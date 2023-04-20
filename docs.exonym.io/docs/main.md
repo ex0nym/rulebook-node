@@ -48,7 +48,7 @@ private enterprise.
 
 This is achieved by establishing the country as a Source 
 and digital advertising agencies in their own country as Advocates. 
-It's a little bit like regional licensing. In this case a license to 
+It's a bit like regional licensing. In this case a license to 
 enforce advertising standards for ads targeted at that region.
 
 The Source maintains a list of agencies they trust to follow and enforce 
@@ -116,6 +116,8 @@ reveals that she has broken rules and $H_1$ can impose a penalty.
 - Breaching a rulebook may result in loss of privilege. 
 - Only when the alleged offender tries to rejoin can accountability be imposed.
 - Each rulebook applies to a narrow context to make them easier to define and manage.
+- Each rulebook is written as the lowest standard that we should be willing to accept.
+- Interpretations of the rulebook increase the standard to what Sources and Advocates believe is desirable.
 - Controllers must maintain reputation.
 - Strong incentives and disincentives for controllers.
 - A sovereign nation can repatriate governance from global platforms for their citizens.
@@ -133,14 +135,10 @@ reveals that she has broken rules and $H_1$ can impose a penalty.
 - __Anonymous__: no two proofs can be shown to be from the same user.
 
 ## [Product Path](product-path.md)
-- Version 0.8: SSO - production version.
-- Version 0.9: Rulebooks - production candidate.
-- Version 1.0: Rulebooks - CA rooted production version.
-- Version ...
-- Version $\chi$: Rulebooks - Blockchain rooted production version. (Open Issues)
+See dedicated page.
 
-# [Structure](node.md)
-Let $H$ be an arbitrary Rulebook with Source's $\mathbf{H_S}$ Advocates 
+# Structure
+Let $H$ be an arbitrary Rulebook with Sources $\mathbf{H_S}$ Advocates 
 $\mathbf{H_{S,A}}$ and a Producer $U_C$.  We define a Rulebook to be structured 
 as follows:
 
@@ -166,6 +164,7 @@ The right to govern is established as follows:
 - A Source asserts an interest in governing the web within some narrow scope.
 - Advocates grant the Source the right to govern in that context, by linking to them.
 - A Producer grants the Advocate the right to govern, by subscribing to them.
+- A Producer only exposes themselves to governance when they show the credential.
 - A Producer allows an Advocate to impose a penalty by identifying themselves.
 
 > __Assertion__
@@ -174,6 +173,8 @@ The right to govern is established as follows:
 > 
 
 ## Enforcing National Advertising Standards & Whitebox Advertising
+> This section goes into more detail than the introduction. 
+ 
 Digital advertising can be a tricky business, with varying advertising 
 standards across countries and the potential for dishonesty in ad 
 placements. To combat these issues, we can deploy a Rulebook with 
@@ -202,22 +203,14 @@ country, and foreign ad agents can subscribe to an Advocate in
 the target nation of the ad campaign. Each ad agent subscribes 
 to one Advocate for each country they advertise in.
 
-However, revocation from an Advocate belonging to one Source 
-may require revocation across many Advocates under different 
-Sources, which can be complicated. To avoid this, each Source 
-is independent by sovereign nation. If an ad agent has subscribed 
-to many Advocates under one Source, the chain revocation protocol 
-would prevent them from proving honesty.
-
 It's important to note that this system can be implemented by 
 individual countries and does not require participation from 
 the entire world. 
 
 By simply setting up the Sources and Advocates, advertisers 
-can prove that their ads comply with local advertising 
-regulations and that they are being honest about their 
-intentions. This could reduce fraudulent advertising practices 
-and create a more trustworthy online advertising ecosystem.
+can prove that they will comply with local advertising 
+regulations and that they will be honest with respect to them. This could reduce 
+fraudulent advertising practices and create a more trustworthy online advertising ecosystem.
 
 It would change the way online advertising is regulated and enforced 
 by providing a decentralized and permissionless system for 
@@ -387,19 +380,6 @@ rather than deploying a ledger until blockchain technologies become a viable pat
 forward. 
 ___
 
-## Project Repositories
-
-| Repository |  Purpose  | Dependency |
-|---|---|---|
-| io.exonym.rulebook  |  Full node Tomcat webserver | .actor |
-| io.exonym.map  |  Broadcast verification server | .lite |
-| io.exonym.wallet  |  A Flutter wallet | dependencies as children |
-| io.exonym.actor  |  Exonym actors (Source, Advocate, ... etc)| .utils |
-| io.exonym.utils  | IDMX Helpers | .lite* |
-| io.exonym.lite  | Foundational utility library |   |
-
-<sup>*Identity Mixer Dependency</sup>
-
 ## Identity Mixer
 At the center of Exonym is an extraordinary cryptographic library from IBM Research 
 called Identity Mixer.  Identity Mixer has features that the W3C Verifiable 
@@ -459,12 +439,12 @@ based on whether it benefits the specific transaction at hand.
 # Patents
 `Patents Pending (US/EU)`
 
-> ___
+
 > 
 > __Exonym's benefits are available to all natural people, for free.__  For 
 > companies and representatives, we charge a one-off Sybil registration fee.
 > 
-> ___
+
 
 Exonym has pending patents in both the US and EU, which serve as a 
 solution to the hard-fork problem.

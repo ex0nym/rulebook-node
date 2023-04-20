@@ -420,11 +420,11 @@ they are already honest under.
 To move from one rulebook to another will always be detected via the 
 common rule $r_0$.  Without a common rule, it is a different rulebook.
 
-|Case|Advocate Migration|Origin Exonyms|  Destination $\mathbf{X}$ | Destination $\mathbf{Y}$ |
-|---|---|---|---|---|
-| 1 |$H_0 \longrightarrow H_1$|$[\begin{matrix} x_0 & x_1 & x_2 \end{matrix}]$ | $[\begin{matrix} 0 & 0 \end{matrix}]$|$[\begin{matrix} x_0 & x_1 \end{matrix}]$|
-| 2 |$H_0 \longrightarrow H_2$|$[\begin{matrix} x_0 & x_1 & x_2 \end{matrix}]$|$[\begin{matrix} 0 & 0 & x_3 \end{matrix}]$|$[\begin{matrix} x_0 & x_1 & 0 \end{matrix}]$|
-| 3 |$H_1 \longrightarrow H_2$|$[\begin{matrix} x_0 & x_1 \end{matrix}]$|$[\begin{matrix} 0 & 0 & x_3 \end{matrix}]$|$[\begin{matrix} x_0 & x_1 & 0 \end{matrix}]$|
+|Case|Advocate Migration| Origin Exonyms                                   |  Destination $\mathbf{X}$ | Destination $\mathbf{Y}$ |
+|---|---|--------------------------------------------------|---|---|
+| 1 |$H_0 \longrightarrow H_1$| $[\begin{matrix} x_0 & x_1 & x_2 \end{matrix}]$ | $[\begin{matrix} 0 & 0 \end{matrix}]$|$[\begin{matrix} x_0 & x_1 \end{matrix}]$|
+| 2 |$H_0 \longrightarrow H_2$| $[\begin{matrix} x_0 & x_1 & x_2 \end{matrix}]$  |$[\begin{matrix} 0 & 0 & x_3 \end{matrix}]$|$[\begin{matrix} x_0 & x_1 & 0 \end{matrix}]$|
+| 3 |$H_1 \longrightarrow H_2$| $[\begin{matrix} x_0 & x_1 \end{matrix}]$        |$[\begin{matrix} 0 & 0 & x_3 \end{matrix}]$|$[\begin{matrix} x_0 & x_1 & 0 \end{matrix}]$|
 
 Cases 1 & 2 have distinct rules at the origin. Cases 2 & 3 have distinct rules at 
 the destination.
