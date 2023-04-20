@@ -4,31 +4,36 @@ Actors and objects are upper case symbols with subscripts
 denoting different actors of the same type.
 ___
 $$
-U_A, U_B, U_C 
+U_A, U_B, U_C
 $$
+
 __Actors:__ Alice, Bob, and Charlie.
 ___
 $$
 \Lambda
 $$
+
 __Object:__ A Rulebook Lambda.
 ___
 
 $$
 \mathbf{\Lambda_S}
 $$
+
 __Actors:__ Sources of a Rulebook Lambda.
 ___
 
 $$
 \mathbf{\Lambda_{S,A}}
 $$
+
 __Actors:__ Advocates and Sources of the Rulebook Lambda.
 ___
 
 $$
 \mathbf{\Lambda_{0,A}}
 $$
+
 __Actors:__ Advocates of a particular Source $\Lambda_0$ of the Rulebook Lambda.  
 
 If there is only one Source, $\Lambda_0$ would be `Advocate0`.  This is
@@ -42,6 +47,7 @@ ___
 $$
 ^{H_0}_{\Sigma(p)}U_A
 $$
+
 Alice has a Sybil credential of class person, $p$ and is honest under 
 a Rulebook, $H_0$.
 
@@ -51,6 +57,7 @@ Exonym does not support Attribute Based Credentials in general; it
 is almost only Sybil displayed there.
 
 The above can be written more succinctly as
+
 $$
 ^{H_0}_{\Sigma_p}U_A
 $$ 
@@ -66,6 +73,7 @@ Sybil class is defined as follows:
 $$
 ^{H_{1,0}}_{\Sigma_P}Q_0
 $$
+
 Above some instance, $0$ of a class of `product` $Q$ is 
 honest under Advocate $H_{1,0}$ belonging to Source $H_1$. 
 E.g., a 'Fair Trade' rulebook.
@@ -76,9 +84,11 @@ They may be honest under many Advocates of the many applicable rulebooks
 $$
 ^{\mathbf{R}}_{\Sigma_P}Q_0
 $$
+
 $$
 \mathbf{R}=[H_{1,0} + H_{1,3} + J_{0}]
 $$
+
 The $+$ meaning `AND` and not a summation.
 
 
@@ -148,6 +158,7 @@ ___
 $$
 U_A  \xrightarrow{\mathbf{B} + c} U_B  \xrightarrow{T_c(\Sigma_{R_e} +H_0 )}  U_A
 $$
+
 Alice connects to Bob and provides byte data, $\mathbf{B}$ and challenge $c$.
 Bob replies with a proof of honesty under $H_0$
 
@@ -158,6 +169,7 @@ provides a slightly different proof to the proof of honesty.
 $$
 T_c(\Sigma+\mathbf{x_r})
 $$
+
 $$
 \mathbf{x_r}=nym(\mathbf{r})
 $$
