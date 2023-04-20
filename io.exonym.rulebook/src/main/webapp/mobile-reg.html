@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link href="css/bootstrap-4.4.1.css" rel="stylesheet">
+		<link href="css/global.css" rel="stylesheet" type="text/css">
+	    <link href="css/buttons.css" rel="stylesheet" type="text/css">
+	    <link href="css/control-panel.css" rel="stylesheet" type="text/css">
+		<link href="css/full-screen.css" rel="stylesheet" type="text/css">
+	    <link href="css/x-form.css" rel="stylesheet" type="text/css">
+
+		<meta charset="ISO-8859-1">
+		<title>Exonym</title>
+	</head>
+	
+	<body class="center whole-vh">
+		<div id="toastMessage" class="hidden">
+			<div id="toastText" class="align-self-center">Error</div>
+		</div>
+
+		<div class="box pad-limit border h-100">
+			<div class="h-100 limit-center">
+				<div class="box justify-content-between h-100 limit">
+					<div class="x-form">
+						<div class="title">
+							<b>CONFIRM CELL NUMBER</b>
+						</div>
+					
+						<div>
+							<label id="lblTwoFactorCountryCode" for="twoFactorCountryCode">COUNTRY CODE</label>
+							<input id="twoFactorCountryCode" type="tel" class="">
+							
+							<label id="lblTwoFactorTelephone" for="twoFactorTelephone">CELL NUMBER</label>
+							<input id="twoFactorTelephone" type="tel" class="">
+							
+							<label for="twoFactorVerificationCode" class="hidden" id="lblTwoFactorVerificationCode">VERIFICATION CODE</label>
+							<input id="twoFactorVerificationCode" type="text" class="hidden">
+						</div>
+					</div>
+
+					<div class="btn-footer">
+						<div class="container-fluid">
+							<div id="resendHide" class="row pad-t pad-b hidden">
+								<div class="col rp">
+									<a id="twoFactorNoSms" href="#" class="inverse-btn">Resend SMS</a>
+								</div>
+							</div>
+
+							<div class="row pad-b">
+								<div class="col rp">
+									<a id="twoFactorContinueBtn" href="#" class="default-btn">CONTINUE</a>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+	</body>
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<script src="js/common.js"></script>  
+	<script src="js/twoFactor.js"></script>
+</html>

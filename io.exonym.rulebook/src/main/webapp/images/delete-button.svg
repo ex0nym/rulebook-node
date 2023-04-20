@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="27" height="27" viewBox="0 0 27 27">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_213" data-name="Rectangle 213" width="27" height="27" transform="translate(222.705 453.705)" fill="#ff4824"/>
+    </clipPath>
+  </defs>
+  <g id="Mask_Group_20" data-name="Mask Group 20" transform="translate(-222.705 -453.705)" clip-path="url(#clip-path)">
+    <g id="noun_Trash_428684" transform="translate(223 454)">
+      <path id="Path_992" data-name="Path 992" d="M20.08,6.875A13.205,13.205,0,1,0,33.286,20.08,13.2,13.2,0,0,0,20.08,6.875Zm5.282,18.917a1.761,1.761,0,0,1-1.75,1.75H16.548a1.761,1.761,0,0,1-1.75-1.75V17.01H25.362ZM13.048,16.119a1.761,1.761,0,0,1,1.75-1.75h3.07a2.212,2.212,0,1,1,4.424,0h3.07a1.761,1.761,0,0,1,1.75,1.75Z" transform="translate(-6.875 -6.875)" fill="#ff4824"/>
+      <path id="Path_993" data-name="Path 993" d="M32.946,19.731a1.324,1.324,0,0,0-1.321,1.321h2.641A1.324,1.324,0,0,0,32.946,19.731Z" transform="translate(-19.74 -13.558)" fill="#ff4824"/>
+      <rect id="Rectangle_210" data-name="Rectangle 210" width="0.891" height="7.032" transform="translate(12.776 11.456)" fill="#ff4824"/>
+      <rect id="Rectangle_211" data-name="Rectangle 211" width="0.891" height="7.032" transform="translate(10.135 11.456)" fill="#ff4824"/>
+      <rect id="Rectangle_212" data-name="Rectangle 212" width="0.891" height="7.032" transform="translate(15.417 11.456)" fill="#ff4824"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
+  <modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.exonym</groupId>
+		<artifactId>rulebook-node-parent</artifactId>
+		<version>1.0.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+  
+  <groupId>io.exonym</groupId>
+  <artifactId>io.exonym.actor</artifactId>
+  <version>0.2</version>
+  <name>io.exonym.actor</name>
+  <description>Interaction with Exonym Actors</description>
+
+  <properties>
+
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<abc4TrustVersion>1.1.36</abc4TrustVersion>
+	<skipTests>true</skipTests>
+
+  </properties>
+	
+	<dependencies>
+
+		<dependency>
+		  <groupId>io.exonym</groupId>
+		  <artifactId>io.exonym.utils</artifactId>
+		  <version>0.2</version>
+		</dependency>
+
+	  <dependency>
+		    <groupId>com.jcraft</groupId>
+		    <artifactId>jsch</artifactId>
+		    <version>0.1.55</version>
+	  </dependency>	    
+
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.15.3</version>
+		</dependency>
+
+	</dependencies>
+
+  <build>
+	   <resources>
+	     <resource>
+	       <directory>resource</directory>
+	     </resource>
+	   </resources>
+    </build>	
+  
+</project>

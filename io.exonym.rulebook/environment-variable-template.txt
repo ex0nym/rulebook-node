@@ -1,0 +1,60 @@
+DB_USERNAME=
+DB_PASSWORD=
+
+# CouchDB URL - must be available; use the name of the docker image if you're using docker.
+DB_URL=
+
+# The name of the admin that will be defined for this node.
+PRIMARY_ADMIN_USERNAME=
+
+# The URL where this node will run.  Do not use local-host. 
+# If you are running on a local machine, use the computer name
+# This will allow devices on the same network to find the node.
+RULEBOOK_NODE_URL=
+
+# The URL that listens to broadcasts, so in the above case: the computer name.
+## TODO: Change VAR_NAME; Check that port isn't needed. 
+BROADCAST_URL=
+UDP_PORT=
+
+# The password that will be used to encrypt the wallet data on this node.
+# Please use a strong password generator.
+RULEBOOK_NODE_ROOT=
+
+# Optional: If you want more than one node to connect to a common couchdb database/
+RULEBOOK_NODE_PREFIX=
+
+ROOT_DOMAIN=
+FAILOVER_DOMAIN=
+
+# Optional: set if you want to publish mutiple nodes to the same static repository.
+STATIC_DATA_FOLDER=
+FAILOVER_STATIC_DATA_FOLDER=
+
+# SFTP Data
+SFTP_HOST=
+SFTP_PORT=
+SFTP_USERNAME=
+SFTP_PASSWORD=
+KNOWN_HOST0=
+KNOWN_HOST1=
+KNOWN_HOST2=
+
+# Failover Domain is optional on the test network
+FAILOVER_SFTP_HOST=
+FAILOVER_SFTP_PORT=
+FAILOVER_SFTP_USERNAME=
+FAILOVER_SFTP_PASSWORD=
+FAILOVER_KNOWN_HOST0=
+FAILOVER_KNOWN_HOST1=
+FAILOVER_KNOWN_HOST2=
+
+SPAWN_WIDER_NETWORK_FROM=
+NODE_SUPPORT_NUMBER=
+
+ISO_COUNTRY_CODE=
+
+EXONYM_API_KEY=
+EXONYM_API_KID=
+
+BLOB_PATH=

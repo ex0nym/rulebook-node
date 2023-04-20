@@ -1,0 +1,8 @@
+/conf/*env
+/.idea
+/couchdb
+/target
+/test
+*env
+*.zip
+/static/

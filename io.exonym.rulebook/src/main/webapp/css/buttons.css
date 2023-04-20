@@ -1,0 +1,153 @@
+@charset "UTF-8";
+
+.btn-footer {
+	margin: 0px 10px 10px 10px;
+
+}
+
+.rp {
+	padding: 0px;
+	margin: 0px;
+}
+
+a.default-btn:link, a.danger-btn:link, a.inverse-btn:link, a.half-height:link{
+	color: white;
+	text-align: center;
+	font-weight:400 ;
+	
+}
+
+a.default-btn:visited, a.danger-btn:visited, a.inverse-btn:visited, a.half-height:visited{
+	font-weight: 400 ;
+	
+}
+
+a.default-btn:hover, a.danger-btn:hover, a.inverse-btn:hover, a.half-height:hover{
+	font-weight: 500 ;
+	text-decoration: none;
+	
+}
+
+a.default-btn:active, a.danger-btn:active, a.inverse-btn:active, a.half-height:active{
+	font-weight: 500 ;
+}
+
+a.default-btn:link{
+	color: white;
+	
+}
+
+a.default-btn:visited{
+	color: white;
+	
+}
+a.default-btn:hover{
+	color: white;
+	
+}
+
+a.default-btn:active{
+	color: #5324ff;
+	background-color: white;
+	border: 2px solid #5324ff;
+}
+
+
+.default-btn, .danger-btn, .inverse-btn, .half-height, .black-btn{
+	border-radius: 8px;	
+	background-color: #5324ff;
+	height: 46px;
+	display: flex;
+	flex-direction: row;
+	align-content: center;
+	justify-content: center;
+	align-items: center;
+	
+	transition:0.2s ease;
+	
+}
+
+.half-height{
+	height: 35px;
+	border-radius: 4px;
+	margin-top: 5px;
+	
+}
+
+.danger-btn{
+	background-color: #ff4824;
+	border: 2px solid #ff4824;
+}
+
+a.danger-btn:link{
+	color: white;
+	
+}
+
+a.danger-btn:visited{
+	color: white;
+	
+}
+a.danger-btn:hover{
+	color: white;
+	
+}
+
+a.danger-btn:active{
+	color: white;
+	background-color: #ff4824;
+}
+
+
+.inverse-btn{
+	background-color: white;
+	border: 2px solid #5324ff;
+}
+
+.half-height .inverse-btn{
+		margin-top: 5px;
+
+}
+
+a.inverse-btn:link{
+	color: #5324ff;
+	
+}
+
+a.inverse-btn:visited{
+	color: #5324ff;
+	
+}
+a.inverse-btn:hover{
+	color: #5324ff;
+	
+}
+
+a.inverse-btn:active{
+	color: white;
+	background-color: #5324ff;
+}
+
+.black-btn{
+	background-color: white;
+	border: 2px solid #2B2B2B;
+}
+
+a.black-btn:link{
+	color: #2B2B2B;
+	
+}
+
+a.black-btn:visited{
+	color: #2B2B2B;
+	
+}
+a.black-btn:hover{
+	color: #2B2B2B;
+	
+}
+
+a.black-btn:active{
+	color: white;
+	color: #2B2B2B;
+}

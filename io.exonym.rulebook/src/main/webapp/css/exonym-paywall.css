@@ -1,0 +1,45 @@
+@charset "UTF-8";
+
+.exo-btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: darkorange;
+    color: white;
+    padding: 15px 5px;
+    margin: 10px;
+    max-width: 250px;
+}
+
+#exo-paywall-message{
+    font-size: large;
+}
+
+#exo-paywall-qr{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F5F5F5;
+    width: 200px;
+    height: 200px;
+    max-width: 200px;
+    max-height: 200px;
+
+}
+
+#exo-qr-code{
+    max-width: 200px;
+    max-height: 200px;
+
+}
+
+.exo-hidden{
+    visibility: hidden;
+}
+
+.exo-remove{
+    display: none;
+}
+

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="27" height="27" viewBox="0 0 27 27">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_250" data-name="Rectangle 250" width="27" height="27" transform="translate(203 354)" fill="#0fdc80" stroke="#707070" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="Mask_Group_36" data-name="Mask Group 36" transform="translate(-203 -354)" clip-path="url(#clip-path)">
+    <g id="noun_Card_Reissue_944000" data-name="noun_Card Reissue_944000" transform="translate(201.5 352.5)">
+      <path id="Path_1052" data-name="Path 1052" d="M27.75,14.25A.75.75,0,0,0,27,15a12,12,0,1,1-5-9.75H20.25a.75.75,0,0,0,0,1.5H24a.776.776,0,0,0,.7-1.064L23.985,2.1a.75.75,0,1,0-1.471.294l.322,1.611A13.5,13.5,0,1,0,28.5,15,.75.75,0,0,0,27.75,14.25Z" fill="#0fdc80"/>
+      <path id="Path_1053" data-name="Path 1053" d="M8.25,8.25A2.252,2.252,0,0,0,6,10.5v9a2.252,2.252,0,0,0,2.25,2.25h13.5A2.252,2.252,0,0,0,24,19.5v-9a2.252,2.252,0,0,0-2.25-2.25ZM22.5,19.5a.751.751,0,0,1-.75.75H8.25a.751.751,0,0,1-.75-.75V14.25h15Zm0-9v.75H7.5V10.5a.751.751,0,0,1,.75-.75h13.5A.751.751,0,0,1,22.5,10.5Z" fill="#0fdc80"/>
+    </g>
+  </g>
+</svg>

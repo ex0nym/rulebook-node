@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Node Control Panel</title>
+	<link href="css/bootstrap-4.4.1.css" rel="stylesheet">
+	<link href="css/control-panel.css" rel="stylesheet" type="text/css">
+	<link href="css/full-screen.css" rel="stylesheet" type="text/css">
+    <link href="css/buttons.css" rel="stylesheet" type="text/css">
+    <link href="css/x-form.css" rel="stylesheet" type="text/css">
+	  
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">	  
+	  
+  </head>
+  <body>
+	  <div class="h-100 container-fluid fix-width">
+
+
+		<!---->
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!-- Working -->
+		 <!---->  
+		 <div id="working" class="hidden overlay opacity-l">
+			<div class="overlay-frame">
+				<img src="images/blue-green-3.7s-48px.svg" class="think" alt="Processing">	
+			</div>	
+		</div>		
+
+
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!-- Progress -->
+		 <!---->  
+		<div id="progress" class="overlay hidden">
+			<div  class="overlay-frame">
+				<img class="progress-logo" src="images/exonym-purple-top.svg" alt="EXONYM">
+				<img src="images/working-16.7s-108px.svg" class="force-size" alt="waiting">
+				<div id="progressTxt" class="think align-self-center">
+					This could take a few minutes...
+					
+				</div>
+				<div id="timer" class="align-self-center border">Patience, please</div>
+			</div>	
+		</div>
+
+
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!-- Help Pages -->
+		 <!---->  	  
+		<div id="helpPage" class="hidden">
+			<div id="helpFrame">
+				<div id="trans" class="grow"></div>
+				<div id="opaque">
+					<div id="helpTitle" class="title">Sorry!</div>
+					<div id="helpText">Failed to get help file</div>
+				</div>
+			</div>
+		</div>	
+
+
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!-- Toast -->
+		 <!---->  
+		<div id="toastMessage" class="hidden">
+			<div id="toastText" class="align-self-center">Error</div>
+		</div>
+
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!-- Modal Confirmation Message -->
+		 <!---->  	  
+		 <div id="errorPage" class="overlay hidden">
+			 <div id="errorFrame" class="overlay-frame low-opacity">
+				 <div class="trans"></div>
+				 <div class="messageFrame">
+					 <div class="title"><div id="errorTitle">Delete Item</div></div>
+					 <div class="msg" id="errorMessage">Are you sure you want to delete?</div>
+					 <div class="ok-cancel">
+						  <div class="container-fluid">
+							  <div class="row">
+								<div id="modalCancel" class="col rp"><a href="#" class="inverse-btn bl">cancel</a></div>
+								<div id="modalOk" class="col rp"><a href="#" class="default-btn br">ok</a></div>
+							  </div>
+						  </div>
+					 </div>
+				 </div>
+				 <div class="trans"></div>
+			 </div>
+		  </div>
+
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!---->
+		 <!-- Modal Input Message -->
+		 <!---->  	  
+		 <div id="inputPage" class="overlay hidden">
+			 <div id="inputFrame" class="overlay-frame low-opacity">
+				 <div class="trans"></div>
+				 <div class="messageFrame">
+					 <div class="title"><div id="inputTitle">ERROR</div></div>
+					 <div class="" id="inputMsg">
+
+						<input id="modalInput" type="text">
+					 </div>
+					 <div class="ok-cancel">
+						  <div class="container-fluid">
+							  <div class="row">
+								<div id="inputCancel" class="col rp"><a href="#" class="inverse-btn bl">cancel</a></div>
+								<div id="inputOk" class="col rp"><a href="#" class="default-btn br">ok</a></div>
+							  </div>
+						  </div>
+					 </div>
+				 </div>
+				 <div class="trans"></div>
+			 </div>
+		  </div>
+
+
+		<div class="box pad-limit">
+			 <!---->
+			 <!---->
+			 <!---->
+			 <!---->
+			 <!-- T A B S -->
+			 <!---->
+			<div id="x-tabs" class="row header">
+			  <div class="container-fluid h-100">
+				<ul class="nav nav-tabs nav-fill" id="myTab" role="tablist">
+				  <li class="nav-item">
+					<a class="nav-link" id="sourceTab" data-toggle="tab" href="#source" role="tab" aria-controls="home" aria-selected="true">
+						<div class="icon row justify-content-center"><div id="source-icon"></div></div>
+						<div class="row label">
+							Source	
+						</div>
+					 </a>
+				  </li>
+				  <li class="nav-item">
+					<a class="nav-link" id="nodeTab" data-toggle="tab" href="#node" role="tab" aria-controls="profile" aria-selected="false">
+						<div class="icon row justify-content-center"><div id="node-icon"></div></div>					
+						<div class="row label">
+							Advocate	
+						</div>
+
+					</a>
+				  </li>
+				  <li class="nav-item">
+					<a class="nav-link" id="hostingTab" data-toggle="tab" href="#hosting" role="tab" aria-controls="contact" aria-selected="false">				
+						<div class="icon row justify-content-center"><div id="hosting-icon"></div></div>
+						<div class="row label">
+							Hosting	
+						</div>
+					</a>
+				  </li>
+				</ul>
+			</div>  
+		  </div>
+
+		  <div class="row content">
+			 <div id="tab-content" class="tab-content h-100" >
+				 <!---->
+				 <!---->
+				 <!---->
+				 <!---->
+				 <!-- S O U R C E -->
+				 <!---->
+				  <div class="tab-pane fade x-tab h-100" id="source" role="tabpanel" aria-labelledby="source-tab">
+					  <div class="container-fluid h-100">
+						  <div class="row h-100">
+							  <div class="col h-100">
+								<div class="col icon-set">
+
+									  <div id="sourceIconsUpperRow" class="row upper-row icon-set-row">
+											<div id="srcNodeManagementBtn" href="#sourceNodeManagement" class="col-4 nav-btn">
+												<div class="row justify-content-center navico">
+													<img src="images/src-node-mngt.svg" class="icon-size" alt="">
+												</div>
+												<div class="row justify-content-center text-center navico">Host Management</div>
+											</div>
+
+											<div id="srcNodeInformationBtn" href="#" class="hidden col-4 nav-btn">
+												<div class="row justify-content-center navico"><img src="images/src-net-info.svg" class="icon-size" alt=""></div>
+												<div class="row justify-content-center text-center navico">Network Infomation</div>
+											</div>							  
+									  </div>
+
+									  <div id="" class="row lower-row icon-set-row">
+											<div id="srcSecondaryNetworksBtn" href="#sourceSecondaryNetworks" class="col-4 nav-btn hidden">
+												<div class="row justify-content-center navico"><img src="images/src-2nd-nets.svg" class="icon-size" alt=""></div>
+												<div class="row justify-content-center text-center navico">Secondary Networks</div>
+											</div>
+
+											<div id="srcNewNetworkBtn" href="#sourceNewNetwork" class="col-4 nav-btn">
+												<div class="row justify-content-center navico"><img src="images/src-new-net.svg" class="icon-size" alt=""></div>
+												<div class="row justify-content-center text-center navico">New Rulebook</div>
+											</div>							  							  
+									  </div>				
+								  </div>
+							  </div>
+						  </div>
+					</div>						  
+				  </div>
+
+				 <!---->
+				 <!---->
+				 <!---->
+				 <!---->
+				 <!-- N O D E -->
+				 <!---->
+				  <div class="tab-pane fade x-tab h-100" id="node" role="tabpanel" aria-labelledby="node-tab">
+					  <div class="container-fluid h-100">
+						  <div class="row h-100">
+							  <div class="col h-100">
+								<div class="col icon-set">
+									<div id="nodeUpperRow" class="row upper-row icon-set-row">
+										<div id="nodeMemberManagementBtn" href="#nodeMemberManagement" class="col-4 nav-btn hidden">
+											<div class="row navico">
+												<img src="images/node-member-mngt.svg" class="icon-size" alt="">
+											</div>
+											<div class="row text-center navico">Member Management</div>
+										</div>
+
+										<div id="nodeTokenManagementBtn" href="#nodeTokenManagement" class="col-4 nav-btn">
+											<div class="row navico"><img src="images/node-token-mngt.svg" class="icon-size" alt=""></div>
+											<div class="row text-center navico">Token Management</div>
+										</div>										
+									</div>
+
+									<div id="nodeMiddleRow" class="row upper-row icon-set-row hidden">
+
+									</div>									
+
+									<div class="row lower-row icon-set-row">
+										<div id="nodeSourceAttachmentBtn" href="#nodeSourceAttachment" class="col-4 nav-btn">
+											<div class="row navico">
+												<img src="images/node-source-attachment.svg" class="icon-size" alt="">
+											</div>
+											<div class="row text-center navico">Source Attachment</div>
+										</div>
+										<div id="nodeSecondaryNetworksBtn" href="#nodeSecondaryNetworks" class="col-4 nav-btn hidden">
+											<div class="row  navico"><img src="images/node-2nd-nets.svg" class="icon-size" alt=""></div>
+											<div class="row  text-center navico">Secondary Networks</div>
+										</div>
+									</div>
+								</div>							  
+							  </div>
+						</div>
+					</div>						  
+				  </div>
+
+				<!---->
+				<!---->
+				<!---->
+				<!---->
+				<!-- H O S T I N G  -->
+				<!---->
+				<div class="tab-pane fade x-tab h-100" id="hosting" role="tabpanel" aria-labelledby="hosting-tab">
+					   <div class="container-fluid h-100">
+						<div class="col icon-set">
+							<div id="hostUpperRow" class="row upper-row icon-set-row">
+								<div id="accessBtn" class="col-4 nav-btn" href="#hostingAccess">
+									<div class="row justify-content-center navico">
+									<img src="images/host-access.svg"  class="icon-size" alt=""></div>
+									<div class="row justify-content-center text-center navico">ACCESS</div>
+								</div>
+								<div id="transferSourceBtn" class="col-4 nav-btn hidden" href="#hostingTransferSource">
+									<div class="row justify-content-center navico"><img src="images/host-transfer-source.svg" class="icon-size" alt=""></div>
+									<div class="row justify-content-center text-center navico">Transfer Source</div>
+								</div>
+							</div>
+
+							<div id="" class="row upper-row icon-set-row">
+								<div id="licenseBtn" class="col-4 nav-btn hidden" href="#hostingLicense">
+									<div class="row justify-content-center navico"><img src="images/host-license.svg" class="icon-size" alt=""></div>
+									<div class="row justify-content-center text-center navico">License</div>
+								</div>
+
+								<div id="exitBtn" href="#exit" class="col-4 nav-btn">
+									<div class="row justify-content-center navico"><img src="images/host-exit.svg"  class="icon-size" alt=""></div>
+									<div class="row justify-content-center text-center navico">Sign Out</div>
+								</div>							
+
+							</div>
+
+							<div id="hostLowerRow" class="row lower-row icon-set-row">
+								<div id="recoveryBtn" class="col-4 nav-btn" href="#hostingRecovery">
+									<div class="row justify-content-center navico"><img src="images/host-recovery.svg" class="icon-size"  alt=""></div>
+									<div class="row justify-content-center text-center navico">Reset</div>
+								</div>															
+							</div>
+						</div>
+					</div>						  
+				</div>
+
+				 <!---->
+				 <!-- Hosting~Recovery [recovery]  -->
+				 <!---->
+				<div class="tab-pane fade h-100" id="hostingRecovery" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">Node Reset</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							 <form class="h-100">
+								<div class="box">
+								  <div class="x-form">
+									<label for="hostingRecoveryPassword">Password</label>
+									<input id="hostingRecoveryPassword" type="password">									
+								  </div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											<div class="col rp">
+												<a id="hostingRecoveryReset" href="#" class="danger-btn">Reset Rulebook Node</a>
+											</div>
+										  </div>
+									  </div>
+								  </div>
+								</div>
+							 </form>
+
+						 </div>
+
+					 </div>
+				 </div>
+
+				 <!---->
+				 <!-- Host~License  [hostingLicense]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="hostingLicense" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">License</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="hostAboutForm" class="h-100">
+								<div class="box justify-content-between">
+									<div class="x-form">
+
+									</div>
+
+									  <div class="btn-footer">
+										  <div class="container-fluid">
+											  <div class="row">
+												  <div class="col rp">
+													  <a id="hostAboutUpdateBtn" href="#" class="default-btn">update</a>
+												  </div>
+											  </div>
+										  </div>
+									  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>	
+
+
+				 <!---->
+				 <!-- Hosting~Access [access]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="hostingAccess" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">Admin Access</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="adminAccess" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+
+										<div class="help">
+											<label for="administratorAccounts">Administrator Accounts</label>
+											<div id="hlpAdminAccessAdministratorAccounts" class="help-btn"></div>
+										</div>
+
+										<div id="adminAccessAdministratorAccounts" class="multi">
+										  <div class="list-line"></div>
+										</div>
+
+										<div class="col rp margin-top">
+											<a id="adminAccessAddApiKey" href="#" class="inverse-btn">Create Api Key</a>
+										</div>
+
+										<label for="adminAccessUsername">Username</label>
+										<input id="adminAccessUsername" type="text">
+
+										<div id="adminAccessApiKeyOutput" class="copy-field border margin-top invisible">
+											<div class="cp-ico"></div>
+											<a id="adminAccessApiKeyOutputCopyField" href="#" class="cp-text"></a>
+										</div>
+								  </div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											  <div class="col rp">
+												  <a id="adminAccessAddEditBtn" href="#" class="default-btn">Add</a>
+											  </div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>			
+
+				 <!---->
+				 <!-- Hosting~Transfer Source [transferSource]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="hostingTransferSource" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">Transfer Source</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="transferSourceForm" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+
+										<label for="transferSourceNetwork">Network</label>
+										<select id="transferSourceNetwork" class="network-source-select">
+											<option value="no-value">no-values</option>									
+										</select>
+
+										<div class="help">
+											<label for="networkName">URL</label>
+											<div id="hlpTransferSourceUrl" class="help-btn"></div>
+										</div>
+										<input id="transferSourceUrl" type="text">							  
+
+								  </div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											  <div class="col rp">
+												  <a id="transferSourceBeginTransferBtn" href="#" class="default-btn">Begin Transfer</a>
+											  </div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>	
+
+				 <!---->
+				 <!-- Source~New Network [newNetwork]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="sourceNewNetwork" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">New Rulebook Source</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">
+
+							<form id="newNetworkForm" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+									<div class="help">
+										<label for="sourceNewNetworkRulebookURL">Rulebook URL</label>
+										<div id="hlpSourceNewNetworkRulebookURL" class="help-btn"></div>
+									</div>
+									<input id="sourceNewNetworkRulebookURL" type="text">
+									<div class="help">
+										<label for="sourceNewNetworkNetworkName">Organization Name</label>
+										<div id="hlpSourceNewNetworkNetworkName" class="help-btn"></div>
+									</div>
+									<input id="sourceNewNetworkNetworkName" type="text">
+								  </div>
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											  <div class="col rp">
+												  <a id="sourceNewNetworkCreateBtn" href="#" class="default-btn">Create</a>
+											  </div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>		
+
+				 <!---->
+				 <!-- Source~Node Management  [sourceNodeManagement]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="sourceNodeManagement" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">Node Management</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="sourceNodeManagementForm" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+										<label for="sourceNodeManagementNetwork">Network</label>
+										<select id="sourceNodeManagementNetwork" class="network-source-select">
+											<option value="no-value">no-values</option>									
+										</select>
+
+										<div class="help">
+											<label for="sourceNetworkInformationSourceUrl">Source URL</label>
+											<div id="hlpSourceNetworkInformationSourceUrl" class="help-btn"></div>
+										</div>
+										<div class="copy-field border">
+											<div class="cp-ico"></div>
+											<a id="sourceNodeInformationSourceUrl" href="#" class="cp-text"></a>
+										</div>
+	
+
+										<div class="help">
+											<label for="sourceNodeManagementAuthorizedNodes">Authorized Nodes</label>
+											<div id="hlpSourceNodeManagementAuthorizedNodes" class="help-btn"></div>
+										</div>
+										<div id="sourceNodeManagementAuthorizedNodes" class="multi">
+										  <div class="list-line">
+											  <a id="snmdp1" href="#" class="list-label-item">node01</a>
+											  <a href="#" class="list-btn list-button-delete hidden"></a>
+										  </div>
+										  <div class="list-line">
+											  <a id="snmdp02" href="#" class="list-label-item">node02</a>
+											  <a href="#" class="list-btn list-button-delete hidden"></a>
+										  </div>
+										</div>
+
+										<div class="help">
+											<label for="sourceNodeManagementNodeUrl">Node URL</label>
+											<div id="hlpSourceNodeManagementNodeUrl" class="help-btn"></div>
+										</div>
+										<input id="sourceNodeManagementNodeUrl" type="text">
+
+										<label for="sourceNodeManagementInternalName">Internal Name</label>
+										<input id="sourceNodeManagementInternalName" type="text">	
+									</div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											<div id="sourceNodeManagementRemoveBtn" class="col rp"><a href="#" class="danger-btn bl">Remove</a></div>
+											<div id="sourceNodeManagementAddBtn" class="col rp"><a href="#" class="default-btn br">Add</a></div>
+										  </div>									 
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>		
+
+				 <!---->
+				 <!-- Source~Secondary Networks  [sourceSecondaryNetworks]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="sourceSecondaryNetworks" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="tb-pad">Secondary Networks</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="sourceSecondaryNetworksForm" class="h-100">
+								<div class="box justify-content-between">
+									<div class="x-form">
+
+										<label for="sourceSecondaryNetworksNetwork">Network</label>
+										<select id="sourceSecondaryNetworksNetwork" class="network-source-select">
+											<option value="no-value">no-values</option>									
+										</select>
+
+										<div class="help">
+											<label for="sourceSecondaryNetworksSecondaryNetwork">Secondary Network</label>
+											<div id="hlpSourceSecondaryNetworksSecondaryNetwork" class="help-btn"></div>
+										</div>
+										<select id="sourceSecondaryNetworksSecondaryNetwork">
+											<option value="sourceSecondaryNetworkAddNetworkOption">Add...</option>
+										</select>
+
+										<label for="sourceSecondaryNetworksAvailableNodes">Available Nodes</label>
+										<div id="sourceSecondaryNetworksAvailableNodes" class="multi">
+										  <div class="list-line">
+											  <a id="ssn01" href="#" class="list-label-item">node01</a>
+											  <a href="#" class="list-btn list-button-add hidden"></a>
+										  </div>
+										  <div class="list-line">
+											  <a id="ssn02" href="#" class="list-label-item">node02</a>
+											  <a href="#" class="list-btn list-button-add hidden"></a>
+										  </div>
+										</div>		
+										<label for="sourceSecondaryNetworksRequiredNodes">Required Nodes</label>
+										<div id="sourceSecondaryNetworksRequiredNodes" class="multi">
+										  <div class="list-line">
+											  <a id="ssn03" href="#" class="list-label-item">node03</a>
+											  <a href="#" class="list-btn list-button-remove hidden"></a>
+										  </div>
+										  <div class="list-line">
+											  <a id="ssn04" href="#" class="list-label-item">node04</a>
+											  <a href="#" class="list-btn list-button-remove hidden"></a>
+										  </div>
+										</div>	
+
+									</div>
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											  <div class="col rp">
+												  <a id="sourceSecondaryNetworksEnforceBtn" href="#" class="default-btn">Enforce</a>
+											  </div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>	
+
+				 
+				 <!---->
+				 <!-- Node~Membership [membership]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="nodeMemberManagement" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">Membership</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="membershipForm" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+
+
+									<div class="help">
+										<label for="nodeMembershipAllTimeMembership">All-Time Membership</label>
+										<div id="hlpNodeMembershipAllTimeMembership" class="help-btn"></div>
+									</div>
+									<div id="nodeMembershipAllTimeMembership" class="multi">
+									</div>	
+
+									<div class="help">
+										<label for="nodeMembershipUsername">Username</label>
+										<div id="searchNodeMembershipUsername" class="search-btn"></div>
+										<div id="hlpNodeMembershipUsername" class="help-btn"></div>
+									</div>
+									<input id="nodeMembershipUsername" type="text">
+
+									<div class="help">
+										<label for="nodeMembershipEmail">Email</label>
+										<div id="searchNodeMembershipEmail" class="search-btn"></div>
+										<div class="help-btn invisible"></div>
+									</div>
+									<input id="nodeMembershipEmail" type="email">
+
+									<div class="help">
+										<label for="nodeMembershipTelephone">Telephone</label>
+										<div id="searchNodeMembershipTelephone" class="search-btn"></div>
+										<div class="help-btn invisible"></div>
+									</div>
+									<input id="nodeMembershipTelephone" type="tel">								
+
+								  </div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											  <div class="col rp">
+												  <a id="nodeMembershipAddEditBtn" href="#" class="default-btn">add member</a>
+											  </div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>					 
+
+				 <!---->
+				 <!-- Node~Token Management [nodeTokenManagement]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="nodeTokenManagement" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">TOKEN MANAGEMENT</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="nodeTokenManagementForm" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+
+									<div class="help">
+										<label for="nodeTokenManagementPresentationToken">Presentation Token</label>
+										<div id="searchNodeTokenManagementPresentationToken" class="search-btn hidden"></div>
+										<div id="hlpNodeTokenManagementPresentationToken" class="help-btn"></div>
+									</div>
+									<textarea id="nodeTokenManagementPresentationToken"> </textarea>
+
+									<div id="nodeTokenManagementVerificationMessage" class="hidden verification-message">
+										The Token has been registered and was not malformed.  Click the Search Icon above or Revoke.
+										If you have made a mistake - drag &amp drop the correct Token and then make your selection.
+									</div>
+									<div id="nodeTokenManagementContact" class="read-only-label-and-field invisible">
+										<div class="row read-only-row">
+											<div class="col">
+												Email
+											</div>
+											<div id="nodeTokenManagementEmail" class="col text-align-right">												
+											</div>
+										</div>											
+										<div class="row read-only-row">
+											<div class="col">
+												Tel
+											</div>
+											<div id="nodeTokenManagementTel" class="col text-align-right">
+												
+											</div>
+										</div>																				
+									</div>
+								  </div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											  <div class="col rp">
+												  <a id="nodeTokenManagementRevokeBtn" href="#" class="danger-btn">Revoke</a>
+											  </div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>		
+
+				 <!---->
+				 <!-- Node~Source Attachment [nodeSourceAttachment]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="nodeSourceAttachment" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">Source Attachment</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="nodeSourceAttachmentForm" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+
+										<div class="help">
+											<label for="nodeSourceAttachmentPublicName" class="lbl">Public Name</label>
+											<div id="hlpNodeSourceAttachmentPublicName" class="help-btn"></div>
+										</div>
+										<input id="nodeSourceAttachmentPublicName" type="text">		
+
+										<div class="help">
+											<label for="nodeSourceAttachmentSourceUrl" class="lbl">Source URL</label>
+											<div id="hlpNodeSourceAttachmentSourceUrl" class="help-btn"></div>
+										</div>
+										<input id="nodeSourceAttachmentSourceUrl" type="text">											
+
+										<label for="nodeSourceAttachmentNodeAddress" class="">This Node Address</label>
+										<div class="copy-field border">
+											<div class="cp-ico"></div>
+											<a id="nodeSourceAttachmentNodeAddress" href="#" class="cp-text">Node is unattached</a>
+										</div>									
+
+								  </div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											  <div class="col rp">
+												  <a id="nodeSourceAttachBtn" href="#" class="default-btn">Attach</a>
+											  </div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>		
+
+
+				 <!---->
+				 <!-- Node~Secondary Networks [nodeSecondaryNetworks]  -->
+				 <!---->
+				 <div class="tab-pane fade h-100" id="nodeSecondaryNetworks" role="tabpanel">
+					 <div class="box">
+
+						 <div class="inner-header">
+							<div class="screen-title align-items-center">
+								<div class="title-padding"></div>
+								<div class="">Secondary Networks</div>
+								<div class="close-btn"></div>
+							</div>						
+						 </div>
+
+						 <div class="content">						 
+							<form id="nodeSecondaryNetworksForm" class="h-100">
+								<div class="box justify-content-between">
+								  <div class="x-form">
+										<div class="help">
+											<label for="nodeSecondaryNetworksIssuerRecipientUrl">Issuer / Recipient URL</label>
+											<div id="hlpNodeSecondaryNetworksIssuerRecipientUrl" class="help-btn"></div>
+										</div>
+										<input id="nodeSecondaryNetworksIssuerRecipientUrl" type="text">							  
+								  </div>
+
+								  <div class="btn-footer">
+									  <div class="container-fluid">
+										  <div class="row">
+											<div id="nodeSecondaryNetworksJoinBtn" class="col rp"><a href="#" class="inverse-btn bl">Join</a></div>
+											<div id="nodeSecondaryNetworksAddBtn" class="col rp"><a href="#" class="default-btn br">Add Member</a></div>
+										  </div>
+									  </div>
+								  </div>
+
+								</div>
+							</form>
+
+						 </div>
+
+					 </div>
+				 </div>					 
+
+			</div>
+		  </div>
+			<!---->
+			<!-- Footer  -->
+			<!---->
+			<div class="row footer tiny">
+				&#174; Exonym - Decentralised Rulebooks &copy; 2023 Exonym GmbH
+			</div>
+		</div>
+
+	</div>
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<script src="js/popper.min.js"></script> 
+	<script src="js/bootstrap-4.4.1.js"></script>
+	<script src="js/common.js"></script>
+	<script src="js/source.js"></script>
+	<script src="js/node.js"></script>
+	<script src="js/host.js"></script>
+	<script src="js/control-panel.js"></script>
+
+  </body>
+</html>

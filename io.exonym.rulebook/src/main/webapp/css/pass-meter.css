@@ -1,0 +1,28 @@
+meter::-moz-meter-bar { /* Firefox Pseudo Class */
+  background: #b40101;
+}
+
+meter.strong::-moz-meter-bar { /* Firefox Pseudo Class */
+  background: #1ab401;;
+}
+
+
+meter.strong::-moz-meter-bar { /* Firefox Pseudo Class */
+  background: #1ab401;
+}
+
+
+meter::-webkit-meter-optimum-value {
+    background: #b40101; /* For browsers that do not support gradients */
+
+}
+
+meter.medium::-webkit-meter-optimum-value {
+    background: #b40101; /* For browsers that do not support gradients */
+
+}
+
+meter.strong::-webkit-meter-optimum-value {
+    background: #1ab401; /* For browsers that do not support gradients */
+
+}

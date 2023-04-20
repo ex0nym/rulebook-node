@@ -1,0 +1,41 @@
+@charset "UTF-8";
+
+html, body {
+	height: 100vh;
+}
+
+.x-container {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+
+}
+
+.x-header {
+	  flex: 0 1 auto;
+}
+
+.x-content {
+	flex: 1 1 auto;
+	height: 100%;
+}
+
+.x-footer {
+	  flex: 0 1 15px;
+}
+.x-sub-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	flex-basis: 100px;
+	height: 100%;
+	
+}
+
+.row-sub-content {
+	flex-grow: 1;
+}
+
+
+
+

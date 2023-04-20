@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rulebook Node</title>
+	
+
+	<link href="css/bootstrap-4.4.1.css" rel="stylesheet">
+
+	<link href="css/home.css" rel="stylesheet" type="text/css">
+	<link href="css/control-panel.css" rel="stylesheet" type="text/css">
+	<link href="css/buttons.css" rel="stylesheet" type="text/css">
+    <link href="css/x-form.css" rel="stylesheet" type="text/css">
+    <link href="css/pass-meter.css" rel="stylesheet" type="text/css">	
+    <link href="css/global.css" rel="stylesheet" type="text/css">	
+	  
+	  
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">	  
+        	  
+  </head>
+  <body>
+
+	<!---->
+	<!---->
+	<!---->
+	<!---->
+	<!-- Working -->
+	
+	<div id="working" class="overlay opacity-l">
+		<div class="overlay-frame ">
+			<img class="think " src="images/blue-green-3.7s-48px.svg" alt="Processing...">
+		</div>	
+	</div>	
+ 
+	  
+	<div id="toastMessage" class="hidden">
+		<div id="toastText" class="align-self-center">Toast Message Error</div>
+	</div>
+
+	<div class="pos-f-t hide-on-rotate">
+	  <div class="collapse" id="navbarToggleExternalContent">
+		<div class="bg-x-dark p-4">
+			<div id="controlPanelBtn" class="x-menu-btn">Control Panel</div>
+			<div id="rulebookBtn" class="x-menu-btn">Rulebook</div>
+			<div id="verifiableClaimsBtn" class="x-menu-btn">Attribute Based Credentials</div>
+
+			<div class="row">
+				<div class="col-8 align-self-end">
+					<span class="tiny tint">&copy; 2023 EXONYM - Exonym is a Registered Trademark of Exonym GmbH</span>
+				</div>
+			</div>
+		</div>
+	  </div>
+		
+	  <nav class="navbar navbar-light">
+		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+		  <span class="navbar-toggler-icon"></span>
+		</button>
+	  </nav>
+	</div>
+	  
+  <div class="container-fluid fix-width">
+	  <div class="spread">
+
+		<div id="forgotPasswordBtn" class="tiny no-select">Decentralized Rulebook Node</div>
+
+		  <div id="logo-container" class="row justify-content-center">
+			<img id="title-logo" src="images/exonym-purple-top.svg" alt="Exonym">
+		  </div>
+
+		<div class="row head1 no-select justify-content-center">
+			Control Panel
+		</div>
+
+		<div id="logon-fields">
+			<label for="loginUsername">Username</label>
+			<input id="loginUsername" type="email">
+
+			<label id="loginPasswordLbl" class="" for="loginPassword">Password</label>
+			<input id="loginPassword" type="password">
+
+			<label id="loginRepeatPasswordLbl" class="hidden" for="loginRepeatPassword">Repeat Password</label>
+			<input id="loginRepeatPassword" class="hidden" type="password">
+
+			<meter id="strength" value="0" min="0" max="100" class="meter invisible"></meter>
+			<label for="strength" id="strengthText" class="invisible"></label>
+
+			<div id="loginSignInBtn" class="btn-footer">
+				<div class="row">
+			  		<div class="col rp">
+				  		<a id="signInText" href="#" class="default-btn">Sign In</a>
+			  		</div>
+				</div>
+			</div>	  
+		</div>	 
+
+	</div>
+  </div>
+  	<script src="js/jquery-3.4.1.min.js"></script>
+	<script src="js/password.min.js"></script>
+  	<script src="js/bootstrap-4.4.1.js"></script>
+	<script src="js/common.js"></script>  
+	<script src="js/logon.js"></script>
+  </body>
+</html>

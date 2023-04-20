@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.exonym</groupId>
+		<artifactId>rulebook-node-parent</artifactId>
+		<version>1.0.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>io.exonym</groupId>
+	<artifactId>io.exonym.lite</artifactId>
+	<version>0.2</version>
+	<name>io.exonym.lite</name>
+	<packaging>jar</packaging>
+	<description>Lightweight Classes</description>
+  <build>
+
+	<resources>
+		<resource>
+		  <directory>src/main/resources</directory>
+		</resource>
+	</resources>
+    </build>
+  
+</project>

@@ -1,0 +1,48 @@
+@charset "UTF-8";
+
+
+.box {
+	display: flex;
+	flex-flow: column;
+	height: 100%;
+}
+
+.box .content {
+	flex-direction: column;
+	flex: 1 1 auto;
+	overflow-y: auto;
+	margin-left: 0px;
+	margin-right: 0px;
+	height: 100%;
+	
+}
+
+.box .footer {
+	flex: 0 1 15px;
+	min-height: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+.tiny {
+	font-size: 0.66em;
+	align-items: flex-end;
+	justify-content: flex-end;
+	margin-top: 2px;
+	
+}
+
+.pad-limit {
+	padding: 15px;
+	padding-top: 0px;
+	max-width: 1080px;
+
+}
+
+.title-padding {
+	min-width: 36px;
+}
+
+.think {
+	max-height: 50px;
+
+}
