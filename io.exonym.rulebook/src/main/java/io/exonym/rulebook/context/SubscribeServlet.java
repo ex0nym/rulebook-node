@@ -4,9 +4,11 @@ import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import eu.abc4trust.xml.IssuanceMessage;
 import eu.abc4trust.xml.IssuanceMessageAndBoolean;
 import eu.abc4trust.xml.IssuanceToken;
+import io.exonym.abc.util.JaxbHelper;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
+import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.utils.ExtractObject;
 import io.exonym.utils.storage.XContainer;
@@ -26,37 +28,20 @@ public class SubscribeServlet extends HttpServlet {
     
     private static final Logger logger = LogManager.getLogger(SubscribeServlet.class);
 
-
     private final ConcurrentHashMap<String, JoinProcessor> joinRequests = new ConcurrentHashMap<>();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            JoinProcessor join = new JoinProcessor();
-            String path = req.getPathInfo();
-            String response = null;
-            if (path == null) {
-                response = join.joinChallenge(false);
+            if (RulebookNodeProperties.instance().isOpenSubscription()) {
+                joinChallenge(req, resp);
 
             } else {
-                String[] request = path.split("/");
-                if (request.length > 1) {
-                    if (request[1].equals("qr")) {
-                        response = join.joinChallenge(true);
+                JoinSupportSingleton support = JoinSupportSingleton.getInstance();
+                Rulebook rulebook = support.getRulebookVerifier().getDisplayRulebook();
+                WebUtils.respond(resp, JaxbHelper.gson.toJson(rulebook, Rulebook.class));
 
-                    } else {
-                        logger.debug("Ignoring request " + request);
-
-                    }
-                }
-                if (response == null) {
-                    throw new UxException(ErrorMessages.URL_INVALID, path, "" + request.length);
-
-                }
             }
-            joinRequests.put(join.getHashOfNonce(), join);
-            WebUtils.respond(resp, response);
-
         } catch (UxException e) {
             WebUtils.processError(e, resp);
 
@@ -64,6 +49,34 @@ public class SubscribeServlet extends HttpServlet {
             WebUtils.processError(new UxException(ErrorMessages.URL_INVALID, e), resp);
 
         }
+    }
+
+    private void joinChallenge(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        JoinProcessor join = new JoinProcessor();
+        String path = req.getPathInfo();
+        String response = null;
+        if (path == null) {
+            response = join.joinChallenge(false);
+
+        } else {
+            String[] request = path.split("/");
+            if (request.length > 1) {
+                if (request[1].equals("qr")) {
+                    response = join.joinChallenge(true);
+
+                } else {
+                    logger.debug("Ignoring request " + request);
+
+                }
+            }
+            if (response == null) {
+                throw new UxException(ErrorMessages.URL_INVALID, path, "" + request.length);
+
+            }
+        }
+        joinRequests.put(join.getHashOfNonce(), join);
+        WebUtils.respond(resp, response);
+
     }
 
     @Override

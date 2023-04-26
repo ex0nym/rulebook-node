@@ -27,7 +27,8 @@ public class RootProperties extends RootPropertyFeatures {
 
 	private final String authorizedDomain;
 
-	private final boolean production;
+	private final boolean openSubscription;
+	private final boolean openSourcePublication;
 
 	/*
 	 * 
@@ -104,7 +105,8 @@ public class RootProperties extends RootPropertyFeatures {
 			this.spawnWiderNetworkFrom=optional("SPAWN_WIDER_NETWORK_FROM", "https://exonym.io/trust");
 			this.nodeSupportNumber=optional("NODE_SUPPORT_NUMBER", "No contact number for this Host");
 			this.isoCountryCode =  mandatory("ISO_COUNTRY_CODE");
-			this.production = Boolean.parseBoolean(optional("SSI_ONLY", "false"));
+			this.openSubscription = Boolean.parseBoolean(optional("OPEN_SUBSCRIPTION", "true"));
+			this.openSourcePublication = Boolean.parseBoolean(optional("OPEN_SOURCE_PUBLICATION", "false"));
 
 		} catch (NumberFormatException e) {
 			throw new UxException("Fatal Error - Bad Configuration - Required Attribute Missing", e);
@@ -189,8 +191,8 @@ public class RootProperties extends RootPropertyFeatures {
 		return super.getDbPassword();
 	}
 
-	protected boolean isProduction() {
-		return production;
+	protected boolean isOpenSubscription() {
+		return openSubscription;
 	}
 
 	public String getRulebookNodeURL() {
@@ -199,5 +201,9 @@ public class RootProperties extends RootPropertyFeatures {
 
 	protected SFTPLogonData getTokenTransfer() {
 		return tokenTransfer;
+	}
+
+	public boolean isOpenSourcePublication() {
+		return openSourcePublication;
 	}
 }

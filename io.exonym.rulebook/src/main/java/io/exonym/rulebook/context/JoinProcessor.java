@@ -75,25 +75,20 @@ public class JoinProcessor {
         try {
             IssuanceMessageAndBoolean imab = initIssuance();
             Rulebook challengedRulebook = support.getRulebookVerifier().getDeepCopy();
-
+            String xml = XContainer.convertObjectToXml(imab);
+            logger.debug("Size at XML=" + xml.length());
+            byte[] compressed = WebUtils.compress(xml.getBytes(StandardCharsets.UTF_8));
+            logger.debug("Size at compressed=" + compressed.length);
+            String b64Xml = Base64.encodeBase64String(compressed);
+            logger.debug("Size at B64XML=" + b64Xml.length());
+            String link = Namespace.UNIVERSAL_LINK_JOIN_REQUEST + b64Xml;
+            logger.debug("Size at link=" + link.length());
             if (qr){
-                String xml = XContainer.convertObjectToXml(imab);
-                logger.debug("Size at XML=" + xml.length());
-                byte[] compressed = WebUtils.compress(xml.getBytes(StandardCharsets.UTF_8));
-                logger.debug("Size at compressed=" + compressed.length);
-                String b64Xml = Base64.encodeBase64String(compressed);
-                logger.debug("Size at B64XML=" + b64Xml.length());
-                String link = Namespace.UNIVERSAL_LINK_JOIN_REQUEST + b64Xml;
-                logger.debug("Size at link=" + link.length());
-                String qrImage = QrCode.computeQrCodeAsPngB64(link, 500);
-                logger.debug("qr=" + qrImage);
+                String qrImage = QrCode.computeQrCodeAsPngB64(link, 300);
                 challengedRulebook.setChallengeB64(qrImage);
 
-            } else {
-                String challengePolicy = Parser.parseIssuanceMessageAndBoolean(imab);
-                challengedRulebook.setChallengeB64(challengePolicy);
-
             }
+            challengedRulebook.setLink(link);
             return JaxbHelper.gson.toJson(challengedRulebook, Rulebook.class);
 
         } catch (ClassNotFoundException e) {

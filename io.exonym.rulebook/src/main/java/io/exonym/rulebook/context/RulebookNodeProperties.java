@@ -187,4 +187,19 @@ public class RulebookNodeProperties extends RootProperties {
     protected SFTPLogonData getTokenTransfer() {
         return super.getTokenTransfer();
     }
+
+    @Override
+    protected boolean isOpenSubscription() {
+        return super.isOpenSubscription();
+    }
+
+    @Override
+    public String getRulebookNodeURL() {
+        return super.getRulebookNodeURL();
+    }
+
+    @Override
+    public boolean isOpenSourcePublication() {
+        return super.isOpenSourcePublication();
+    }
 }

@@ -4,6 +4,8 @@ import io.exonym.abc.util.FileType;
 import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.storage.SFTPClient;
 import io.exonym.lite.connect.UrlHelper;
+import io.exonym.lite.exceptions.ErrorMessages;
+import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.standard.*;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.utils.storage.NetworkParticipant;
@@ -70,19 +72,20 @@ public class WiderTrustNetworkManagement {
 
     }
 
-    protected void open() throws Exception {
-
-    }
-
-    protected void publish() throws Exception {
+    public void publish() throws Exception {
         TrustNetwork wtn = tnw.finalizeTrustNetwork();
         byte[] trust = JaxbHelper.serializeToXml(wtn, TrustNetwork.class).getBytes();
         publish(URI.create(props.getPrimaryStaticDataFolder()), trust, "sources.xml");
 
     }
 
-    protected void addSource(URI sourceUrl) throws Exception {
+    public void addSource(URI sourceUrl, boolean production) throws Exception {
         NodeVerifier v = NodeVerifier.openNode(sourceUrl.toURL(), true, false);
+        boolean prod = v.getRulebook().getDescription().isProduction();
+        if (prod!=production){
+            throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "production=" + prod);
+
+        }
         TrustNetworkWrapper tnw = new TrustNetworkWrapper(v.getTargetTrustNetwork());
         NodeInformation source = tnw.getNodeInformation();
 
@@ -154,16 +157,17 @@ public class WiderTrustNetworkManagement {
     }
 
     public static void main(String[] args) throws Exception {
-        WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
-        wtn.setupWiderTrustNetwork();
-        wtn.addSource(URI.create("https://trust.exonym.io/sybil/x-source")); //*/
-        wtn.addSource(URI.create("https://trust.exonym.io/nu0/exonym/x-source")); //*/
+//        WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
+//        wtn.setupWiderTrustNetwork();
+//        wtn.addSource(URI.create("https://trust.exonym.io/sybil-test/sybil/x-source")); //*/
+//        wtn.addSource(URI.create("https://trust.exonym.io/nu2/exonym/x-source")); //*/
 //        wtn.addSource(URI.create("https://trust.exonym.io/nu0/exosources/x-source")); //*/
-//
-////        wtn.addSource(URI.create("https://spectra.plus/spectra/x-source")); //*/
-////        wtn.addSource(URI.create("https://original.spectra.plus/original/x-source")); //*/
-        wtn.publish();
+//        wtn.addSource(URI.create("https://spectra.plus/spectra/x-source")); //*/
+///        wtn.addSource(URI.create("https://original.spectra.plus/original/x-source")); //*/
+//        wtn.publish();
 
+        String u = "https://trust.exonym.io/sybil-test/sybil/x-source";
+        logger.info(WhiteList.isSourceUrl(u));
 
     }
 }

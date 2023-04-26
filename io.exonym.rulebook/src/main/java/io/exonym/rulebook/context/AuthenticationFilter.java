@@ -2,6 +2,7 @@ package io.exonym.rulebook.context;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.actor.XContainerExternal;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
@@ -51,7 +52,7 @@ public class AuthenticationFilter implements Filter {
             XContainerJSON.openSystemParameters();
             XContainerExternal.openSystemParameters();
 
-            logger.debug("NetworkMap should have initialized");
+            logger.info("NetworkMap should have initialized");
 
             // Removed due to super-seeded by the UDP protocols.
             // new SyncNetwork();
@@ -104,7 +105,7 @@ public class AuthenticationFilter implements Filter {
         CouchRepository<IUser> repo = new CouchRepository<>(db, IUser.class);
 
         String url = RulebookNodeProperties.instance().getRulebookNodeURL();
-        logger.debug("XNODEURL " + url);
+        logger.debug("RULEBOOK_NODE_URL " + url);
 
         try {
             QueryBasic q = QueryBasic.selectType(IUser.I_USER_PRIMARY_ADMIN);
@@ -113,6 +114,9 @@ public class AuthenticationFilter implements Filter {
         } catch (NoDocumentException e) {
             CouchDbHelper.initDb();
             setupPrimaryAdmin(repo);
+
+        } catch (CouchDbException e) {
+            logger.error("Please restart the webserver - this error is caused by establishing the database: ", e);
 
         } catch (Exception e) {
             logger.error(">>>>>>>>>>>>>>>>>> Catastrophic failure", e);

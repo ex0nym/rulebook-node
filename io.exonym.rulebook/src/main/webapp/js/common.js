@@ -118,7 +118,7 @@ var menu = {
             menu.navControlPanel();
             
         } else if (id === "rulebookBtn"){
-            window.location = "rules.html";
+            window.location = "/";
             
         // } else if (id === "verifyBtn"){
         //     window.location = "manual.html";

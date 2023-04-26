@@ -223,11 +223,13 @@ public class PresentationPolicyManager {
 		policy.getPseudonym().clear();
 		// Build Credential In Policy
 		// Add Single Credential In Policy
-		AttributeInPolicy.InspectorAlternatives ia = cip.getDisclosedAttribute().get(0)
-				.getInspectorAlternatives();
-		if (ia!=null){
-			ia.getInspectorPublicKeyUID().clear();
+		List<AttributeInPolicy> disclosedAttributes = cip.getDisclosedAttribute();
+		if (disclosedAttributes!=null && !disclosedAttributes.isEmpty()){
+			AttributeInPolicy.InspectorAlternatives ia = disclosedAttributes.get(0).getInspectorAlternatives();
+			if (ia!=null){
+				ia.getInspectorPublicKeyUID().clear();
 
+			}
 		}
 		ArrayList<IssuerAlternatives.IssuerParametersUID> newList = new ArrayList<>();
 

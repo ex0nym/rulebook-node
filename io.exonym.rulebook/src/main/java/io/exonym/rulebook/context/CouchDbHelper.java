@@ -20,11 +20,11 @@ public class CouchDbHelper {
 
     protected static String get(String name){
         String prefix = RulebookNodeProperties.instance().getDbPrefix();
-        if (prefix!=null){
-            return prefix + "_" + name;
+        if (prefix==null || prefix.length()==0){
+            return name;
 
         } else {
-            return name;
+            return prefix + "_" + name;
 
         }
     }

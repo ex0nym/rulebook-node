@@ -40,12 +40,12 @@ public class Rulebook extends SerialErrorHandling {
 
     public static final String SYBIL_CLASS_TYPE = Namespace.URN_PREFIX_COLON + "sybil-class";
     private String rulebookId;
-
     private RulebookDescription description;
     private ArrayList<RulebookItem> rules = new ArrayList<>();
     private ArrayList<RulebookItem> ruleExtensions = new ArrayList<>();
 
     private String challengeB64;
+    private String link;
 
     private ArrayList<String> acceptsSybilClasses = new ArrayList<>();
 
@@ -130,4 +130,11 @@ public class Rulebook extends SerialErrorHandling {
         this.challengeB64 = challengeB64;
     }
 
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
 }

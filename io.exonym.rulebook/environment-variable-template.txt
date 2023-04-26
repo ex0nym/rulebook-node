@@ -57,4 +57,9 @@ ISO_COUNTRY_CODE=
 EXONYM_API_KEY=
 EXONYM_API_KID=
 
+#the path to storage of exonym matrix data for onboarding of new nodes.
 BLOB_PATH=
+
+# optional flag to allow for the home page to invite users to subscribe. [default = true]
+# if false, you invite users to subscribe via API calls (this is what Sybil does).
+OPEN_SUBSCRIPTION=true

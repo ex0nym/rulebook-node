@@ -57,6 +57,15 @@ public class WhiteList {
 		return isSourceUid(uid.toString());
 
 	}
+	public static boolean isSourceUrl(String url){
+		return (url!=null && url.matches(".*/x-source\\/?"));
+
+	}
+
+	public static boolean isUnreliableUrl(String url){
+		return (url!=null && url.matches("/^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$/"));
+
+	}
 
 	public static boolean isAdvocateUid(String uid){
 		if (uid==null){

@@ -16,13 +16,20 @@
 		display: (xnode) => {
 			const f = {
 				displayQr: () => {					
-					var source = "data:image/png;base64,--qr-base64--";
-					source = source.replace("--qr-base64--", xnode.challengeB64);
-					console.log(source);
-					$("#qrImg").attr("src", source);
-					$("#qrImg").removeClass("think");				
-					$("#qrImg").addClass("normal-size");				
-			
+					const b64 = xnode.challengeB64;
+					if (b64){
+						var source = "data:image/png;base64,--qr-base64--";
+						source = source.replace("--qr-base64--", b64);
+						console.log(source);
+						$("#qrImg").attr("src", source);
+						$("#qrImg").removeClass("think");				
+						$("#qrImg").addClass("normal-size");				
+						$("#ulink").attr("href", xnode.link);
+	
+					} else {
+						$(".guidanceTxt").addClass("hidden");
+
+					}
 				},
 				
 				addNodeTitle: () => {
@@ -96,8 +103,6 @@
 				baseRule: () => "<div class='card'><div class='card-header' role='tab' id='--heading-id--'><h5 class='mb-0'><a data-toggle='collapse' href='#--drill--' role='button' aria-expanded='true' aria-controls='--drill--'>--title--</a></h5></div><div id='--drill--' class='collapse' role='tabpanel' aria-labelledby='--heading-id--' data-parent='#accordion1'><div class='card-body'><p class='rulebookUid'>--rulebook-uid--</p><div class='rbParas'>--rbParas--</div></div></div></div>"
 			}
 			
-			
-			const isProduction = xnode.description.production;
 			const isNode = xnode.rulebookId!==undefined;
 			const isInit = xnode.init!==undefined; 
 			const isError = xnode.error!=undefined;
@@ -110,7 +115,7 @@
 			
 			} else if (isNode || isSource){
 				f.displayQr();
-				f.testFlag(isProduction);
+				f.testFlag(xnode.description.production);
 				f.addNodeTitle();
 				f.rulebookDescription();				
 				f.insertRules(xnode.rules);
