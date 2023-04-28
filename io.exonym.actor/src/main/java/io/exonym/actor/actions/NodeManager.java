@@ -1470,7 +1470,8 @@ public class NodeManager {
 	
 	private String constructBaseNodeUrl(String root, String networkFolder) throws UxException {
 		if (!WhiteList.url(root)){
-			throw new UxException("Node Setup Error - the server.xml 'root-domain' is an invalid URL - See exonym.io/help for more information");
+			logger.info("constructBaseNodeUrl() received a root of " + root);
+			throw new UxException("Node Setup Error - the server.xml 'root-domain' is an invalid URL - See exonym.io/help for more information", root);
 			
 		} else {
 			if (!root.endsWith("/")) {

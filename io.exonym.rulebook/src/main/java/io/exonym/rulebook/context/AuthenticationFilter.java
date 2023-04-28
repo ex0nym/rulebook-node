@@ -41,6 +41,7 @@ public class AuthenticationFilter implements Filter {
     public void init(FilterConfig filterConfig) throws ServletException {
         try {
             testFileWrite();
+            filterConfig.getServletContext();
 
             // updOpen();
             // testSecureRandom();

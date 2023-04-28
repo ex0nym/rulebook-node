@@ -89,14 +89,14 @@ public class WhiteList {
 	}
 	
 	public static boolean url(String url){
-		return (url==null ? null : url.matches("^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]"));
+		return (url!=null && url.matches("^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]"));
 		
 	}
 
 	public static boolean path(String path){
 		Pattern p = Pattern.compile("[A-Z:\\.]*[\\\\/][\\\\/\\w\\.-]*");
 		Matcher m = p.matcher(path);
-		return (path==null ? null : m.matches());
+		return (path!=null && m.matches());
 	}
 	
 	public static boolean email(String email){		

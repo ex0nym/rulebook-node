@@ -30,6 +30,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.security.sasl.AuthenticationException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -89,7 +90,10 @@ public final class ControlPanelServlet extends HttpServlet {
 
 		} catch (UxException e) {
 			WebUtils.processError(e, resp);
-			
+
+		} catch (AuthenticationException e) {
+			WebUtils.processError(new UxException(ErrorMessages.FAILED_TO_AUTHORIZE), resp);
+
 		} catch (Exception e) {
 			WebUtils.processError(new Exception("Server Error - check logs", e), resp);
 			
