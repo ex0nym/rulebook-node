@@ -209,7 +209,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
             }
         } catch (NoDocumentException e) {
-            allSources.setCurrentLocalState(NetworkMapNodeOverview.LOCAL_STATE_UNINITIALIZED);
+            allSources.setCurrentLocalState(NetworkMapNodeOverview.LOCAL_STATE_UNDEFINED);
 
         } catch (Exception e) {
             logger.error("Unexpected Error - Failed to Define Local State", e);

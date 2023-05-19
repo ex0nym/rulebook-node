@@ -10,6 +10,6 @@ COPY conf/catalina.properties /usr/local/tomcat/conf/
 RUN groupadd -r tomcat && useradd -r -g tomcat tomcat
 RUN mkdir -p /var/www/html
 RUN chown -R tomcat:tomcat /var/www/html
-RUN chmod -R 775 /var/www/html
+RUN chmod -R 750 /var/www/html
 
 COPY target/rulebook.war /usr/local/tomcat/webapps/

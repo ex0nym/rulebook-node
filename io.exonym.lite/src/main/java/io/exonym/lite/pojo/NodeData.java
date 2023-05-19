@@ -14,6 +14,9 @@ public class NodeData extends AbstractCouchDbObject  {
 	public static final String TYPE_SOURCE= "source";
 	public static final String TYPE_RECIPIENT= "recipient";
 
+	public static final String FIELD_NODE_UID= "nodeUid";
+
+
 	// this network name
 	private String networkName;
 	

@@ -3,7 +3,6 @@ package io.exonym.lite.pojo;
 import io.exonym.lite.couchdb.AbstractCouchDbObject;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,7 +17,7 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
     public static final String GLOBAL_STATE_THIS_SOURCE_LISTED_HOST_INDETERMINATE = "GLOBAL_STATE_THIS_SOURCE_LISTED_HOST_INDETERMINATE";
     public static final String GLOBAL_STATE_THIS_NODE_LISTED = "GLOBAL_STATE_THIS_NODE_LISTED";
 
-    public static final String LOCAL_STATE_UNINITIALIZED = "LOCAL_STATE_UNDEFINED";
+    public static final String LOCAL_STATE_UNDEFINED = "LOCAL_STATE_UNDEFINED";
     public static final String LOCAL_STATE_HOST = "LOCAL_STATE_HOST";
     public static final String LOCAL_STATE_SOURCE = "LOCAL_STATE_SOURCE";
     public static final String LOCAL_STATE_SOURCE_AND_HOST = "LOCAL_STATE_SOURCE_AND_HOST";

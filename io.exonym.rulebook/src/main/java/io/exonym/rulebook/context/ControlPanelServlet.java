@@ -580,6 +580,9 @@ public final class ControlPanelServlet extends HttpServlet {
 				throw new UxException(NAME_INVALID);
 				
 			}
+		} catch (FileNotFoundException e) {
+			throw new UxException(ErrorMessages.RULEBOOK_FAILED_TO_VERIFY_OR_NOT_FOUND, e);
+
 		} catch (MalformedURLException e) {
 			throw new UxException(ErrorMessages.URL_INVALID, e, rulebookUrl);
 

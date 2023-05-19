@@ -11,6 +11,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ public class RegisterSourceServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().write("use post");
+        resp.getWriter().write("Error: GET not implemented : use POST");
     }
 
     @Override
@@ -44,22 +45,27 @@ public class RegisterSourceServlet extends HttpServlet {
             WebUtils.processError(e, resp);
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            WebUtils.processError(new UxException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR, e), resp);
 
         }
     }
 
     private void addToSourcesList(HashMap<String, String> in, HttpServletResponse resp) throws Exception {
-        String target = in.get("sourceUrl");
-        if (WhiteList.isSourceUrl(target)){
-            WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
-            wtn.openWiderTrustNetwork();
-            wtn.addSource(URI.create(target), !in.containsKey("test"));
-            wtn.publish();
-            WebUtils.success(resp);
+        try {
+            String target = in.get("sourceUrl");
+            if (WhiteList.isSourceUrl(target)){
+                WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
+                wtn.openWiderTrustNetwork();
+                wtn.addSource(URI.create(target), !in.containsKey("test"));
+                wtn.publish();
+                WebUtils.success(resp);
 
-        } else {
-            throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "Unexpected URL", target);
+            } else {
+                throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "Unexpected URL", target);
+
+            }
+        } catch (FileNotFoundException e) {
+            throw new UxException(ErrorMessages.RULEBOOK_FAILED_TO_VERIFY_OR_NOT_FOUND, e);
 
         }
     }

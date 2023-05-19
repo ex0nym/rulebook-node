@@ -2,19 +2,35 @@
 # Status
 > 🔬 Under Test
 
-Please see [docs.exonym.io](https://docs.exonym.io) for full-documentation.
+Please see the wiki of this repository for full-documentation.
 
 # Rulebook Node
-Responsible for managing Exonym nodes, this repository is a critical component of the Decentralised Rulebook system. 
-It provides the infrastructure for Sources and Advocates to deploy rulebooks, and enables the system to operate in a 
-fully decentralised manner.
+Responsible for managing Exonym nodes, this repository is a core component of the Decentralised Rulebook system.
+It provides the infrastructure for Sources and Advocates to deploy rulebooks, and enables the system to operate in a
+fully decentralized manner.
 
-The Exonym node management software is designed to be secure, fault-tolerant, and scalable. It ensures that rulebooks 
-are deployed and executed correctly across the network, and that the system remains highly available and responsive 
-at all times. The software is responsible for managing the consensus mechanism that ensures all nodes on the network 
-agree on the state of the system, and for enforcing the rules of the various rulebooks that are deployed.
+The Exonym node management software is designed to be secure, fault-tolerant, and scalable. It ensures that rulebooks
+are deployed and executed correctly across the network, and that the system remains highly available and responsive
+at all times. The software is responsible for managing system nodes, and for implementing their chosen rulebook.
 
-__Steps to Production Ready System:__ 
+# Installation
+
+To set up the necessary environment for running the application, we recommend our 
+Docker repositories for both `local-` and `deploy-` nodes.  
+
+```
+ex0nym/local-rulebook-node
+ex0nym/deploy-rulebook-node
+```
+
+N.B, that the deploy repository sets up a local static datastore, along with 
+TLS and an nginx reverse proxy, while the local repository does not include 
+these features.
+
+We are currently working on providing build instructions for this repository. Thank you for your patience.
+
+
+__TODOs for Production Ready System:__ 
 
 - Active corporate Sybil Registry activated.
 - Trustworthy-Sources-Rulebook activated together with the ability to prove honesty to self-list as a Source. 

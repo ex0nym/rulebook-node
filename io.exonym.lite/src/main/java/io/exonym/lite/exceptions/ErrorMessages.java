@@ -150,6 +150,11 @@ public class ErrorMessages {
     /**
      *
      */
+    public static final String RULEBOOK_FAILED_TO_VERIFY_OR_NOT_FOUND = "RULEBOOK_FAILED_TO_VERIFY_OR_NOT_FOUND";
+
+    /**
+     *
+     */
     public static final String PROFILE_REQUIRED = "PROFILE_REQUIRED";
 
     /**

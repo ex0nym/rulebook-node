@@ -52,20 +52,20 @@ public class NodeStore {
 	}
 
 
-	public synchronized NodeData findNetworkNodeDataItem(String nodeUrl) throws Exception {
+	public synchronized NodeData findNetworkNodeDataItem(String nodeUid) throws Exception {
 		try {
 //			String query = "{\"selector\": {\"nodeUrl\":\"<replace>\", \"type\":\"" + NodeData.TYPE_NETWORK_NODE + "\"}}";
 
             QueryBasic q = new QueryBasic();
-            q.getSelector().put("nodeUrl", nodeUrl);
-            q.getSelector().put("type", NodeData.TYPE_NETWORK_NODE);
+            q.getSelector().put(NodeData.FIELD_NODE_UID, nodeUid);
+            q.getSelector().put(NodeData.FIELD_TYPE, NodeData.TYPE_NETWORK_NODE);
 			List<NodeData> containers = store.read(q);
 
 			if (containers.isEmpty()) {
-				throw new ItemNotFoundException("NodeData(" + nodeUrl + ")");
+				throw new ItemNotFoundException("NodeData(" + nodeUid + ")");
 
 			} else {
-				logger.debug("Returned " + containers.size() + " results for " + nodeUrl);
+				logger.debug("Returned " + containers.size() + " results for " + nodeUid);
 
 			}
 			return containers.get(0);
@@ -74,7 +74,7 @@ public class NodeStore {
 			throw new ItemNotFoundException("", e);
 
 		} catch (Exception e) {
-			logger.debug("Bad container name request " + nodeUrl);
+			logger.debug("Bad container name request " + nodeUid);
 			throw e;
 
 		}
