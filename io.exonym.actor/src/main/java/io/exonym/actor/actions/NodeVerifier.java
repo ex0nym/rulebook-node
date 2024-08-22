@@ -54,7 +54,7 @@ public class NodeVerifier {
 	private final HashMap<String, PresentationToken> presentationTokenMap = new HashMap<String, PresentationToken>();
 
 	private final String networkName;
-	private URL nodeUrl;
+	private URI nodeUrl;
 	
 	private long touched = Timing.currentTime();
 	private final boolean amISource; 
@@ -71,7 +71,7 @@ public class NodeVerifier {
 	 * @return
 	 * @throws Exception
 	 */
-	public static NodeVerifier tryNode(URL primary, URL secondary,
+	public static NodeVerifier tryNode(URI primary, URI secondary,
 									   boolean isTargetSource, boolean amISource) throws Exception {
 //		throw new Exception();
 		try {
@@ -100,7 +100,7 @@ public class NodeVerifier {
 	 * @return
 	 * @throws Exception
 	 */
-	public static void confrimPrimaryAndSecondary(URL primary, URL secondary) throws Exception {
+	public static void confrimPrimaryAndSecondary(URI primary, URI secondary) throws Exception {
 		try {
 			tryUrl(primary, false, false);
 			tryUrl(secondary, false, false);
@@ -122,7 +122,7 @@ public class NodeVerifier {
 	 * @return
 	 * @throws Exception
 	 */
-	public static NodeVerifier openNode(URL known, boolean isTargetSource, boolean amISource) throws Exception {
+	public static NodeVerifier openNode(URI known, boolean isTargetSource, boolean amISource) throws Exception {
 		return new NodeVerifier(known, isTargetSource, amISource);
 
 	}
@@ -138,7 +138,7 @@ public class NodeVerifier {
 	 *
 	 * @throws Exception
 	 */
-	public static URL ping(URL primary, URL secondary, String lastUpdatedTime,
+	public static URI ping(URI primary, URI secondary, String lastUpdatedTime,
 									   boolean isTargetSource, boolean amISource) throws Exception {
 		try {
 			String t = tryUrl(primary, isTargetSource, amISource);
@@ -179,10 +179,10 @@ public class NodeVerifier {
 
 	}
 
-	private static String tryUrl(URL url, boolean isTargetSource, boolean amISource) throws Exception {
+	private static String tryUrl(URI url, boolean isTargetSource, boolean amISource) throws Exception {
 		try {
-			URL sig = new URL(url + "/signatures.xml");
-			String xml = new String(UrlHelper.readXml(sig), "UTF8");
+			String xml = new String(UrlHelper.readXml(
+					url.resolve("signatures.xml").toURL()), "UTF8");
 			KeyContainer kc = JaxbHelper.xmlToClass(xml, KeyContainer.class);
 			return kc.getLastUpdateTime();
 
@@ -192,7 +192,7 @@ public class NodeVerifier {
 		}
 	}
 
-	private NodeVerifier(URL node, boolean isTargetSource, boolean amISource) throws Exception {
+	private NodeVerifier(URI node, boolean isTargetSource, boolean amISource) throws Exception {
 		this.amISource=amISource;
 		
 		if (isTargetSource){
@@ -500,19 +500,19 @@ public class NodeVerifier {
 		}
 	}
 	
-	public static URL trainAtFolder(URL node) throws UxException, MalformedURLException {
+	public static URI trainAtFolder(URI node) throws Exception {
 		String f = node.toString();
 		if (f.endsWith("x-node/") || f.endsWith("x-source/")){
 			return node;
 			
 		} else if (f.endsWith("x-node") || f.endsWith("x-source")){
-			return new URL(node + "/");
+			return new URL(node + "/").toURI();
 			
 		} else if (f.contains("x-node")){
-			return new URL(f.substring(0, f.indexOf("x-node")) + "x-node/");
+			return new URL(f.substring(0, f.indexOf("x-node")) + "x-node/").toURI();
 			
 		} else if (f.contains("x-source")){
-			return new URL(f.substring(0, f.indexOf("x-source")) + "x-source/");
+			return new URL(f.substring(0, f.indexOf("x-source")) + "x-source/").toURI();
 			
 		} else {
 			throw new UxException("Node Verification Error.  An inspectable url ends with either x-node or x-source (" + node + ")");

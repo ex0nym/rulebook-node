@@ -85,7 +85,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
 
     @Override
-    protected NodeVerifier openNodeVerifier(URL staticNodeUrl0, URL staticNodeUrl1, boolean isTargetSource) throws Exception {
+    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, URI staticNodeUrl1, boolean isTargetSource) throws Exception {
         return NodeVerifier.tryNode(staticNodeUrl0, staticNodeUrl1, true, false);
     }
 
@@ -364,7 +364,8 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     private void sourceCryptoUpdate(NetworkMapItem source) throws Exception {
         if (source!=null){
             NodeVerifier verifier = openNodeVerifier(source.getStaticURL0(),
-                    source.getStaticURL1(), true);
+                    source.getRulebookNodeURL().resolve("static"),
+                    true);
             IAuthenticator auth = IAuthenticator.getInstance();
             XNodeContainer container = new XNodeContainer(auth.getContainerNameForNode());
             container.saveLocalResource(verifier.getPresentationPolicy(), true);
@@ -631,7 +632,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         i.setNodeUID(ni.getNodeUid());
         i.setBroadcastAddress(ni.getBroadcastAddress());
         i.setStaticURL0(ni.getStaticNodeUrl0());
-        i.setStaticURL1(ni.getStaticNodeUrl1());
         i.setRulebookNodeURL(ni.getRulebookNodeUrl());
 
         String[] n = ni.getNodeUid().toString().split(":");
@@ -658,7 +658,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         nmi.setNodeUID(participant.getNodeUid());
         nmi.setBroadcastAddress(participant.getBroadcastAddress());
         nmi.setStaticURL0(participant.getStaticNodeUrl0());
-        nmi.setStaticURL1(participant.getStaticNodeUrl1());
         nmi.setPublicKeyB64(participant.getPublicKey().getPublicKey());
         nmi.setRulebookNodeURL(participant.getRulebookNodeUrl());
         nmi.setRegion(participant.getRegion());

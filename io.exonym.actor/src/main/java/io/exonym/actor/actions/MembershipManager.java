@@ -33,7 +33,7 @@ public class MembershipManager {
 	private final NodeManager nodeManager;
 	private final TrustNetworkWrapper trustNetworkWrapper;
 	private final NodeInformation info;
-	private final URL nodeUrl;
+	private final URI nodeUrl;
 	private final URI lastIssuerUid;
 	private final XContainerJSON xIssuer;
 
@@ -295,13 +295,9 @@ public class MembershipManager {
 		
 		String xml = JaxbHelper.serializeToXml(kcPublic.getKeyContainer(), KeyContainer.class);
 
-		RulebookNodeProperties props = RulebookNodeProperties.instance();
-		URL url1 = nodeManager.getAdvocateUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		nodeManager.publish(nodeUrl, url1, xml.getBytes(), "signatures.xml");
-		nodeManager.publish(nodeUrl, url1, rai, XContainerJSON.uidToXmlFileName(raiUid));
-		nodeManager.publish(nodeUrl, url1, ni, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
+		nodeManager.publish(nodeUrl, xml.getBytes(), "signatures.xml");
+		nodeManager.publish(nodeUrl, rai, XContainerJSON.uidToXmlFileName(raiUid));
+		nodeManager.publish(nodeUrl, ni, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
 		return raiHash;
 		
 	}

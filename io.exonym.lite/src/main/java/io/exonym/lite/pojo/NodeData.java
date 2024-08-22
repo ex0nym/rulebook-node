@@ -24,14 +24,12 @@ public class NodeData extends AbstractCouchDbObject  {
 	private String name;
 
 	// [source || node || secondary-network || network-node=UID]
-	private URL nodeUrl;
+	private URI nodeUrl;
 
-	// [source || node || secondary-network || network-node=UID]
-	private URL failOverUrl;
 
 	private URI nodeUid;
 
-	private URL sourceUrl;
+	private URI sourceUrl;
 
 	private URI sourceUid;
 
@@ -119,27 +117,19 @@ public class NodeData extends AbstractCouchDbObject  {
 		this.sourceUid = sourceUid;
 	}
 
-	public URL getNodeUrl() {
+	public URI getNodeUrl() {
 		return nodeUrl;
 	}
 
-	public void setNodeUrl(URL nodeUrl) {
+	public void setNodeUrl(URI nodeUrl) {
 		this.nodeUrl = nodeUrl;
 	}
 
-	public URL getFailOverUrl() {
-		return failOverUrl;
-	}
-
-	public void setFailOverUrl(URL failOverUrl) {
-		this.failOverUrl = failOverUrl;
-	}
-
-	public URL getSourceUrl() {
+	public URI getSourceUrl() {
 		return sourceUrl;
 	}
 
-	public void setSourceUrl(URL sourceUrl) {
+	public void setSourceUrl(URI sourceUrl) {
 		this.sourceUrl = sourceUrl;
 	}
 

@@ -93,7 +93,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 			URI sourceUID = UIDHelper.computeSourceUidFromNodeUid(UIDHelper.fileNameToUid(fileName));
 			NetworkMapItem nmi = getNetworkMap().nmiForNode(sourceUID);
 			NodeVerifier sourceVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
-					nmi.getStaticURL1(), true, false);
+					nmi.getRulebookNodeURL().resolve("static"), true, false);
 			CacheContainer cache = this.getCache();
 			cache.store(sourceVerifier.getPresentationPolicy());
 			cache.store(sourceVerifier.getCredentialSpecification());
@@ -130,7 +130,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		URI advocateUID = UIDHelper.computeAdvocateUidFromMaterialUID(searchingFor);
 		NetworkMapItem nmi = getNetworkMap().nmiForNode(advocateUID);
 		NodeVerifier advocateVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
-				nmi.getStaticURL1(), false, false);
+				nmi.getRulebookNodeURL().resolve("static"), false, false);
 
 		CacheContainer cache = this.getCache();
 		TrustNetworkWrapper tnw = new TrustNetworkWrapper(advocateVerifier.getTargetTrustNetwork());

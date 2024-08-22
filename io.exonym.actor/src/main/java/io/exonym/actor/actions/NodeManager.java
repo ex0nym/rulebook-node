@@ -84,26 +84,19 @@ public class NodeManager {
 				PresentationPolicy policy = generatePolicy(networkUid, cred, x);
 
 				// define trust network
-				URL primaryUrl =  getSourceUrlForThisNode(props.getPrimaryDomain(),
+				URI primaryUrl =  getSourceUrlForThisNode(props.getPrimaryDomain(),
 						props.getPrimaryStaticDataFolder());
 				logger.debug("PRIMARY >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " + primaryUrl);
 
 				NodeInformation nodeInfo = new NodeInformation();
 				nodeInfo.setSourceUid(networkUid);
-				nodeInfo.setRulebookNodeUrl(new URL(props.getRulebookNodeURL()));
+				nodeInfo.setRulebookNodeUrl(URI.create(props.getRulebookNodeURL()));
 				nodeInfo.setBroadcastAddress(URI.create(props.getBroadcastUrl()));
 				nodeInfo.setNodeUid(networkUid);
 				nodeInfo.setStaticSourceUrl0(primaryUrl);
 				nodeInfo.setStaticNodeUrl0(primaryUrl);
 				nodeInfo.setNodeName(sourceName);
 				nodeInfo.setRegion(props.getIsoCountryCode());
-
-				URL failover = getSourceUrlForThisNode(props.getFailoverDomain(),
-						props.getFailoverStaticDataFolder());
-				logger.debug("SECONDARY >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " + failover);
-
-				nodeInfo.setStaticSourceUrl1(failover);
-				nodeInfo.setStaticNodeUrl1(failover);
 
 				TrustNetwork network = new TrustNetwork();
 				network.setNodeInformation(nodeInfo);
@@ -143,19 +136,16 @@ public class NodeManager {
 				toSign.put(policy.getPolicyUID(), new ByteArrayBuffer(pSign));
 				toSign.put(network.getNodeInformationUid(), new ByteArrayBuffer(tnSign));
 
-				URL url0 = getSourceUrlForThisNode(props.getPrimaryDomain(),
+				URI url0 = getSourceUrlForThisNode(props.getPrimaryDomain(),
 						props.getPrimaryStaticDataFolder());
-
-				URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-						props.getFailoverStaticDataFolder());
 
 				signatureUpdateXml(key, toSign, wrapper, url0);
 				String xml = JaxbHelper.serializeToXml(wrapper.getKeyContainer(), KeyContainer.class);
 
-				publishOnlyIfNew(url0, url1, xml.getBytes(), "signatures.xml");
-				publish(url0, url1, cSpecBytes, XContainerJSON.uidToXmlFileName(cred.getSpecificationUID()));
-				publish(url0, url1, cPolicy, XContainerJSON.uidToXmlFileName(policy.getPolicyUID()));
-				publish(url0, url1, trust, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
+				publishOnlyIfNew(url0, xml.getBytes(), "signatures.xml");
+				publish(url0, cSpecBytes, XContainerJSON.uidToXmlFileName(cred.getSpecificationUID()));
+				publish(url0, cPolicy, XContainerJSON.uidToXmlFileName(policy.getPolicyUID()));
+				publish(url0, trust, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
 
 				try {
 					String filename = "/rulebook.json";
@@ -188,7 +178,7 @@ public class NodeManager {
 
 
 
-	public NodeInformation setupAdvocateNode(URL sourceUrl,  String nodeName,
+	public NodeInformation setupAdvocateNode(URI sourceUrl,  String nodeName,
 											 PassStore store, ProgressReporter progress) throws Exception{
 		ArrayList<String> pending = progress.getPending();
 		if (pending.size()!=7){
@@ -212,12 +202,12 @@ public class NodeManager {
 			URI raiUid = URI.create(root + issuerUid + ":rai");
 			URI insUid = URI.create(root + ":ins");
 
-			URL primaryUrl = getAdvocateUrlForThisNode(props.getPrimaryDomain(),
+			URI primaryUrl = getAdvocateUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeInformation nodeInfo = new NodeInformation();
 			nodeInfo.setNodeName(nodeName);
-			nodeInfo.setRulebookNodeUrl(new URL(props.getRulebookNodeURL()));
+			nodeInfo.setRulebookNodeUrl(URI.create(props.getRulebookNodeURL()));
 			nodeInfo.setBroadcastAddress(URI.create(props.getBroadcastUrl()));
 			nodeInfo.setNodeUid(URI.create(root));
 			nodeInfo.setStaticNodeUrl0(primaryUrl);
@@ -227,14 +217,6 @@ public class NodeManager {
 
 			nodeInfo.setSourceUid(source.getSourceUid());
 			nodeInfo.setStaticSourceUrl0(sourceUrl);
-			nodeInfo.setStaticSourceUrl1(source.getStaticSourceUrl1());
-
-			URL failover = getAdvocateUrlForThisNode(
-					props.getFailoverDomain(),
-					props.getFailoverStaticDataFolder());
-
-			nodeInfo.setStaticNodeUrl1(failover);
-			nodeInfo.setStaticSourceUrl1(source.getStaticSourceUrl1());
 
 			NetworkParticipant sourceParticipant = new NetworkParticipant();
 			sourceParticipant.setNodeUid(source.getNodeUid());
@@ -243,10 +225,8 @@ public class NodeManager {
 			sourceParticipant.setBroadcastAddress(nodeInfo.getBroadcastAddress());
 			sourceParticipant.setAvailableOnMostRecentRequest(true);
 			sourceParticipant.setStaticNodeUrl0(source.getStaticSourceUrl0());
-			sourceParticipant.setStaticNodeUrl1(source.getStaticSourceUrl1());
 			logger.info("sourceUid " + source.getNodeUid());
 			logger.info("sourceUrl " + source.getStaticSourceUrl0());
-			logger.info("failoverSourceUid " + source.getStaticSourceUrl1());
 
 			TrustNetwork network = new TrustNetwork();
 			network.setNodeInformation(nodeInfo);
@@ -328,15 +308,12 @@ public class NodeManager {
 
 			String xml = JaxbHelper.serializeToXml(wrapper.getKeyContainer(), KeyContainer.class);
 
-			URL url1 = getAdvocateUrlForThisNode(props.getFailoverDomain(),
-					props.getFailoverStaticDataFolder());
-
-			publishOnlyIfNew(primaryUrl, url1, xml.getBytes(), "signatures.xml");
-			publish(primaryUrl, url1, rapBytes, XContainerJSON.uidToXmlFileName(rapUid));
-			publish(primaryUrl, url1, raiBytes, XContainerJSON.uidToXmlFileName(raiUid));
-			publish(primaryUrl, url1, insBytes, XContainerJSON.uidToXmlFileName(insUid));
-			publish(primaryUrl, url1, iBytes, XContainerJSON.uidToXmlFileName(iUid));
-			publish(primaryUrl, url1, niBytes, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
+			publishOnlyIfNew(primaryUrl, xml.getBytes(), "signatures.xml");
+			publish(primaryUrl, rapBytes, XContainerJSON.uidToXmlFileName(rapUid));
+			publish(primaryUrl, raiBytes, XContainerJSON.uidToXmlFileName(raiUid));
+			publish(primaryUrl, insBytes, XContainerJSON.uidToXmlFileName(insUid));
+			publish(primaryUrl, iBytes, XContainerJSON.uidToXmlFileName(iUid));
+			publish(primaryUrl, niBytes, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
 			// PUBLISHED DATA
 			progress.setComplete(pending.get(6));
 
@@ -438,21 +415,16 @@ public class NodeManager {
 		toSign.put(iUid, new ByteArrayBuffer(iSign.getBytes()));
 		toSign.put(network.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
 
-		URL nodeUrl = info.getStaticNodeUrl0();
+		URI nodeUrl = info.getStaticNodeUrl0();
 		KeyContainerWrapper kcPublic = openSignaturesContainer(nodeUrl);
 		signatureUpdateXml(key, toSign, kcPublic, nodeUrl);
 		String xml = JaxbHelper.serializeToXml(kcPublic.getKeyContainer(), KeyContainer.class);
 
-		URL url1 = getAdvocateUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-
-
-		publish(nodeUrl, url1, iBytes, XContainerJSON.uidToXmlFileName(iUid));
-		publish(nodeUrl, url1, rapBytes, XContainerJSON.uidToXmlFileName(raUid));
-		publish(nodeUrl, url1, raiBytes, XContainerJSON.uidToXmlFileName(raiUid));
-		publish(nodeUrl, url1, niBytes, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
-		publish(nodeUrl, url1, xml.getBytes(), "signatures.xml");
+		publish(nodeUrl, iBytes, XContainerJSON.uidToXmlFileName(iUid));
+		publish(nodeUrl, rapBytes, XContainerJSON.uidToXmlFileName(raUid));
+		publish(nodeUrl, raiBytes, XContainerJSON.uidToXmlFileName(raiUid));
+		publish(nodeUrl, niBytes, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
+		publish(nodeUrl, xml.getBytes(), "signatures.xml");
 		
 	}
 
@@ -465,7 +437,7 @@ public class NodeManager {
 		String niString = JaxbHelper.serializeToXml(tn, TrustNetwork.class);
 		byte[] niBytes = niString.getBytes();
 		String niSign = NodeVerifier.stripStringToSign(niString);
-		URL url = getAdvocateUrlForThisNode(props.getPrimaryDomain(), props.getPrimaryStaticDataFolder());
+		URI url = getAdvocateUrlForThisNode(props.getPrimaryDomain(), props.getPrimaryStaticDataFolder());
 
 		HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
 		toSign.put(tn.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
@@ -474,11 +446,8 @@ public class NodeManager {
 		signatureUpdateXml(key, toSign, new KeyContainerWrapper(publicKeyContainer), url);
 		String xml = JaxbHelper.serializeToXml(publicKeyContainer, KeyContainer.class);
 
-		URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		publish(url, url1, niBytes, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
-		publish(url, url1, xml.getBytes(), "signatures.xml");
+		publish(url, niBytes, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
+		publish(url, xml.getBytes(), "signatures.xml");
 
 	}
 
@@ -574,7 +543,7 @@ public class NodeManager {
 	 * @return the UID of the Node Added
 	 * @throws Exception
 	 */
-	public URI addNodeToSource(URL nodeUrl, PassStore store, AbstractNetworkMap networkMap, boolean testnet) throws Exception{
+	public URI addNodeToSource(URI nodeUrl, PassStore store, AbstractNetworkMap networkMap, boolean testnet) throws Exception{
 		NodeVerifier nodeToAdd = NodeVerifier.openNode(nodeUrl, false, true);
 		IssuerParametersUID sybilUid = defineIssuerParams(nodeToAdd, networkMap, testnet); // null if we're adding a sybil node
 		TrustNetworkWrapper addingNetworkWrapper = new TrustNetworkWrapper(nodeToAdd.getTargetTrustNetwork());
@@ -590,10 +559,8 @@ public class NodeManager {
 		LinkedList<URI> currentIssuerParams = myNetwork.getNodeInformation().getIssuerParameterUids();
 		currentIssuerParams.remove(addingIssuerUid);
 
-		URL failover = addingNi.getStaticNodeUrl1();
-		
 		myNetworkWrapper.addParticipant(addingNi.getNodeUid(),
-				nodeUrl, failover, addingNi.getRulebookNodeUrl(), addingNi.getBroadcastAddress(),
+				nodeUrl, addingNi.getRulebookNodeUrl(), addingNi.getBroadcastAddress(),
 				nodeToAdd.getPublicKey(), addingNi.getRegion(),
 				addingNetworkWrapper.getMostRecentIssuerParameters());
 
@@ -616,7 +583,7 @@ public class NodeManager {
 
 		x.saveLocalResource(myPresentationPolicy, true);
 		
-		URL url = getSourceUrlForThisNode(props.getPrimaryDomain(), props.getPrimaryStaticDataFolder());
+		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(), props.getPrimaryStaticDataFolder());
 		
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
 		
@@ -647,12 +614,9 @@ public class NodeManager {
 		
 		String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
 
-		URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		publish(url, url1, xml.getBytes(), "signatures.xml");
-		publish(url, url1, ppa0Bytes, XContainerJSON.uidToXmlFileName(myPresentationPolicy.getPolicyUID()));
-		publish(url, url1, niBytes, XContainerJSON.uidToXmlFileName(myNetwork.getNodeInformationUid()));
+		publish(url, xml.getBytes(), "signatures.xml");
+		publish(url, ppa0Bytes, XContainerJSON.uidToXmlFileName(myPresentationPolicy.getPolicyUID()));
+		publish(url, niBytes, XContainerJSON.uidToXmlFileName(myNetwork.getNodeInformationUid()));
 		return addingNi.getNodeUid();
 		
 	}
@@ -682,10 +646,10 @@ public class NodeManager {
 
 	}
 
-	public void pollNodeForNewParameters(URL nodeUrl, URL failoverUrl,
+	public void pollNodeForNewParameters(URI nodeUrl, URI failoverUrl,
 										 String lastUpdateTime, PassStore store,
 										 IssuerParametersUID sybilUid) throws Exception {
-		URL uri = NodeVerifier.ping(nodeUrl, failoverUrl,
+		URI uri = NodeVerifier.ping(nodeUrl, failoverUrl,
 				lastUpdateTime,false, true);
 
 		if (uri!=null){
@@ -741,22 +705,18 @@ public class NodeManager {
 				toSign.put(pp.getPolicyUID(), new ByteArrayBuffer(ppaSign.getBytes()));
 				toSign.put(tn.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
 
-				URL url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+				URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
 						props.getPrimaryStaticDataFolder());
 
 				KeyContainerWrapper kcw = openSignaturesContainer(url);
 
 				signatureUpdateXml(key, toSign, kcw, url);
 
-				URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-						props.getFailoverStaticDataFolder());
-
-
 
 				String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
-				publish(url, url1, xml.getBytes(), "signatures.xml");
-				publish(url, url1, ppaBytes, XContainerJSON.uidToXmlFileName(pp.getPolicyUID()));
-				publish(url, url1, niBytes, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
+				publish(url, xml.getBytes(), "signatures.xml");
+				publish(url, ppaBytes, XContainerJSON.uidToXmlFileName(pp.getPolicyUID()));
+				publish(url, niBytes, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
 
 			} else {
 				throw new Exception("To poll for new paramaters, select a x-node");
@@ -778,7 +738,7 @@ public class NodeManager {
 		
 	}
 
-	public URI removeNode(URL nodeUrl, PassStore store) throws Exception {
+	public URI removeNode(URI nodeUrl, PassStore store) throws Exception {
 		NodeVerifier v = NodeVerifier.openNode(nodeUrl, false, true);
 		try {
 			TrustNetworkWrapper tnw = new TrustNetworkWrapper(v.getTargetTrustNetwork());
@@ -835,7 +795,7 @@ public class NodeManager {
 		toSign.put(ppa0.getPolicyUID(), new ByteArrayBuffer(ppSign.getBytes()));
 		toSign.put(network.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
 
-		URL url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 		
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
@@ -843,16 +803,13 @@ public class NodeManager {
 		signatureUpdateXml(key, toSign, kcw, url);
 		String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
 
-		URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		publish(url, url1, xml.getBytes(), "signatures.xml");
-		publish(url, url1, ppBytes, XContainerJSON.uidToXmlFileName(ppa0.getPolicyUID()));
-		publish(url, url1, niBytes, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
+		publish(url, xml.getBytes(), "signatures.xml");
+		publish(url, ppBytes, XContainerJSON.uidToXmlFileName(ppa0.getPolicyUID()));
+		publish(url, niBytes, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
 		
 	}
 
-	public KeyContainerWrapper openSignaturesContainer(URL url) throws Exception {
+	public KeyContainerWrapper openSignaturesContainer(URI url) throws Exception {
 		String uStr = url.toString();
 		if (uStr.endsWith("signatures.xml")) {
 			// do nothing
@@ -882,7 +839,7 @@ public class NodeManager {
 			return trustNetwork;
 			
 		} else {
-			URL url = null;
+			URI url = null;
 			if (isSource) {
 				url = getSourceUrlForThisNode(props.getPrimaryDomain(),
 						props.getPrimaryStaticDataFolder());
@@ -946,7 +903,7 @@ public class NodeManager {
 		ppm.addNym(scope);
 		ppa0 = ppm.build();
 		
-		URL url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
@@ -964,11 +921,8 @@ public class NodeManager {
 		signatureUpdateXml(key, toSign, kcw, url);
 		String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
 
-		URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		publish(url, url1, xml.getBytes(), "signatures.xml");
-		publish(url, url1, ppBytes, XContainerJSON.uidToXmlFileName(ppa0.getPolicyUID()));
+		publish(url, xml.getBytes(), "signatures.xml");
+		publish(url, ppBytes, XContainerJSON.uidToXmlFileName(ppa0.getPolicyUID()));
 		
 	}
 
@@ -991,7 +945,7 @@ public class NodeManager {
 		ppa0 = ppm.build();
 		x.saveLocalResource(ppa0, true);
 		
-		URL url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
 
@@ -1007,11 +961,8 @@ public class NodeManager {
 		signatureUpdateXml(key, toSign, kcw, url);
 		String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
 
-		URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		publish(url, url1, xml.getBytes(), "signatures.xml");
-		publish(url, url1, ppaBytes, XContainerJSON.uidToXmlFileName(ppa0.getPolicyUID()));
+		publish(url, xml.getBytes(), "signatures.xml");
+		publish(url, ppaBytes, XContainerJSON.uidToXmlFileName(ppa0.getPolicyUID()));
 
 	}
 
@@ -1035,7 +986,7 @@ public class NodeManager {
 		owner.addInspectorParameters(node.getInspectorPublicKey());
 
 		PresentationPolicy pp = source.getPresentationPolicy();
-		URL url = getAdvocateUrlForThisNode(props.getPrimaryDomain(),
+		URI url = getAdvocateUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 		Message message = new Message();
 		message.setNonce(url.toString().getBytes());
@@ -1065,13 +1016,10 @@ public class NodeManager {
 
 			toSign.put(URI.create(tokenUid), new ByteArrayBuffer(tBytes));
 
-			URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-					props.getFailoverStaticDataFolder());
-
 			signatureUpdateXml(key, toSign, kcw, url);
 			String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
-			publish(url, url1, xml.getBytes(), "signatures.xml");
-			publish(url, url1, ptXml.getBytes(), XContainer.uidToXmlFileName(tokenUid));
+			publish(url, xml.getBytes(), "signatures.xml");
+			publish(url, ptXml.getBytes(), XContainer.uidToXmlFileName(tokenUid));
 
 		} else {
 			throw new HubException("There was more than one possible option to fill the credential");
@@ -1079,7 +1027,7 @@ public class NodeManager {
 		}
 	}
 
-	public void transferInit(URL transferUrl, PassStore store) throws Exception{
+	public void transferInit(URI transferUrl, PassStore store) throws Exception{
 		try {
 			try {
 				transferUrl = NodeVerifier.trainAtFolder(transferUrl);
@@ -1098,7 +1046,7 @@ public class NodeManager {
 					
 				}
 			} catch (HubException e2) { // In
-				defineTransferXml(transferUrl.toURI(), store);
+				defineTransferXml(transferUrl, store);
 				
 			}
 		} catch (HubException e) {
@@ -1114,7 +1062,7 @@ public class NodeManager {
 		String name = info.getNodeName() + "test";
 		NodeManager nm = new NodeManager(name);
 		RulebookNodeProperties props = RulebookNodeProperties.instance();
-		URL sourceUrl = nm.getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI sourceUrl = nm.getSourceUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 		logger.info("To " + sourceUrl);
 		info.setStaticSourceUrl0(sourceUrl);
@@ -1166,13 +1114,10 @@ public class NodeManager {
 
 		String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
 
-		URL url1 = nm.getSourceUrlForThisNode(props.getFailoverDomain(),
-					props.getFailoverStaticDataFolder());
-
-		nm.publish(sourceUrl, url1, xml.getBytes(), "signatures.xml");
-		nm.publish(sourceUrl, url1, csBytes, XContainerJSON.uidToXmlFileName(cs.getSpecificationUID()));
-		nm.publish(sourceUrl, url1, ppaBytes, XContainerJSON.uidToXmlFileName(ppa.getPolicyUID()));
-		nm.publish(sourceUrl, url1, niBytes, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
+		nm.publish(sourceUrl, xml.getBytes(), "signatures.xml");
+		nm.publish(sourceUrl, csBytes, XContainerJSON.uidToXmlFileName(cs.getSpecificationUID()));
+		nm.publish(sourceUrl, ppaBytes, XContainerJSON.uidToXmlFileName(ppa.getPolicyUID()));
+		nm.publish(sourceUrl, niBytes, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
 
 	}
 
@@ -1185,7 +1130,7 @@ public class NodeManager {
 		t.setTransferToBeCompletedBy(DateHelper.isoUtcDateTime(dt));
 		t.setDestinationUrl(destinationUrl);
 
-		URL sourceUrl = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI sourceUrl = getSourceUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 
 		KeyContainerWrapper kcwPublic = openSignaturesContainer(sourceUrl);
@@ -1206,11 +1151,8 @@ public class NodeManager {
 		signatureUpdateXml(key, toSign, kcwPublic, sourceUrl);
 		String xml = JaxbHelper.serializeToXml(kcwPublic.getKeyContainer(), KeyContainer.class);
 
-		URL url1 = getSourceUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		publish(sourceUrl, url1, xml.getBytes(), "signatures.xml");
-		publish(sourceUrl, url1, tBytes, XContainerJSON.uidToXmlFileName(t.getTransferUid()));
+		publish(sourceUrl, xml.getBytes(), "signatures.xml");
+		publish(sourceUrl, tBytes, XContainerJSON.uidToXmlFileName(t.getTransferUid()));
 		
 	}
 
@@ -1251,7 +1193,7 @@ public class NodeManager {
 	}
 
 	public static void signatureUpdateXml(AsymStoreKey key, HashMap<URI, ByteArrayBuffer> toSign,
-										  KeyContainerWrapper kcw, URL nodeUrl) throws Exception{
+										  KeyContainerWrapper kcw, URI nodeUrl) throws Exception{
 		if (kcw.getKey(KeyContainerWrapper.TN_ROOT_KEY).getPrivateKey()!=null) {
 			throw new SecurityException("Cannot write this KeyContainer Publicly as it contains a Private Key");
 			
@@ -1295,11 +1237,10 @@ public class NodeManager {
 		
 	}
 
-	protected void publish(URL url0, URL url1, byte[] xml, String xmlFileName) throws Exception{
+	protected void publish(URI url0, byte[] xml, String xmlFileName) throws Exception{
 		if (UrlHelper.isXml(xml)){
 			if (FileType.isXmlDocument(xmlFileName)){
 				primaryPut(url0, xml, xmlFileName);
-				// secondaryPut(url1, xml, xmlFileName);
 
 			} else {
 				throw new Exception("The file name was not an xml file name " + xmlFileName);
@@ -1311,11 +1252,10 @@ public class NodeManager {
 		}
 	}
 
-	protected void publishOnlyIfNew(URL url0, URL url1, byte[] xml, String xmlFileName) throws Exception{
+	protected void publishOnlyIfNew(URI url0, byte[] xml, String xmlFileName) throws Exception{
 		if (UrlHelper.isXml(xml)){
 			if (FileType.isXmlDocument(xmlFileName)){
 				primaryPutNew(url0, xml, xmlFileName);
-				// secondaryPutNew(url1, xml, xmlFileName);
 
 			} else {
 				throw new Exception("The file name was not an xml file name " + xmlFileName);
@@ -1344,7 +1284,7 @@ public class NodeManager {
 	}
 
 
-	private void primaryPutNew(URL url, byte[] xml, String xmlFileName) throws Exception {
+	private void primaryPutNew(URI url, byte[] xml, String xmlFileName) throws Exception {
 		try {
 			if (primarySftp ==null || !primarySftp.isActive()) {
 				primarySftp = new SFTPClient(props.getPrimarySftpCredentials());
@@ -1369,36 +1309,12 @@ public class NodeManager {
 		}
 	}
 
-
-	private void secondaryPutNew(URI url, byte[] xml, String xmlFileName) throws Exception {
-		try {
-			if (secondarySftp ==null || !secondarySftp.isActive()) {
-				secondarySftp = new SFTPClient(props.getSecondarySftpCredentials());
-				secondarySftp.connect();
-
-			}
-			logger.debug("URL >>>>>>>>>>>>>>>>>>>>>>>>>" + url);
-			String path = url.toString().replace(root(props.getFailoverDomain()), "/");
-			logger.debug("PATH1 >>>>>>>>>>>>>>>>>>>>>>>>>" + path);
-			try {
-				secondarySftp.put(path + "//" + xmlFileName, new String(xml), false);
-
-			} catch (Exception e) {
-				secondarySftp.put(path + "//" + xmlFileName, new String(xml), true);
-
-			}
-		} catch (ProgrammingException e) {
-			throw new UxException("Files have already been published to this space - Please delete them and try again", e);
-
-		}
-	}
-
 	private String root(String rootProp){
 		return (rootProp.endsWith("/") ? rootProp : rootProp + "/");
 
 	}
 
-	private void primaryPut(URL url, byte[] xml, String xmlFileName) throws Exception {
+	private void primaryPut(URI url, byte[] xml, String xmlFileName) throws Exception {
 		if (primarySftp ==null || !primarySftp.isActive()) {
 			primarySftp = new SFTPClient(props.getPrimarySftpCredentials());
 			primarySftp.connect();
@@ -1416,35 +1332,6 @@ public class NodeManager {
 		}
 	}
 
-	private void secondaryPut(URI url, byte[] xml, String xmlFileName) throws Exception {
-		if (secondarySftp ==null || !secondarySftp.isActive()) {
-			secondarySftp = new SFTPClient(props.getSecondarySftpCredentials());
-			secondarySftp.connect();
-
-		}
-		String path = url.toString().replace(root(props.getFailoverDomain()), "//");
-		logger.debug("\n" + path + "\n" + url);
-
-		String xml0 = new String(xml);
-		try {
-			secondarySftp.overwrite(path + "/" + xmlFileName,
-					xml0, false);
-			logger.debug("Completed Overwrite with False");
-
-		} catch (Exception e) {
-			try {
-				secondarySftp.overwrite(path + "//" + xmlFileName,
-						xml0, true);
-				logger.debug("Completed Overwrite with True");
-
-			} catch (Exception exception) {
-				logger.error("Failed to complete", exception);
-
-			}
-
-		}
-	}
-
 	public NodeInformation getNodeInformation() {
 		if (this.trustNetwork!=null) {
 			return this.trustNetwork.getNodeInformation();
@@ -1455,16 +1342,16 @@ public class NodeManager {
 		}
 	}
 
-	public URL getSourceUrlForThisNode(String root, String folder) throws UxException, MalformedURLException {
+	public URI getSourceUrlForThisNode(String root, String folder) throws UxException, MalformedURLException {
 		String r = constructBaseNodeUrl(root, folder) + "/x-source";
-		return new URL(r);
+		return URI.create(r);
 
 	}
 	
-	public URL getAdvocateUrlForThisNode(String root, String folder) throws UxException, MalformedURLException {
+	public URI getAdvocateUrlForThisNode(String root, String folder) throws UxException, MalformedURLException {
 		String baseUrl = constructBaseNodeUrl(root, folder) + "/x-node";
 		logger.info("Built URL=" + baseUrl);
-		return new URL(baseUrl);
+		return URI.create(baseUrl);
 
 	}
 	

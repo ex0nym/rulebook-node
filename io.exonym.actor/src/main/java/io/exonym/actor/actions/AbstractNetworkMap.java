@@ -147,8 +147,8 @@ public abstract class AbstractNetworkMap {
 
     }
 
-    protected abstract NodeVerifier openNodeVerifier(URL staticNodeUrl0,
-                                                     URL staticNodeUrl1,
+    protected abstract NodeVerifier openNodeVerifier(URI staticNodeUrl0,
+                                                     URI staticNodeUrl1,
                                                      boolean isTargetSource) throws Exception;
 
     private NetworkMapItemAdvocate buildAdvocateNMIA(URI sourceUid, NetworkParticipant participant) throws Exception {
@@ -163,7 +163,6 @@ public abstract class AbstractNetworkMap {
         nmi.setNodeUID(participant.getNodeUid());
         nmi.setPublicKeyB64(participant.getPublicKey().getPublicKey());
         nmi.setStaticURL0(participant.getStaticNodeUrl0());
-        nmi.setStaticURL1(participant.getStaticNodeUrl1());
         nmi.setLastUpdated(participant.getLastUpdateTime());
         nmi.setBroadcastAddress(participant.getBroadcastAddress());
         nmi.setRulebookNodeURL(participant.getRulebookNodeUrl());

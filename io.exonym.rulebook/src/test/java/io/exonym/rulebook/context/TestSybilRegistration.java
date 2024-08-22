@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -81,8 +82,8 @@ public class TestSybilRegistration {
                 map.spawn();
             }
             external.setNetworkMapAndCache(map, new Cache());
-            URL sourceURL = new URL("https://trust.exonym.io/sybil/x-source/");
-            URL advocateURL = new URL("https://trust.exonym.io/sybil/x-node/");
+            URI sourceURL = URI.create("https://trust.exonym.io/sybil/x-source/");
+            URI advocateURL = URI.create("https://trust.exonym.io/sybil/x-node/");
             NodeVerifier advocate = NodeVerifier.openNode(advocateURL,
                     false, false);
             NodeVerifier source = NodeVerifier.openNode(sourceURL,

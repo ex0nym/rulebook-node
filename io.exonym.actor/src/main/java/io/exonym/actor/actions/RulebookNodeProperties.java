@@ -11,12 +11,10 @@ public class RulebookNodeProperties extends RootProperties {
     
     private static final Logger logger = LogManager.getLogger(RulebookNodeProperties.class);
 
-
     protected RulebookNodeProperties() throws Exception {
         super();
 
     }
-
 
     /*
      * Singleton
@@ -51,11 +49,6 @@ public class RulebookNodeProperties extends RootProperties {
     @Override
     protected SFTPLogonData getPrimarySftpCredentials() {
         return super.getPrimarySftpCredentials();
-    }
-
-    @Override
-    protected SFTPLogonData getSecondarySftpCredentials() {
-        return super.getSecondarySftpCredentials();
     }
 
     @Override
@@ -101,16 +94,6 @@ public class RulebookNodeProperties extends RootProperties {
     @Override
     protected String getNodeRoot() {
         return super.getNodeRoot();
-    }
-
-    @Override
-    protected String getFailoverDomain() {
-        return super.getFailoverDomain();
-    }
-
-    @Override
-    protected String getFailoverStaticDataFolder() {
-        return super.getFailoverStaticDataFolder();
     }
 
     @Override

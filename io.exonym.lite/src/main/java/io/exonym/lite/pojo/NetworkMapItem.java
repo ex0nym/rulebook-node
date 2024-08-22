@@ -22,10 +22,9 @@ public class NetworkMapItem extends AbstractCouchDbObject {
     private String advocateName;
     private URI sourceUID;
     private URI nodeUID;
-    private URL rulebookNodeURL;
+    private URI rulebookNodeURL;
     private URI broadcastAddress;
-    private URL staticURL0;
-    private URL staticURL1;
+    private URI staticURL0;
     private byte[] publicKeyB64;
     private URI lastIssuerUID;
 
@@ -53,13 +52,6 @@ public class NetworkMapItem extends AbstractCouchDbObject {
         this.nodeUID = nodeUID;
     }
 
-    public URL getRulebookNodeURL() {
-        return rulebookNodeURL;
-    }
-
-    public void setRulebookNodeURL(URL rulebookNodeURL) {
-        this.rulebookNodeURL = rulebookNodeURL;
-    }
 
     public URI getBroadcastAddress() {
         return broadcastAddress;
@@ -67,22 +59,6 @@ public class NetworkMapItem extends AbstractCouchDbObject {
 
     public void setBroadcastAddress(URI broadcastAddress) {
         this.broadcastAddress = broadcastAddress;
-    }
-
-    public URL getStaticURL0() {
-        return staticURL0;
-    }
-
-    public void setStaticURL0(URL staticURL0) {
-        this.staticURL0 = staticURL0;
-    }
-
-    public URL getStaticURL1() {
-        return staticURL1;
-    }
-
-    public void setStaticURL1(URL staticURL1) {
-        this.staticURL1 = staticURL1;
     }
 
     public byte[] getPublicKeyB64() {
@@ -123,5 +99,21 @@ public class NetworkMapItem extends AbstractCouchDbObject {
 
     public void setAdvocateName(String advocateName) {
         this.advocateName = advocateName;
+    }
+
+    public URI getRulebookNodeURL() {
+        return rulebookNodeURL;
+    }
+
+    public void setRulebookNodeURL(URI rulebookNodeURL) {
+        this.rulebookNodeURL = rulebookNodeURL;
+    }
+
+    public URI getStaticURL0() {
+        return staticURL0;
+    }
+
+    public void setStaticURL0(URI staticURL0) {
+        this.staticURL0 = staticURL0;
     }
 }

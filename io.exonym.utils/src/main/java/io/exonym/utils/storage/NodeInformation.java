@@ -5,6 +5,7 @@ import io.exonym.lite.pojo.Namespace;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.LinkedList;
 
@@ -17,12 +18,10 @@ import java.util.LinkedList;
 public class NodeInformation {
 
 	private String nodeName;
-	private URL staticNodeUrl0;
-	private URL staticNodeUrl1;
-	private URL staticSourceUrl0;
-	private URL staticSourceUrl1;
+	private URI staticNodeUrl0;
+	private URI staticSourceUrl0;
 	private URI nodeUid;
-	private URL rulebookNodeUrl;
+	private URI rulebookNodeUrl;
 	private URI broadcastAddress;
 	private URI sourceUid;
 	private String region;
@@ -30,11 +29,11 @@ public class NodeInformation {
 	private LinkedList<URI> issuerParameterUids = null;
 
 	@XmlElement(name = "RulebookNodeURL", namespace = Namespace.EX)
-	public URL getRulebookNodeUrl() {
+	public URI getRulebookNodeUrl() {
 		return rulebookNodeUrl;
 	}
 
-	public void setRulebookNodeUrl(URL rulebookNodeUrl) {
+	public void setRulebookNodeUrl(URI rulebookNodeUrl) {
 		this.rulebookNodeUrl = rulebookNodeUrl;
 	}
 
@@ -48,21 +47,12 @@ public class NodeInformation {
 	}
 
 	@XmlElement(name = "StaticNodeURL0", namespace = Namespace.EX)
-	public URL getStaticNodeUrl0() {
+	public URI getStaticNodeUrl0() {
 		return staticNodeUrl0;
 	}
 
-	public void setStaticNodeUrl0(URL staticNodeUrl0) {
+	public void setStaticNodeUrl0(URI staticNodeUrl0) {
 		this.staticNodeUrl0 = staticNodeUrl0;
-	}
-
-	@XmlElement(name = "StaticNodeURL1", namespace = Namespace.EX)
-	public URL getStaticNodeUrl1() {
-		return staticNodeUrl1;
-	}
-
-	public void setStaticNodeUrl1(URL staticNodeUrl1) {
-		this.staticNodeUrl1 = staticNodeUrl1;
 	}
 
 	@XmlElement(name = "BroadcastAddress", namespace = Namespace.EX)
@@ -84,21 +74,12 @@ public class NodeInformation {
 	}
 
 	@XmlElement(name = "StaticSourceURL0", namespace = Namespace.EX)
-	public URL getStaticSourceUrl0() {
+	public URI getStaticSourceUrl0() {
 		return staticSourceUrl0;
 	}
 
-	public void setStaticSourceUrl0(URL staticSourceUrl0) {
+	public void setStaticSourceUrl0(URI staticSourceUrl0) {
 		this.staticSourceUrl0 = staticSourceUrl0;
-	}
-
-	@XmlElement(name = "StaticSourceURL1", namespace = Namespace.EX)
-	public URL getStaticSourceUrl1() {
-		return staticSourceUrl1;
-	}
-
-	public void setStaticSourceUrl1(URL staticSourceUrl1) {
-		this.staticSourceUrl1 = staticSourceUrl1;
 	}
 
 	@XmlElement(name = "SourceUID", namespace = Namespace.EX)

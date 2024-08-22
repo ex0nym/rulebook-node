@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 public class WiderTrustNetworkManagement {
     
     private static final Logger logger = LogManager.getLogger(WiderTrustNetworkManagement.class);
-
     private AsymStoreKey key;
     private SFTPClient sftp = null;
     private TrustNetworkWrapper tnw = null;
@@ -80,7 +79,7 @@ public class WiderTrustNetworkManagement {
     }
 
     public void addSource(URI sourceUrl, boolean production) throws Exception {
-        NodeVerifier v = NodeVerifier.openNode(sourceUrl.toURL(), true, false);
+        NodeVerifier v = NodeVerifier.openNode(sourceUrl, true, false);
         boolean prod = v.getRulebook().getDescription().isProduction();
         if (prod!=production){
             throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "production=" + prod);
@@ -91,7 +90,7 @@ public class WiderTrustNetworkManagement {
 
         NetworkParticipant participant = this.tnw.addParticipant(
                 source.getNodeUid(), source.getStaticSourceUrl0(),
-                source.getStaticSourceUrl1(), source.getRulebookNodeUrl(), source.getBroadcastAddress(),
+                source.getRulebookNodeUrl(), source.getBroadcastAddress(),
                 v.getPublicKey(), source.getRegion(), tnw.getMostRecentIssuerParameters());
 
         participant.setRulebookNodeUrl(source.getRulebookNodeUrl());
@@ -115,9 +114,9 @@ public class WiderTrustNetworkManagement {
     protected TrustNetwork setupWiderTrustNetwork() throws Exception {
         TrustNetwork tn = new TrustNetwork();
         NodeInformation ni = new NodeInformation();
-        String url = props.getPrimaryDomain() + "/" + props.getPrimaryStaticDataFolder();
-        ni.setStaticNodeUrl0(new URL(url));
-        ni.setStaticNodeUrl1(new URL("https://failover.io"));
+        URI url = URI.create(props.getPrimaryDomain())
+                .resolve(props.getPrimaryStaticDataFolder());
+        ni.setStaticNodeUrl0(url);
         tn.setNodeInformation(ni);
 
         TrustNetworkWrapper tnw = new TrustNetworkWrapper(tn);

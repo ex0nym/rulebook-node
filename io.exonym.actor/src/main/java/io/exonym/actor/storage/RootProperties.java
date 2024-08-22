@@ -9,15 +9,11 @@ public class RootProperties extends RootPropertyFeatures {
 	
 	private final String broadcastUrl;
 	private final SFTPLogonData primarySftpCredentials;
-	private final SFTPLogonData secondarySftpCredentials;
 
 	private final SFTPLogonData tokenTransfer;
 
 	private final String primaryDomain;
 	private final String primaryStaticDataFolder;
-
-	private final String failoverDomain;
-	private final String failoverStaticDataFolder;
 
 	private final String nodeSupportNumber;
 	private final String spawnWiderNetworkFrom;
@@ -61,28 +57,6 @@ public class RootProperties extends RootPropertyFeatures {
 			String failSftpHost=mandatory("FAILOVER_SFTP_HOST");
 			this.authorizedDomain = optional("AUTHORIZED_DOMAIN", null);
 
-			if (failSftpHost!=null){
-				int failSftpPort = Integer.parseInt(mandatory("FAILOVER_SFTP_PORT"));
-				String failSftpUsername = mandatory("FAILOVER_SFTP_USERNAME");
-				String failSftpPassword=mandatory("FAILOVER_SFTP_PASSWORD");
-				String failKnownHost0=mandatory("FAILOVER_KNOWN_HOST0");
-				String failKnownHost1=mandatory("FAILOVER_KNOWN_HOST1");
-				String failKnownHost2=mandatory("FAILOVER_KNOWN_HOST2");
-				this.secondarySftpCredentials = new SFTPLogonData();
-				this.secondarySftpCredentials.setPort(failSftpPort);
-				this.secondarySftpCredentials.setHost(failSftpHost);
-				this.secondarySftpCredentials.setKnownHosts(failKnownHost0, failKnownHost1, failKnownHost2);
-				this.secondarySftpCredentials.setUsernameAndPassword(failSftpUsername, failSftpPassword);
-
-				this.failoverDomain = mandatory("FAILOVER_DOMAIN");
-				this.failoverStaticDataFolder = optional("FAILOVER_STATIC_DATA_FOLDER", "");
-
-			} else {
-				this.secondarySftpCredentials = null;
-				this.failoverDomain = null;
-				this.failoverStaticDataFolder = null;
-
-			}
 			String tokenHost=optional("TOKEN_TRANSFER_HOST", null);
 			if (tokenHost!=null){
 				int tSftpPort = Integer.parseInt(mandatory("TOKEN_TRANSFER_PORT"));
@@ -137,20 +111,8 @@ public class RootProperties extends RootPropertyFeatures {
 		return isoCountryCode;
 	}
 
-	protected String getFailoverDomain() {
-		return failoverDomain;
-	}
-
-	protected String getFailoverStaticDataFolder() {
-		return failoverStaticDataFolder;
-	}
-
 	protected SFTPLogonData getPrimarySftpCredentials() {
 		return primarySftpCredentials;
-	}
-
-	protected SFTPLogonData getSecondarySftpCredentials() {
-		return secondarySftpCredentials;
 	}
 
 	protected String getBroadcastUrl() {

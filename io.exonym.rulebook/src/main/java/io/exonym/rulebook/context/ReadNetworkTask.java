@@ -83,8 +83,9 @@ public class ReadNetworkTask implements Job {
         if (kc!=null){ // Local Data Found
             String t = kc.getLastUpdateTime();
             try {
-                URL known = NodeVerifier.ping(participant.getStaticNodeUrl0(),
-                        participant.getStaticNodeUrl1(), t, false, amISource);
+                URI known = NodeVerifier.ping(participant.getStaticNodeUrl0(),
+                        participant.getRulebookNodeUrl().resolve("static"),
+                        t, false, amISource);
                 if (known!=null){ // established which URL worked and there is an update available
                     NodeVerifier node = NodeVerifier.openNode(known, false, amISource);
                     participant.setLastUpdateTime(DateHelper.currentIsoUtcDateTime());
@@ -105,7 +106,8 @@ public class ReadNetworkTask implements Job {
         } else { // Local Data did not exist
             try {
                 NodeVerifier node = NodeVerifier.tryNode(participant.getStaticNodeUrl0(),
-                        participant.getStaticNodeUrl1(), false, amISource);
+                        participant.getRulebookNodeUrl().resolve("static"),
+                        false, amISource);
                 participant.setLastUpdateTime(DateHelper.currentIsoUtcDateTime());
                 participant.setAvailableOnMostRecentRequest(true);
                 writeLocalNodeData(node);
@@ -122,15 +124,15 @@ public class ReadNetworkTask implements Job {
         if (self.getType().equals(NodeData.TYPE_NODE)){
             NodeVerifier node = NodeVerifier.openNode(self.getNodeUrl(), false, false);
             NodeInformation nodeInformation = node.getTargetTrustNetwork().getNodeInformation();
-            URL sUrl = nodeInformation.getStaticSourceUrl0();
-            URL fUrl = nodeInformation.getStaticSourceUrl1();
+            URI sUrl = nodeInformation.getStaticSourceUrl0();
+            URI fUrl = nodeInformation.getRulebookNodeUrl();
             URI sUid = nodeInformation.getSourceUid();
             KeyContainer localSourceSig = openLocalSignatureData(self.getNetworkName(), sUid);
             NetworkParticipant participant = ownTrustNetwork.getParticipantWithError(sUid);
 
             // Check for local data - if it does not exist then try - else - ping
             if (localSourceSig!=null){
-                URL known = NodeVerifier.ping(sUrl, fUrl,
+                URI known = NodeVerifier.ping(sUrl, fUrl,
                         localSourceSig.getLastUpdateTime(), true, false);
 
                 if (known!=null){

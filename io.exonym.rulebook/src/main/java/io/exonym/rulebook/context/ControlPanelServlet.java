@@ -286,7 +286,7 @@ public final class ControlPanelServlet extends HttpServlet {
 											HttpServletRequest req, HttpServletResponse resp) throws Exception{
 		try {
 			String name = dataReq.get("publicName");
-			URL sourceUrl = new URL(dataReq.get("sourceUrl"));
+			URI sourceUrl = URI.create(dataReq.get("sourceUrl"));
 			
 			if (name!=null) {
 				if (WhiteList.isMinLettersAllowsNumbersAndHyphens(name, 3)) {
@@ -295,7 +295,7 @@ public final class ControlPanelServlet extends HttpServlet {
 						PassStore p = new PassStore(RulebookNodeProperties.instance().getNodeRoot(), false);
 						
 						if (p!=null) {
-							String networkName = NodeManagerWeb.computeNetworkName(sourceUrl.toURI());
+							String networkName = NodeManagerWeb.computeNetworkName(sourceUrl);
 							NodeManagerWeb n = new NodeManagerWeb(networkName);
 							ProgressReporter reporter = new ProgressReporter(new String[] {
 									"Defining Trust Network",
@@ -322,7 +322,6 @@ public final class ControlPanelServlet extends HttpServlet {
 									d.setNodeUrl(info.getStaticNodeUrl0());
 									d.setNodeUid(info.getNodeUid());
 									d.setSourceUid(info.getSourceUid());
-									d.setFailOverUrl(info.getStaticNodeUrl1());
 									d.setLastRAIHash(n.getRaiHash());
 									NodeStore.getInstance().add(d);
 									localNodeInfo.clear();
@@ -553,7 +552,7 @@ public final class ControlPanelServlet extends HttpServlet {
 				NodeManagerWeb n = new NodeManagerWeb(orgName);
 				TrustNetwork t = n.setupNetworkSource(new URL(rulebookUrl), store); //, WebUtils.getFullPath(req)
 				NodeInformation info = t.getNodeInformation();
-				URL url = info.getStaticSourceUrl0();
+				URI url = info.getStaticSourceUrl0();
 				NodeData nd = new NodeData();
 				nd.setName(orgName);
 				nd.setNetworkName(orgName);
@@ -605,11 +604,11 @@ public final class ControlPanelServlet extends HttpServlet {
 			if (WhiteList.url(nodeUrl)) {
 				NodeManagerWeb n = new NodeManagerWeb(networkName);
 				NetworkMapWeb networkMap = new NetworkMapWeb();
-
-				URI nodeUid = n.addNodeToSource(new URL(nodeUrl), passStore, networkMap, testNet);
+				URI nurl = URI.create(nodeUrl);
+				URI nodeUid = n.addNodeToSource(nurl, passStore, networkMap, testNet);
 				broadcast();
 				NodeData d = new NodeData();
-				d.setNodeUrl(new URL(nodeUrl));
+				d.setNodeUrl(nurl);
 				d.setNodeUid(nodeUid);
 				d.setType(NodeData.TYPE_NETWORK_NODE);
 				d.setName(internalName);
@@ -661,12 +660,12 @@ public final class ControlPanelServlet extends HttpServlet {
 	private void sourceNodeManagementRemove(HashMap<String, String> dataReq, HttpServletResponse resp) throws Exception{
 		try {
 			String networkName = dataReq.get("networkName");
-			URL nodeUrl = new URL(dataReq.get("nodeUrl"));
+			String nodeUrl = dataReq.get("nodeUrl");
 			PassStore p = new PassStore(RulebookNodeProperties.instance().getNodeRoot(), false);
 			
-			if (WhiteList.url(nodeUrl.toString())) {
+			if (WhiteList.url(nodeUrl)) {
 				NodeManagerWeb n = new NodeManagerWeb(networkName);
-				URI nodeUid = n.removeNode(nodeUrl, p);
+				URI nodeUid = n.removeNode(URI.create(nodeUrl), p);
 				broadcast();
 				NodeStore store = NodeStore.getInstance();
 				NodeData d = store.findNetworkNodeDataItem(nodeUid.toString());

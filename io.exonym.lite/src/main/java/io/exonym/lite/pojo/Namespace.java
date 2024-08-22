@@ -1,13 +1,10 @@
 package io.exonym.lite.pojo;
 
 import java.net.URI;
-
 import org.joda.time.DateTime;
-
 import io.exonym.lite.standard.CryptoUtils;
 
 public class Namespace  {
-	
 
 	public static final String URN_PREFIX = "urn:rulebook";
 	public static final String URN_PREFIX_COLON = URN_PREFIX + ":";

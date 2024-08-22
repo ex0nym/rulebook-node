@@ -66,12 +66,11 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
     private final AbstractXContainer advocateContainer;
     private final String staticFolder;
-    private final String staticFailoverFolder;
 
     public ExonymMatrixManagerLocal(AbstractXContainer advocateContainer,
                                     ArrayList<String> ruleUrns, NetworkMapItemAdvocate myNmia,
                                     SFTPLogonData logonData, String root,
-                                    String staticFolder, String staticFailoverFolder) throws Exception {
+                                    String staticFolder) throws Exception {
         try {
             this.advocateContainer =advocateContainer;
             this.ruleUrns = ruleUrns;
@@ -79,11 +78,9 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
             this.sftpLogonData = logonData;
             this.root = root;
             this.staticFolder=staticFolder;
-            this.staticFailoverFolder = staticFailoverFolder;
 
             logger.debug("Initializing-----------------------");
             logger.debug("static0 \t\t" + myNmia.getStaticURL0());
-            logger.debug("static1 \t" + myNmia.getStaticURL1());
             logger.debug("advocateUID \t" + myNmia.getNodeUID());
             logger.debug("rulebookNodeURL \t\t" + myNmia.getRulebookNodeURL());
             logger.debug("-----------------------------------");
@@ -301,22 +298,15 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
     private void write(String xOrYList, String pokeString, String n3, String n6) throws Exception {
         activateSftpOut();
         String r0 = staticFolder;
-        String r1 = staticFailoverFolder;
         String name = "/" + myNmia.getSourceName() + "/x-node";
 
         String pokePath0 = r0 + name + computePokePathToFile(xOrYList);
-        String pokePath1 = r1 + name + computePokePathToFile(xOrYList);
         String n3Path0 = r0 + name + computeN3PathToFile(matrix.getNibble3(), xOrYList);
-        String n3Path1 = r1 + name + computeN3PathToFile(matrix.getNibble3(), xOrYList);
         String n6Path0 = r0 + name + computeN6PathToFile(matrix.getNibble3(), matrix.getNibble6(), xOrYList);
-        String n6Path1 = r1 + name + computeN6PathToFile(matrix.getNibble3(), matrix.getNibble6(), xOrYList);
 
         logger.debug(pokePath0);
-        logger.debug(pokePath1);
         logger.debug(n3Path0);
-        logger.debug(n3Path1);
         logger.debug(n6Path0);
-        logger.debug(n6Path1);
 
 //        String testFile = "<html><body>identity is control</body></html>";
 //        put(sftp0, r0 + name + xOrYList + "/" + matrix.getNibble3() + "/index.html", testFile);

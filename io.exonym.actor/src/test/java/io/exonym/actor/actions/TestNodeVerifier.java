@@ -1,6 +1,7 @@
 package io.exonym.actor.actions;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 import org.apache.logging.log4j.LogManager;
@@ -16,13 +17,13 @@ public class TestNodeVerifier {
 		
 	}
 
-	public void name() throws UxException, MalformedURLException {
-		URL url0 = new URL("https://existence.global/jti/x-source");
-		URL url1 = new URL("https://existence.global/jti/x-source/");
-		URL url2 = new URL("https://existence.global/jti/x-source/abc.xml");
-		URL url3 = new URL("https://existence.global/jti/x-node");
-		URL url4 = new URL("https://existence.global/jti/x-node/");
-		URL url5 = new URL("https://existence.global/jti/x-node/abc.xml/");
+	public void name() throws Exception {
+		URI url0 = URI.create("https://existence.global/jti/x-source");
+		URI url1 = URI.create("https://existence.global/jti/x-source/");
+		URI url2 = URI.create("https://existence.global/jti/x-source/abc.xml");
+		URI url3 = URI.create("https://existence.global/jti/x-node");
+		URI url4 = URI.create("https://existence.global/jti/x-node/");
+		URI url5 = URI.create("https://existence.global/jti/x-node/abc.xml/");
 
 		assert(url1.equals(NodeVerifier.trainAtFolder(url0)));
 		assert(url1.equals(NodeVerifier.trainAtFolder(url1)));
@@ -33,7 +34,7 @@ public class TestNodeVerifier {
 		assert(url4.equals(NodeVerifier.trainAtFolder(url5)));
 		
 		try {
-			NodeVerifier.trainAtFolder(new URL("https://www.existence.global/jti/"));
+			NodeVerifier.trainAtFolder(URI.create("https://www.existence.global/jti/"));
 			assert(false);
 			
 		} catch (Exception e) {

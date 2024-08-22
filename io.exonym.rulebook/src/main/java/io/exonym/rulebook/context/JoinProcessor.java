@@ -267,8 +267,7 @@ public class JoinProcessor {
         ExonymMatrixManagerLocal local = new ExonymMatrixManagerLocal(
                 myAdvocateContainer,
                 support.getMyRules(), support.getMyAdvocate(), props.getPrimarySftpCredentials(),
-                props.getNodeRoot(), props.getPrimaryStaticDataFolder(),
-                props.getFailoverStaticDataFolder());
+                props.getNodeRoot(), props.getPrimaryStaticDataFolder());
         local.addExonymRow(xyLists.getExox(), xyLists.getExoy());
         broadcastJoin(xyLists.getN6(), xyLists.getX0());
 

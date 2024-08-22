@@ -161,7 +161,7 @@ public class LocalNodeInformation {
 			} else if (d.getType().equals(NodeData.TYPE_NODE)) {
 				if (node==0) {
 					node++;
-					nodeAttached=d.getNodeUrl().toURI();
+					nodeAttached=d.getNodeUrl();
 					result.addProperty("attached", nodeAttached.toString());
 
 				} else {
@@ -439,7 +439,7 @@ public class LocalNodeInformation {
 						}
 						logger.info("network-node=" + n.getName() + " UID=" + n.getNodeUrl() + " networkName=" + n.getNetworkName());
 						// For a network-node type the URL is the UID for that node. 
-						network.put(n.getNodeUrl().toURI(), n.getName());
+						network.put(n.getNodeUrl(), n.getName());
 						
 					}
 				}

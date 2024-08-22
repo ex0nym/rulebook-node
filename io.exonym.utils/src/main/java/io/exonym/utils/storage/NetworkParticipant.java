@@ -12,9 +12,9 @@ import java.net.URL;
 public class NetworkParticipant {
 	
 	private String networkName;
-	private URL staticNodeUrl0;
-	private URL staticNodeUrl1;
-	private URL rulebookNodeUrl;
+	private URI staticNodeUrl0;
+	private URI staticNodeUrl1;
+	private URI rulebookNodeUrl;
 	private URI broadcastAddress;
 	private URI nodeUid;
 
@@ -25,11 +25,11 @@ public class NetworkParticipant {
 	private XKey publicKey;
 
 	@XmlElement(name = "RulebookNodeURL", namespace = Namespace.EX)
-	public URL getRulebookNodeUrl() {
+	public URI getRulebookNodeUrl() {
 		return rulebookNodeUrl;
 	}
 
-	public void setRulebookNodeUrl(URL rulebookNodeUrl) {
+	public void setRulebookNodeUrl(URI rulebookNodeUrl) {
 		this.rulebookNodeUrl = rulebookNodeUrl;
 	}
 
@@ -52,11 +52,11 @@ public class NetworkParticipant {
 	}
 
 	@XmlElement(name = "StaticNodeURL0", namespace = Namespace.EX)
-	public URL getStaticNodeUrl0() {
+	public URI getStaticNodeUrl0() {
 		return staticNodeUrl0;
 	}
 
-	public void setStaticNodeUrl0(URL staticNodeUrl0) {
+	public void setStaticNodeUrl0(URI staticNodeUrl0) {
 		this.staticNodeUrl0 = staticNodeUrl0;
 	}
 
@@ -97,11 +97,11 @@ public class NetworkParticipant {
 	}
 
 	@XmlElement(name = "StaticNodeURL1", namespace = Namespace.EX)
-	public URL getStaticNodeUrl1() {
+	public URI getStaticNodeUrl1() {
 		return staticNodeUrl1;
 	}
 
-	public void setStaticNodeUrl1(URL staticNodeUrl1) {
+	public void setStaticNodeUrl1(URI staticNodeUrl1) {
 		this.staticNodeUrl1 = staticNodeUrl1;
 	}
 

@@ -63,12 +63,11 @@ public class TrustNetworkWrapper {
 	 *
 	 * @param nodeUid
 	 * @param nodeUrl
-	 * @param failover
 	 * @param publicKey
 	 * @return
 	 */
-	public NetworkParticipant addParticipant(URI nodeUid, URL nodeUrl,
-											 URL failover, URL xNodeUrl, URI multicastUrl,
+	public NetworkParticipant addParticipant(URI nodeUid, URI nodeUrl,
+											 URI xNodeUrl, URI multicastUrl,
 											 XKey publicKey, String region, URI lastIssuerUID) {
 		logger.info("Adding Participant " + nodeUid);
 		if (nodeUid== null) {
@@ -76,9 +75,6 @@ public class TrustNetworkWrapper {
 
 		} if (nodeUrl == null) {
 			throw new NullPointerException("Node URL");
-
-		} if (failover == null) {
-			throw new NullPointerException("Failover");
 
 		} if (xNodeUrl == null) {
 			throw new NullPointerException("XNode URL");
@@ -96,7 +92,6 @@ public class TrustNetworkWrapper {
 		p.setRulebookNodeUrl(xNodeUrl);
 		p.setBroadcastAddress(multicastUrl);
 		p.setPublicKey(publicKey);
-		p.setStaticNodeUrl1(failover);
 		p.setRegion(region);
 		p.setLastIssuerUID(lastIssuerUID);
 		p.setLastUpdateTime(DateHelper.currentIsoUtcDateTime());

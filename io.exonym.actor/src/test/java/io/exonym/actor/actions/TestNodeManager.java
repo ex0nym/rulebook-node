@@ -68,7 +68,7 @@ public class TestNodeManager {
 	private void testPPM() {
 		try {
 			NodeVerifier verifier = NodeVerifier.openNode(
-					new URL("https://trust.exonym.io/ccc-test/x-source"),
+					URI.create("https://trust.exonym.io/ccc-test/x-source"),
 					true, false);
 			PresentationPolicyManager ppm = new PresentationPolicyManager(verifier.getPresentationPolicy(),
 					verifier.getCredentialSpecification(), null);
@@ -97,7 +97,7 @@ public class TestNodeManager {
 			NodeManager network = new NodeManager(sourceName);
 			network.setupNetworkSource(new URL("https://trust.exonym.io/source-rulebook.json"), store);
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URL url = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier nv = NodeVerifier.openNode(url, true, true);
@@ -145,12 +145,12 @@ public class TestNodeManager {
 		try {
 //			resetNode("noborder", orgName);
 			NodeManager network = new NodeManager(sourceName);
-			URL sourceUrl = new URL("https://trust.exonym.io/ccc-test/x-source");
+			URI sourceUrl = URI.create("https://trust.exonym.io/ccc-test/x-source");
 			ProgressReporter r = new ProgressReporter(new String[] {"0", "1", "2", "3", "4", "5", "6"});
 			network.setupAdvocateNode(sourceUrl, advocateName, store, r);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URL url = network.getAdvocateUrlForThisNode(props.getPrimaryDomain(),
+			URI url = network.getAdvocateUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier v = NodeVerifier.openNode(url, false, false);
@@ -159,8 +159,6 @@ public class TestNodeManager {
 			NodeInformation ni = tn.getNodeInformation();
 			assert(ni.getSourceUid()!=null);
 			assert(!ni.getSourceUid().equals(ni.getNodeUid()));
-			assert(ni.getStaticNodeUrl1()!=null);
-			assert(ni.getStaticSourceUrl1()!=null);
 			assert(ni.getNodeName()!=null);
 			assert(!ni.getIssuerParameterUids().isEmpty());
 			assert(ni.getStaticNodeUrl0()!=null);
@@ -181,11 +179,11 @@ public class TestNodeManager {
 				networkMap.spawn();
 			}
 			NodeManager network = new NodeManager(sourceName);
-			URL nodeUrl = new URL("https://trust.exonym.io/ccc-test/x-node");
+			URI nodeUrl = URI.create("https://trust.exonym.io/ccc-test/x-node");
 			network.addNodeToSource(nodeUrl, store, networkMap, true);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URL url = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier n = NodeVerifier.openNode(url, true, false);
@@ -216,7 +214,7 @@ public class TestNodeManager {
 			NodeManager network = new NodeManager(sourceName);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URL nodeUrl = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI nodeUrl = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			network.removeNode(nodeUrl, store);
@@ -265,7 +263,7 @@ public class TestNodeManager {
 			m.addScope(s, store);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URL url = m.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url = m.getSourceUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier v = NodeVerifier.openNode(url, true, true);
@@ -280,7 +278,7 @@ public class TestNodeManager {
 			assert(hasScopeString(v.getPresentationPolicy(), s));
 			
 			m.removeScope(s, store);
-			URL url0 = m.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url0 = m.getSourceUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			v = NodeVerifier.openNode(url0, true, true);
@@ -343,13 +341,10 @@ public class TestNodeManager {
 		xk.setSignature(p.signData(xk.getPublicKey(), key, null));
 		String xml = JaxbHelper.serializeToXml(pub, KeyContainer.class);
 		RulebookNodeProperties props = RulebookNodeProperties.instance();
-		URL url = p.getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = p.getSourceUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 
-		URL url1 = p.getSourceUrlForThisNode(props.getFailoverDomain(),
-				props.getFailoverStaticDataFolder());
-
-		p.publish(url, url1, xml.getBytes(), "signatures.xml");
+		p.publish(url, xml.getBytes(), "signatures.xml");
 
 	}
 
@@ -410,8 +405,9 @@ public class TestNodeManager {
 			NetworkMapItemAdvocate nmia = (NetworkMapItemAdvocate)
 					map.nmiForNode(nmis.getAdvocatesForSource().get(0));
 
-			URL s0 = nmis.getStaticURL0();
-			URL a0 = nmia.getStaticURL0();
+			URI s0 = nmis.getStaticURL0();
+			URI a0 = nmia.getStaticURL0();
+
 			String ax0 = nmia.getRulebookNodeURL() + "/subscribe";
 			String r = client.basicGet(ax0);
 			Rulebook rulebook = RulebookVerifier.fromString(r);

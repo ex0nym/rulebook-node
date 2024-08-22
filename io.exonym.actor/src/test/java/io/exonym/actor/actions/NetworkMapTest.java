@@ -72,7 +72,7 @@ public class NetworkMapTest extends AbstractNetworkMap {
     }
 
     @Override
-    protected NodeVerifier openNodeVerifier(URL staticNodeUrl0, URL staticNodeUrl1, boolean isTargetSource) throws Exception {
+    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, URI staticNodeUrl1, boolean isTargetSource) throws Exception {
         return NodeVerifier.tryNode(staticNodeUrl0, staticNodeUrl0, true, false);
     }
 

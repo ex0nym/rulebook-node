@@ -191,7 +191,7 @@ public class XmlHelper {
 	} 
 	
 	// TODO Tidy up
-	public static ConcurrentHashMap<String, ByteArrayBuffer> openXmlBytesAtUrl(URL nodeUrl) throws Exception {
+	public static ConcurrentHashMap<String, ByteArrayBuffer> openXmlBytesAtUrl(URI nodeUrl) throws Exception {
 		String root = nodeUrl.toString();
 		String descUrl = null;
 		String filename = "/rulebook.json";
@@ -231,23 +231,22 @@ public class XmlHelper {
 		}
 		
 		ArrayList<XKey> signatures = kcPublic.getKeyContainer().getKeyPairs();
-		HashMap<URL, String> urlToFileName = new HashMap<URL, String>();
-
+		HashMap<URI, String> urlToFileName = new HashMap<>();
 
 		for (XKey sig : signatures) {
 			if (!sig.getKeyUid().equals(KeyContainerWrapper.TN_ROOT_KEY) && 
 					!sig.getKeyUid().equals(KeyContainerWrapper.SIG_CHECKSUM)) {
 
 				String fileName = XContainer.uidToXmlFileName(sig.getKeyUid());
-				urlToFileName.put(new URL(root + "/" + fileName), fileName);
+				urlToFileName.put(URI.create(root).resolve(fileName), fileName);
 				
 			}
 		}
-		for (URL xmlUrl : urlToFileName.keySet()) {
+		for (URI xmlUrl : urlToFileName.keySet()) {
 			byte[] content = null;
 			boolean isTransfer= false; 
 			try {
-				content = UrlHelper.read(xmlUrl);
+				content = UrlHelper.read(xmlUrl.toURL());
 				
 			} catch (Exception e) {
 				content = fileDidNotExist(nodeUrl, xmlUrl, urlToFileName);
@@ -270,10 +269,10 @@ public class XmlHelper {
 	}
 	
 	
-	private static byte[] fileDidNotExist(URL sourceUrl, URL xmlUrl, HashMap<URL, String> urlToFileName) throws MalformedURLException {
-		URL transferUrl = new URL(sourceUrl.toString() + "/transfer.xml");
+	private static byte[] fileDidNotExist(URI sourceUrl, URI xmlUrl, HashMap<URI, String> urlToFileName) throws MalformedURLException {
+		URI transferUrl =sourceUrl.resolve("transfer.xml");
 		try {
-			return UrlHelper.read(transferUrl);
+			return UrlHelper.read(transferUrl.toURL());
 			
 		} catch (Exception e) {
 			throw new SecurityException("The file " + urlToFileName.get(xmlUrl) + " was deleted without authorization - Node Invalid");

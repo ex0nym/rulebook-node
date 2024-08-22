@@ -112,11 +112,6 @@ public class RulebookNodeProperties extends RootProperties {
     }
 
     @Override
-    protected SFTPLogonData getSecondarySftpCredentials() {
-        return super.getSecondarySftpCredentials();
-    }
-
-    @Override
     protected String getPrimaryDomain() {
         return super.getPrimaryDomain();
     }
@@ -134,16 +129,6 @@ public class RulebookNodeProperties extends RootProperties {
     @Override
     protected String getSpawnWiderNetworkFrom() {
         return super.getSpawnWiderNetworkFrom();
-    }
-
-    @Override
-    protected String getFailoverDomain() {
-        return super.getFailoverDomain();
-    }
-
-    @Override
-    protected String getFailoverStaticDataFolder() {
-        return super.getFailoverStaticDataFolder();
     }
 
     @Override

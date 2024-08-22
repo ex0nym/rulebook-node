@@ -5,6 +5,7 @@ import io.exonym.lite.pojo.NetworkMapItemAdvocate;
 import io.exonym.lite.pojo.NetworkMapItemSource;
 
 import java.io.BufferedWriter;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,7 +65,7 @@ public class LocalNetworkMap extends AbstractNetworkMap {
     }
 
     @Override
-    protected NodeVerifier openNodeVerifier(URL staticNodeUrl0, URL staticNodeUrl1, boolean isTargetSource) throws Exception {
+    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, URI staticNodeUrl1, boolean isTargetSource) throws Exception {
         return NodeVerifier.tryNode(staticNodeUrl0, staticNodeUrl0, true, false);
     }
 }
