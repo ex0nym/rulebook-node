@@ -236,7 +236,7 @@ public class MembershipManager {
 			PresentationTokenDescription ptd = token.getPresentationTokenDescription();
 			
 			if (ptd!=null) {
-				CredentialInToken cit = ptd.getCredential().get(0);
+				CredentialInToken cit = ptd.getCredential().get(1);
 				
 				if (cit!=null) {
 					String ra = XContainerJSON.stripUidSuffix(cit.getIssuerParametersUID(), 1);
@@ -244,6 +244,9 @@ public class MembershipManager {
 					BigInteger handle = new BigInteger(discoverRevocationHandle(token, store));
 					ExonymIssuer i = new ExonymIssuer(xIssuer);
 					i.openContainer(store.getDecipher());
+					logger.info("----------- Revocation Request for RA UID");
+					logger.info("raUid: "   + raUid);
+					logger.info("-----------");
 					RevocationInformation ri = i.revokeCredential(raUid, handle, store.getDecipher());
 					i.clearStale();
 					return publishedRevocationData(ri, store);

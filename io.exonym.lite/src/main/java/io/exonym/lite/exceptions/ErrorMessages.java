@@ -9,6 +9,10 @@ public class ErrorMessages {
      */
     public static final String INCORRECT_PARAMETERS = "ERROR_INCORRECT_PARAMETERS";
 
+    public static final String INSPECTION_RESULT_REQUIRED = "INSPECTION_RESULT_REQUIRED";
+
+    public static final String  SSO_END_POINT_404 = "SSO_END_POINT_404";
+
     public static final String HEXADECIMAL_REQUIRED= "HEXADECIMAL_REQUIRED";
     public static final String CONTEXT_NOT_FOUND= "CONTEXT_NOT_FOUND";
 

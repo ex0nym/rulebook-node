@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,21 @@ public class BuildPresentationPolicy {
 		policy.setMessage(m);
 
 	}
+
+	public void makeNonInteractive(String content){
+		Message m = of.createMessage();
+		m.setNonce(content.getBytes());
+		policy.setMessage(m);
+
+	}
+
+	public void makeNonInteractiveB64(String b64EncodedString){
+		Message m = of.createMessage();
+		m.setNonce(org.apache.commons.codec.binary.Base64.decodeBase64(b64EncodedString.getBytes(StandardCharsets.UTF_8)));
+		policy.setMessage(m);
+
+	}
+
 
 	public void addAcceptableCredential(CredentialInPolicy cip){
 		policy.getCredential().add(cip);

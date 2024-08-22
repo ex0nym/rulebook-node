@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Enumeration;
+import java.util.UUID;
 
 @WebFilter(filterName = "authFilter")
 public class AuthenticationFilter implements Filter {
@@ -48,12 +49,13 @@ public class AuthenticationFilter implements Filter {
             setup();
             NetworkMapWeb map = new NetworkMapWeb();
             map.spawn();
+
             PkiExternalResourceContainer.getInstance()
                     .setNetworkMapAndCache(map, CacheNodeContainer.getInstance());
             XContainerJSON.openSystemParameters();
             XContainerExternal.openSystemParameters();
 
-            logger.info("NetworkMap should have initialized");
+            logger.info("NetworkMap and Lambda Params initialized");
 
             // Removed due to super-seeded by the UDP protocols.
             // new SyncNetwork();
@@ -74,7 +76,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     private void testFileWrite() throws IOException {
-        Path writeLocation = Path.of("/var", "www", "html", "replication");
+        Path writeLocation = Path.of("/var", "www", "html", "static", CryptoUtils.computeSha256HashAsHex(UUID.randomUUID().toString()));
         Files.createDirectories(writeLocation);
         Path filePath = writeLocation.resolve("test.json");
         Files.write(filePath,

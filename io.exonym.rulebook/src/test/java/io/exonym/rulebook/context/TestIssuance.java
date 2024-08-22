@@ -40,27 +40,32 @@ public class TestIssuance {
     private static final Logger logger = LogManager.getLogger(TestIssuance.class);
 
     public static final String issuerUsername = "issuer";
-    public static final String ownerUsername = "owner";
     public static final String owner0Username = "owner0";
+    public static final String owner1Username = "owner1";
     public static final String password = "password";
 
     @BeforeAll
     static void beforeAll() throws Exception {
+        Cache cache = new Cache();
+        NetworkMapWeb networkMapWeb = new NetworkMapWeb();
+        PkiExternalResourceContainer.getInstance()
+                .setNetworkMapAndCache(networkMapWeb,cache);
+
         new XContainerJSON(issuerUsername, true);
-        new XContainerJSON(ownerUsername, true);
         new XContainerJSON(owner0Username, true);
+        new XContainerJSON(owner1Username, true);
 
 
     }
 
     @AfterAll
     static void afterAll() throws Exception {
-        XContainerJSON x = new XContainerJSON(issuerUsername);
-        x.delete();
-        XContainerJSON o = new XContainerJSON(ownerUsername);
-        o.delete();
-        XContainerJSON o0 = new XContainerJSON(owner0Username);
-        o0.delete();
+//        XContainerJSON x = new XContainerJSON(issuerUsername);
+//        x.delete();
+//        XContainerJSON o = new XContainerJSON(owner0Username);
+//        o.delete();
+//        XContainerJSON o0 = new XContainerJSON(owner1Username);
+//        o0.delete();
 
     }
 
@@ -116,24 +121,25 @@ public class TestIssuance {
             //
             // Owner (Sybil)
             //
-            ExonymOwnerTest owner = setupExistingOwner(ownerUsername, store);
+            ExonymOwnerTest owner = setupExistingOwner(owner0Username, store);
             issueSybil(sybilIssuer, owner, store, sybilCredSpec, sybilHelper.getIssuerParameters(), rulebook);
             showSybilCredential(owner, rulebook, sybilHelper, cache, external);
 
             //
             // Owner0 (Sybil)
             //
-            ExonymOwnerTest owner0 = setupExistingOwner(owner0Username, store);
+            ExonymOwnerTest owner0 = setupExistingOwner(owner1Username, store);
             issueSybil(sybilIssuer, owner0, store, sybilCredSpec, sybilHelper.getIssuerParameters(), rulebook);
             showSybilCredential(owner0, rulebook, sybilHelper, cache, external);
 
             //
             //  Setup as issuer of rulebook
             //
-            RulebookVerifier rulebookRulebook = new RulebookVerifier(new URL("https://trust.exonym.io/source-rulebook.json"));
+            RulebookVerifier rulebookRulebook = new RulebookVerifier(new URL("https://trust.exonym.io/sources-rulebook.json"));
 
             String rootIssuerUid = Namespace.URN_PREFIX_COLON + "badass:badass-two:" +
-                    UIDHelper.computeRulebookHashFromRulebookId(rulebookRulebook.getRulebook().getRulebookId()) + "1213:i" ;
+                    UIDHelper.computeRulebookHashFromRulebookId(
+                            rulebookRulebook.getRulebook().getRulebookId()) + "1213:i" ;
             UIDHelper rulebookHelper = new UIDHelper(rootIssuerUid);
             rulebookHelper.out();
 
@@ -145,12 +151,26 @@ public class TestIssuance {
             ExonymIssuerTest issuerRulebook = new ExonymIssuerTest(xIssuer);
 
             issuerRulebook.addCredentialSpecification(credSpec);
-            issuerRulebook.setupAsRevocationAuthority(rulebookHelper.getIssuerParameters(), store.getEncrypt());
-            issuerRulebook.setupAsCredentialIssuer(rulebookHelper.getCredentialSpec(), rulebookHelper.getIssuerParameters(),
-                    rulebookHelper.getRevocationAuthority(), store.getEncrypt());
 
-            joinRulebook(owner, issuerRulebook, sybilIssuerUID, store, rulebookHelper, rulebookRulebook, external);
-            joinRulebook(owner0, issuerRulebook, sybilIssuerUID, store, rulebookHelper, rulebookRulebook, external);
+            issuerRulebook.setupAsRevocationAuthority(
+                    rulebookHelper.getIssuerParameters(), store.getEncrypt());
+
+            issuerRulebook.setupAsCredentialIssuer(
+                    rulebookHelper.getCredentialSpec(),
+                    rulebookHelper.getIssuerParameters(),
+                    rulebookHelper.getRevocationAuthority(),
+                    store.getEncrypt());
+
+            joinRulebook(owner, issuerRulebook, sybilIssuerUID,
+                    store, rulebookHelper, rulebookRulebook, external);
+
+            joinRulebook(owner0, issuerRulebook, sybilIssuerUID,
+                    store, rulebookHelper, rulebookRulebook, external);
+
+            // Build presention policy
+            // prove returning Presentation Token
+            // revoke based on Presentation Token
+            // attempt to
 
 
         } catch (Exception e) {
@@ -160,16 +180,25 @@ public class TestIssuance {
         }
     }
 
+    private PresentationPolicy standardProofOfHonesty(URI sybilIssuerUID, UIDHelper issuerHelper){
+        return null;
+
+    }
+
     private void joinRulebook(ExonymOwnerTest owner, ExonymIssuerTest issuerSecond, URI sybilIssuerUID, PassStore store,
                               UIDHelper issuerHelper, RulebookVerifier vSource, PkiExternalResourceContainer external) throws Exception {
 
-        PresentationPolicy pp = JoinHelper.baseJoinPolicy(vSource, sybilIssuerUID, external, CryptoUtils.generateNonce(32));
-        BuildIssuancePolicy bip1  = new  BuildIssuancePolicy(pp, issuerHelper.getCredentialSpec(), issuerHelper.getIssuerParameters());
+        PresentationPolicy pp = JoinHelper.baseJoinPolicy(
+                vSource, sybilIssuerUID, external, CryptoUtils.generateNonce(32));
+
+        BuildIssuancePolicy bip1  = new  BuildIssuancePolicy(
+                pp, issuerHelper.getCredentialSpec(), issuerHelper.getIssuerParameters());
+
         IssuancePolicy issuancePolicy1 = bip1.getIssuancePolicy();
+
         VerifiedClaim vc = new VerifiedClaim( // open credSpec.
                 issuerSecond.getContainer().openResource(
                         issuerHelper.getCredentialSpec()));
-
 
         IssuanceMessageAndBoolean imabRb = issuerSecond.issueInit(vc,issuancePolicy1,store.getEncrypt(),URI.create(UUID.randomUUID().toString()));
         IssuanceMessage imRb = owner.issuanceStep(imabRb, store.getEncrypt());
@@ -244,7 +273,6 @@ public class TestIssuance {
 
         logger.debug("Issued=" + imabAndHandle0.getHandle() + " " + imabAndHandle0.getIssuerUID());
 
-
     }
 
     @Test
@@ -276,7 +304,7 @@ public class TestIssuance {
             RevocationInformation rai = xIssuer.openResource(raiUid);
 
             logger.info("Defining Main Container");
-            XContainerJSON xUser = new XContainerJSON(ownerUsername);
+            XContainerJSON xUser = new XContainerJSON(owner0Username);
             ExonymOwnerTest owner = new ExonymOwnerTest(xUser);
             owner.openContainer(store);
             owner.addCredentialSpecification(credSpec);
@@ -301,13 +329,11 @@ public class TestIssuance {
             List<PseudonymInToken> nyms = issuanceToken.getIssuanceTokenDescription()
                     .getPresentationTokenDescription().getPseudonym();
 
-            URI issuerUID = token.getIssuanceTokenDescription().getCredentialTemplate().getIssuerParametersUID();
-
-
+            URI issuerUID = token.getIssuanceTokenDescription()
+                        .getCredentialTemplate().getIssuerParametersUID();
 
             // ISSUER - Step (Step 2)
             ImabAndHandle result = issuer.issueStep(im, store.getEncrypt());
-
 
             // 			OWNER - Step B
             owner.issuanceStep(result.getImab(), store.getEncrypt());

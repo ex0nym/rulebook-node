@@ -15,16 +15,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 
-@WebServlet("/api")
-public class ApiServlet extends HttpServlet {
+@WebServlet("/revoke")
+public class RevokeServlet extends HttpServlet {
 
-
-    private static final Logger logger = LogManager.getLogger(ApiServlet.class);
-    public static final String CMD_SIGN = "sign";
-
-    public static final String CMD_REVOKE = "revoke"; // against context string??
-
-    public static final String CMD_BLACKLIST_HOST = "blacklist-host";
+    private static final Logger logger = LogManager.getLogger(RevokeServlet.class);
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -33,25 +27,9 @@ public class ApiServlet extends HttpServlet {
             IAuthenticator auth = IAuthenticator.getInstance();
             auth.authenticateApiKey(in);
             logger.debug("Completed Authentication");
-            String cmd = in.get("cmd");
-            if (cmd != null) {
-                if (cmd.equals(CMD_REVOKE)) {
-                    revoke(in, req, resp);
+            revoke(in, req, resp);
 
-                } else if (cmd.equals(CMD_BLACKLIST_HOST)) {
-                    blacklistHost(in, req, resp);
 
-                } else if (cmd.equals(CMD_SIGN)) {
-                    sign(in, resp);
-
-                } else {
-                    throw new UxException("Unknown command " + cmd);
-
-                }
-            } else {
-                throw new UxException("Expected a command");
-
-            }
         } catch (UxException e) {
             logger.debug("error", e);
             JsonObject o = new JsonObject();
@@ -63,12 +41,6 @@ public class ApiServlet extends HttpServlet {
             WebUtils.processError(e, resp);
 
         }
-    }
-
-    // Sign Materials with Root Key
-    private void sign(HashMap<String, String> in, HttpServletResponse resp) throws UxException {
-        throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "Not yet implemented");
-
     }
 
     /**
@@ -84,15 +56,4 @@ public class ApiServlet extends HttpServlet {
                 "Not yet implemented", "Please use the Control Panel");
     }
 
-    /**
-     * Adds a host to a blacklist that this service will no longer accept
-     *
-     * @param in
-     * @param req
-     * @param resp
-     */
-    private void blacklistHost(HashMap<String, String> in,
-                               HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "Not yet implemented");
-    }
 }

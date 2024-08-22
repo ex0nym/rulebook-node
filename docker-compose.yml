@@ -16,7 +16,7 @@ services:
     env_file:
         - io.exonym.rulebook/conf/e-vanilla-s.env
     volumes:
-      - ~/github/rulebook-node/io.exonym.rulebook/static:/var/www/html/replication
+      - ~/github/rulebook-node/io.exonym.rulebook/static:/var/www/html/static
     networks:
       - rulebook_network
 

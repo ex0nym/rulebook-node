@@ -38,7 +38,6 @@ public class TestNodeManager {
 	private static String sybilServiceUrl = "http://exonym-x-03:8080/";
 	private static String sybilServiceRegisterUrl = sybilServiceUrl + "register";
 
-	
 
 	public static void setup() throws Exception {
 		store = new PassStore(password, false);
