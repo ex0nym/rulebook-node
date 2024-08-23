@@ -34,7 +34,7 @@ public class AsymStoreKey implements Serializable{
 		try {
 			if (MODE == MODE_GENERATE){
 				KeyPairGenerator keyGen = KeyPairGenerator.getInstance(Const.ASYM_ENCRYPTION_ALGORITHM);
-				keyGen.initialize(2048);
+				keyGen.initialize(Const.ASYM_KEY_SIZE);
 				KeyPair keyPair = keyGen.generateKeyPair();
 				privateKey = keyPair.getPrivate();
 				publicKey = keyPair.getPublic();

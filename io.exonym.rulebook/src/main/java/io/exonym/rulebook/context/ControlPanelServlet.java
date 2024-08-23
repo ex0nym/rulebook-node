@@ -146,7 +146,7 @@ public final class ControlPanelServlet extends HttpServlet {
 					getNetworks(dataReq, resp);
 
 				} else if (cmd.equals("sourceNewNetworkCreate")) {
-					sourceNewNetworkCreate(dataReq, req, resp);
+					leadCreateNewTrustNetwork(dataReq, req, resp);
 					refreshNetworkMap();
 
 				} else if (cmd.equals("sourceNodeManagementAdd")) {
@@ -318,10 +318,10 @@ public final class ControlPanelServlet extends HttpServlet {
 									NodeData d = new NodeData();
 									d.setNetworkName(networkName);
 									d.setName(name);
-									d.setType(NodeData.TYPE_NODE);
+									d.setType(NodeData.TYPE_MODERATOR);
 									d.setNodeUrl(info.getStaticNodeUrl0());
 									d.setNodeUid(info.getNodeUid());
-									d.setSourceUid(info.getSourceUid());
+									d.setSourceUid(info.getLeadUid());
 									d.setLastRAIHash(n.getRaiHash());
 									NodeStore.getInstance().add(d);
 									localNodeInfo.clear();
@@ -337,7 +337,7 @@ public final class ControlPanelServlet extends HttpServlet {
 							}).start();
 
 							JsonObject r = new JsonObject();
-							r.addProperty("update", "Defining X-Node");
+							r.addProperty("update", "Defining Rulebook Node");
 							WebUtils.respond(resp, r);
 							
 						} else {
@@ -539,8 +539,8 @@ public final class ControlPanelServlet extends HttpServlet {
 		
 	} //*/
 
-	private void sourceNewNetworkCreate(HashMap<String, String> dataReq,
-			HttpServletRequest req, HttpServletResponse resp) throws Exception{
+	private void leadCreateNewTrustNetwork(HashMap<String, String> dataReq,
+										   HttpServletRequest req, HttpServletResponse resp) throws Exception{
 
 		String rulebookUrl = dataReq.get("rulebookUrl");
 		try {
@@ -549,22 +549,23 @@ public final class ControlPanelServlet extends HttpServlet {
 			if (WhiteList.isMinLettersAllowsNumbersAndHyphens(orgName, 3)) {
 				PassStore store = new PassStore(RulebookNodeProperties.instance().getNodeRoot(), false);
 				orgName = orgName.toLowerCase();
+
 				NodeManagerWeb n = new NodeManagerWeb(orgName);
-				TrustNetwork t = n.setupNetworkSource(new URL(rulebookUrl), store); //, WebUtils.getFullPath(req)
+				TrustNetwork t = n.setupLead(new URL(rulebookUrl), store); //, WebUtils.getFullPath(req)
 				NodeInformation info = t.getNodeInformation();
-				URI url = info.getStaticSourceUrl0();
+				URI url = info.getStaticLeadUrl0();
 				NodeData nd = new NodeData();
 				nd.setName(orgName);
 				nd.setNetworkName(orgName);
-				nd.setType(NodeData.TYPE_SOURCE);
+				nd.setType(NodeData.TYPE_LEAD);
 				nd.setNodeUrl(url);
-				nd.setNodeUid(info.getSourceUid());
-				nd.setSourceUid(info.getSourceUid());
+				nd.setNodeUid(info.getLeadUid());
+				nd.setSourceUid(info.getLeadUid());
 				nd.setLastPPHash(n.getPpHash());
 
 				NodeStore node = NodeStore.getInstance();
 				node.add(nd);
-				// RulebookManager.getInstance().reset(); // commented out before IUser
+
 				JsonObject r = new JsonObject();
 				r.addProperty("networkName", info.getNodeName());
 
@@ -605,12 +606,12 @@ public final class ControlPanelServlet extends HttpServlet {
 				NodeManagerWeb n = new NodeManagerWeb(networkName);
 				NetworkMapWeb networkMap = new NetworkMapWeb();
 				URI nurl = URI.create(nodeUrl);
-				URI nodeUid = n.addNodeToSource(nurl, passStore, networkMap, testNet);
+				URI nodeUid = n.addModeratorToLead(nurl, passStore, networkMap, testNet);
 				broadcast();
 				NodeData d = new NodeData();
 				d.setNodeUrl(nurl);
 				d.setNodeUid(nodeUid);
-				d.setType(NodeData.TYPE_NETWORK_NODE);
+				d.setType(NodeData.TYPE_RULEBOOK_NODE);
 				d.setName(internalName);
 				d.setSourceUid(UIDHelper.computeSourceUidFromNodeUid(nodeUid));
 				d.setNetworkName(networkName);

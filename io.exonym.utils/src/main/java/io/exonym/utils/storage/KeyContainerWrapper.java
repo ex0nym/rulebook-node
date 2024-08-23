@@ -25,10 +25,13 @@ public final class KeyContainerWrapper {
 	private ConnectKeyContainer connectKeyContainer;
 
 	// AsymStoreKey
-	public static final URI SIGN_VOTE_PARTS = URI.create("urn:keys:rsa:sign:vote-share");
+	public static final URI SIGN_VOTE_PARTS =
+			URI.create("urn:keys:rsa:sign:vote-share");
 
-	// todo store the key with the UID of the node.  Duplicates can happen when testing and they cause hellish 'bugs'.
-	public static final URI TN_ROOT_KEY = URI.create("urn:keys:rsa:trust-network-root");
+	// todo store the key with the UID of the node.
+	// Duplicates can happen when testing and they cause hellish 'bugs'.
+	public static final URI TN_ROOT_KEY =
+			URI.create("urn:keys:rsa:trust-network-root");
 
 	/*
 	 *  SymStoreKey

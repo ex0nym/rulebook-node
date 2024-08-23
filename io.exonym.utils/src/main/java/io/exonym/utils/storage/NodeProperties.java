@@ -37,10 +37,10 @@ public class NodeProperties {
 		try (FileOutputStream fos = new FileOutputStream(file)){
 			Properties p = createProperties();
 			
-			p.setProperty(FAILOVER_SOURCE, "https://existence.global/ccc-trust-network/x-source");
+			p.setProperty(FAILOVER_SOURCE, "https://existence.global/ccc-trust-network/lead");
 			p.setProperty(FAILOVER_SOURCE_USERNAME, "ftp-username");
 			p.setProperty(FAILOVER_SOURCE_PASSWORD, "ftp-password");
-			p.setProperty(FAILOVER_NODE, "https://existence.global/ccc-trust-network/x-node");
+			p.setProperty(FAILOVER_NODE, "https://existence.global/ccc-trust-network/moderator");
 			p.setProperty(FAILOVER_NODE_USERNAME, "ftp-username");
 			p.setProperty(FAILOVER_NODE_PASSWORD, "ftp-password");
 			p.setProperty(SYNC_NETWORK, "false");

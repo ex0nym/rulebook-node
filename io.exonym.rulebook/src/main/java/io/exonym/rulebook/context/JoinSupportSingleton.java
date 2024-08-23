@@ -8,6 +8,7 @@ import io.exonym.helpers.BuildIssuancePolicy;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.*;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.utils.RulebookVerifier;
@@ -81,7 +82,7 @@ public class JoinSupportSingleton {
     protected RulebookVerifier openRulebookVerifier() throws Exception {
         NodeData node = NodeStore.getInstance().openThisAdvocate();
         String target = node.getNodeUrl().toString()
-                .replaceAll("x-node", "rulebook.json");
+                .replaceAll(Const.MODERATOR, "rulebook.json");
         this.rulebookVerifier = new RulebookVerifier(new URL(target));
         return this.rulebookVerifier;
 

@@ -3,15 +3,14 @@ package io.exonym.lite.pojo;
 import io.exonym.lite.couchdb.AbstractCouchDbObject;
 
 import java.net.URI;
-import java.net.URL;
 
 public class NodeData extends AbstractCouchDbObject  {
 	
 	// In superclass
 	public static final String TYPE_MEMBER = "member";
-	public static final String TYPE_NODE = "node";
-	public static final String TYPE_NETWORK_NODE = "network-node";
-	public static final String TYPE_SOURCE= "source";
+	public static final String TYPE_MODERATOR = "moderator";
+	public static final String TYPE_RULEBOOK_NODE = "rulebook-node";
+	public static final String TYPE_LEAD = "lead";
 	public static final String TYPE_RECIPIENT= "recipient";
 
 	public static final String FIELD_NODE_UID= "nodeUid";

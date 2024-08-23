@@ -110,7 +110,7 @@ public class ErrorMessages {
     public static final String STALE_REQUEST = "STALE_REQUEST";
 
     /**
-     * Failed to find an x-node-description.xml file
+     * Failed to find a rulebook-node-description.xml file
      */
     public static final String NO_DESCRIPTION_FOUND = "NO_DESCRIPTION_FOUND";
 

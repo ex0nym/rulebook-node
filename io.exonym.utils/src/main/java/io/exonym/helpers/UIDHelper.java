@@ -6,6 +6,7 @@ import eu.abc4trust.xml.PresentationToken;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.Namespace;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.WhiteList;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.utils.storage.XContainer;
@@ -13,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
+import java.nio.file.Path;
 
 public class UIDHelper {
 
@@ -343,11 +345,31 @@ public class UIDHelper {
 
     }
 
+    public static URI ensureTrailingSlash(String uri){
+        return ensureTrailingSlash(URI.create(uri));
+    }
+
+    public static URI ensureTrailingSlash(URI uri){
+        logger.info("Trailing slash path" + uri);
+        String path = uri.getPath();
+        logger.info("Trailing slash path" + path);
+        if (path == null || path.isEmpty()) {
+            return uri.resolve("/");
+
+        } else if (!path.endsWith("/")) {
+            return uri.resolve(path + "/");
+
+        }
+        return uri;
+
+    }
+
+
 
 
     public void out(){
         logger.info(">>>>>>>>>>>>> ");
-        logger.info("> Outputting Projected UIDS");
+        logger.info("> Output Projected UIDS");
         logger.info("");
         logger.info(sourceName);
         logger.info(advocateName);
@@ -375,4 +397,20 @@ public class UIDHelper {
         logger.info(">>>>>>>>>>>>> ");
 
     }
+
+    public static void main(String[] args) {
+        URI staticUrl = URI.create("http://example.com/")
+                .resolve("/static/")
+                .resolve("c30/")
+                .resolve("lead/");
+        System.out.println(staticUrl);
+        Path parent = Path.of(staticUrl.getPath())
+                .getParent().resolve("rulebook.json");
+
+
+        System.out.println(parent);
+
+
+    }
+
 }

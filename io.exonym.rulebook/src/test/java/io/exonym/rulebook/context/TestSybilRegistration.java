@@ -12,6 +12,7 @@ import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.connect.Http;
 import io.exonym.lite.pojo.XKey;
 import io.exonym.lite.standard.AsymStoreKey;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.utils.storage.KeyContainer;
@@ -82,8 +83,8 @@ public class TestSybilRegistration {
                 map.spawn();
             }
             external.setNetworkMapAndCache(map, new Cache());
-            URI sourceURL = URI.create("https://trust.exonym.io/sybil/x-source/");
-            URI advocateURL = URI.create("https://trust.exonym.io/sybil/x-node/");
+            URI sourceURL = URI.create("https://trust.exonym.io/sybil").resolve(Const.LEAD);
+            URI advocateURL = URI.create("https://trust.exonym.io/sybil").resolve(Const.MODERATOR);
             NodeVerifier advocate = NodeVerifier.openNode(advocateURL,
                     false, false);
             NodeVerifier source = NodeVerifier.openNode(sourceURL,

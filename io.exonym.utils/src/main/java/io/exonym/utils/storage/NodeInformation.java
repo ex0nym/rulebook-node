@@ -5,8 +5,6 @@ import io.exonym.lite.pojo.Namespace;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.LinkedList;
 
 @XmlType(name="NodeInformation", namespace = Namespace.EX)  
@@ -19,11 +17,11 @@ public class NodeInformation {
 
 	private String nodeName;
 	private URI staticNodeUrl0;
-	private URI staticSourceUrl0;
+	private URI staticLeadUrl0;
 	private URI nodeUid;
 	private URI rulebookNodeUrl;
 	private URI broadcastAddress;
-	private URI sourceUid;
+	private URI leadUid;
 	private String region;
 	private String lastUpdateReceived;
 	private LinkedList<URI> issuerParameterUids = null;
@@ -73,22 +71,22 @@ public class NodeInformation {
 		this.nodeUid = nodeUid;
 	}
 
-	@XmlElement(name = "StaticSourceURL0", namespace = Namespace.EX)
-	public URI getStaticSourceUrl0() {
-		return staticSourceUrl0;
+	@XmlElement(name = "StaticLeadURL0", namespace = Namespace.EX)
+	public URI getStaticLeadUrl0() {
+		return staticLeadUrl0;
 	}
 
-	public void setStaticSourceUrl0(URI staticSourceUrl0) {
-		this.staticSourceUrl0 = staticSourceUrl0;
+	public void setStaticLeadUrl0(URI staticLeadUrl0) {
+		this.staticLeadUrl0 = staticLeadUrl0;
 	}
 
-	@XmlElement(name = "SourceUID", namespace = Namespace.EX)
-	public URI getSourceUid() {
-		return sourceUid;
+	@XmlElement(name = "LeadUID", namespace = Namespace.EX)
+	public URI getLeadUid() {
+		return leadUid;
 	}
 
-	public void setSourceUid(URI sourceUid) {
-		this.sourceUid = sourceUid;
+	public void setLeadUid(URI leadUid) {
+		this.leadUid = leadUid;
 	}
 
 	@XmlElement(name = "LastUpdatedReceivedUTC", namespace = Namespace.EX)

@@ -58,7 +58,7 @@ public class WhiteList {
 
 	}
 	public static boolean isSourceUrl(String url){
-		return (url!=null && url.matches(".*/x-source\\/?"));
+		return (url!=null && url.matches(".*/lead\\/?"));
 
 	}
 

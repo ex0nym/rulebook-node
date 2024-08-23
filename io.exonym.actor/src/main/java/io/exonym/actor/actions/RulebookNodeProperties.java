@@ -27,7 +27,6 @@ public class RulebookNodeProperties extends RootProperties {
 
         } catch (Exception e) {
             throw new RuntimeException("Instantiation Error", e);
-
         }
     }
 

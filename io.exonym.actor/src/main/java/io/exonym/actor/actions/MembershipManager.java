@@ -39,7 +39,7 @@ public class MembershipManager {
 
 	public MembershipManager(String networkName) throws Exception {
 		nodeManager = new NodeManager(networkName);
-		trustNetworkWrapper = new TrustNetworkWrapper(nodeManager.openMyTrustNetwork(false));
+		trustNetworkWrapper = nodeManager.openMyTrustNetwork(false);
 		info = trustNetworkWrapper.getNodeInformation();
 		if (info.getNodeName()==null) {
 			throw new NullPointerException("Node Name");
@@ -270,7 +270,7 @@ public class MembershipManager {
 		String root = NamespaceMngt.URN_PREFIX_COLON + XContainerJSON.stripUidSuffix(raUid, 2);
 		URI raiUid = URI.create(root + ":rai");
 		
-		TrustNetworkWrapper tnw = new TrustNetworkWrapper(nodeManager.openMyTrustNetwork(false));
+		TrustNetworkWrapper tnw = nodeManager.openMyTrustNetwork(false);
 		TrustNetwork tn = tnw.finalizeTrustNetwork();
 
 		String riString = XContainerJSON.convertObjectToXml(ri);

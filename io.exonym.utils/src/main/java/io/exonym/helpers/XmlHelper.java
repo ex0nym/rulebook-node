@@ -10,6 +10,7 @@ import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.pojo.XKey;
+import io.exonym.lite.standard.Const;
 import io.exonym.utils.storage.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -196,19 +197,19 @@ public class XmlHelper {
 		String descUrl = null;
 		String filename = "/rulebook.json";
 		if (root.endsWith("/")){
-			if (root.contains("x-source")){
-				descUrl = root.replaceAll("/x-source/", filename);
+			if (root.contains(Const.LEAD)){
+				descUrl = root.replaceAll("/"+Const.LEAD+"/", filename);
 
-			} else if (root.contains("x-node")){
-				descUrl = root.replaceAll("/x-node/", filename);
+			} else if (root.contains(Const.MODERATOR)){
+				descUrl = root.replaceAll("/"+Const.MODERATOR+"/", filename);
 
 			}
 		} else {
-			if (root.contains("x-source")){
-				descUrl = root.replaceAll("/x-source", filename);
+			if (root.contains(Const.LEAD)){
+				descUrl = root.replaceAll("/" + Const.LEAD, filename);
 
-			} else if (root.contains("x-node")){
-				descUrl = root.replaceAll("/x-node", filename);
+			} else if (root.contains(Const.MODERATOR)){
+				descUrl = root.replaceAll("/" + Const.MODERATOR, filename);
 
 			}
 		}

@@ -160,8 +160,8 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         try {
             CouchRepository<NodeData> repo = CouchDbHelper.repoNodeData();
             ArrayList<String> orGate = new ArrayList<>();
-            orGate.add(NodeData.TYPE_NODE);
-            orGate.add(NodeData.TYPE_SOURCE);
+            orGate.add(NodeData.TYPE_MODERATOR);
+            orGate.add(NodeData.TYPE_LEAD);
             QueryOrGate query = new QueryOrGate("type", orGate);
             List<NodeData> node = repo.read(query);
             HashMap<String, NodeData> local = new HashMap<>();
@@ -169,8 +169,8 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                 local.put(n.getType(), n);
 
             }
-            NodeData host = local.get(NodeData.TYPE_NODE);
-            NodeData source = local.get(NodeData.TYPE_SOURCE);
+            NodeData host = local.get(NodeData.TYPE_MODERATOR);
+            NodeData source = local.get(NodeData.TYPE_LEAD);
             if (host!=null){
                 allSources.setAdvocateUID(host.getNodeUid());
                 URI sourceUuid = UIDHelper.computeSourceUidFromNodeUid(host.getNodeUid());
@@ -556,7 +556,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         boolean isHostListed = false;
 
         URI thisHostSourceUuid = allSources.getThisAdvocateSourceUID();
-        URI targetNodeSourceUid = tnSource.getNodeInformation().getSourceUid();
+        URI targetNodeSourceUid = tnSource.getNodeInformation().getLeadUid();
         logger.debug("isSourceWithinScope==" + thisHostSourceUuid + " " + targetNodeSourceUid);
 
         boolean isSourceWithinScope = (thisHostSourceUuid!=null &&
@@ -636,9 +636,9 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
         String[] n = ni.getNodeUid().toString().split(":");
         boolean isHost = n.length==5;
-        logger.debug(ni.getSourceUid() + " isHost=" + isHost + " " + allSources.getThisNodeSourceUID());
+        logger.debug(ni.getLeadUid() + " isHost=" + isHost + " " + allSources.getThisNodeSourceUID());
 
-        if (ni.getSourceUid().equals(allSources.getThisAdvocateSourceUID())){
+        if (ni.getLeadUid().equals(allSources.getThisAdvocateSourceUID())){
             if (isHost){
                 i.setType(NetworkMapItem.TYPE);
 

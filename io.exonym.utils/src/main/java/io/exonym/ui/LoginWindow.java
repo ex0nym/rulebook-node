@@ -54,7 +54,7 @@ public class LoginWindow extends JFrame {
 			this.setLocationRelativeTo(null);
 			this.setResizable(false);
 			this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			this.setTitle("X-Node");
+			this.setTitle("Rulebook Node");
 			this.getRootPane().setDefaultButton(btnOk);
 			this.setVisible(true);
 			URL iconURL = this.getClass().getResource("/existence-favicon.png");

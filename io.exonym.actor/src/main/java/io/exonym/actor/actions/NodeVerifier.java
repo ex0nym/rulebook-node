@@ -10,6 +10,8 @@ import io.exonym.lite.connect.UrlHelper;
 import io.exonym.helpers.XmlHelper;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.pojo.XKey;
+import io.exonym.lite.standard.Const;
+import io.exonym.lite.standard.PassStore;
 import io.exonym.lite.time.Timing;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.lite.standard.AsymStoreKey;
@@ -21,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -57,7 +58,7 @@ public class NodeVerifier {
 	private URI nodeUrl;
 	
 	private long touched = Timing.currentTime();
-	private final boolean amISource; 
+	private final boolean amILead;
 	
 	private AsymStoreKey publicKey;
 
@@ -73,17 +74,16 @@ public class NodeVerifier {
 	 */
 	public static NodeVerifier tryNode(URI primary, URI secondary,
 									   boolean isTargetSource, boolean amISource) throws Exception {
-//		throw new Exception();
 		try {
-			tryUrl(primary, isTargetSource, amISource);
+			tryUrl(secondary, isTargetSource, amISource);
 			return new NodeVerifier(primary, isTargetSource, amISource);
 
 		} catch (FileNotFoundException e){
-			tryUrl(secondary, isTargetSource, amISource);
+			tryUrl(primary, isTargetSource, amISource);
 			return new NodeVerifier(secondary, isTargetSource, amISource);
 
 		} catch (UnknownHostException e){
-			tryUrl(secondary, isTargetSource, amISource);
+			tryUrl(primary, isTargetSource, amISource);
 			return new NodeVerifier(secondary, isTargetSource, amISource);
 
 		} catch (Exception e){
@@ -182,7 +182,7 @@ public class NodeVerifier {
 	private static String tryUrl(URI url, boolean isTargetSource, boolean amISource) throws Exception {
 		try {
 			String xml = new String(UrlHelper.readXml(
-					url.resolve("signatures.xml").toURL()), "UTF8");
+					url.resolve("/signatures.xml").toURL()), "UTF8");
 			KeyContainer kc = JaxbHelper.xmlToClass(xml, KeyContainer.class);
 			return kc.getLastUpdateTime();
 
@@ -192,12 +192,12 @@ public class NodeVerifier {
 		}
 	}
 
-	private NodeVerifier(URI node, boolean isTargetSource, boolean amISource) throws Exception {
-		this.amISource=amISource;
+	private NodeVerifier(URI node, boolean isTargetLead, boolean amILead) throws Exception {
+		this.amILead =amILead;
 		
-		if (isTargetSource){
-			if (!node.toString().contains("x-source")){
-				throw new UxException("URL must be a Source-URL " + node);
+		if (isTargetLead){
+			if (!node.toString().contains(Const.LEAD)){
+				throw new UxException("URL must be a Lead-URL " + node);
 				
 			}
 		}
@@ -231,7 +231,7 @@ public class NodeVerifier {
 		try {
 			networkName = null;
 
-			this.amISource = amISource;
+			this.amILead = amISource;
 			byteContent = readLocalBytes(url, keys);
 			signatureBytes = computeBytesThatWereSigned(byteContent);
 			contents = XmlHelper.deserializeOpenXml(byteContent);
@@ -275,27 +275,14 @@ public class NodeVerifier {
 
 
 	private TrustNetworkWrapper openMyTrustNetwork() throws Exception {
-		NodeManager nm = new NodeManager(networkName);
-		TrustNetwork t = nm.openMyTrustNetwork(amISource);
-		if (t!=null) {
-			return new TrustNetworkWrapper(t);
+		MyTrustNetwork mtn = new MyTrustNetwork(amILead);
+		return mtn.getTrustNetworkWrapper();
 
-		} else {
-			return null;
-
-		}
 	}
 
 	public static TrustNetworkWrapper openMyHostTrustNetwork(String name) throws Exception {
-		NodeManager nm = new NodeManager(name);
-		TrustNetwork t = nm.openMyTrustNetwork(false);
-		if (t!=null) {
-			return new TrustNetworkWrapper(t);
-
-		} else {
-			return null;
-
-		}
+		MyTrustNetwork mtn = new MyTrustNetwork(false);
+		return mtn.getTrustNetworkWrapper();
 	}
 
 	private void verification() throws Exception {
@@ -502,20 +489,20 @@ public class NodeVerifier {
 	
 	public static URI trainAtFolder(URI node) throws Exception {
 		String f = node.toString();
-		if (f.endsWith("x-node/") || f.endsWith("x-source/")){
+		if (f.endsWith(Const.MODERATOR + "/") || f.endsWith(Const.LEAD + "/")){
 			return node;
 			
-		} else if (f.endsWith("x-node") || f.endsWith("x-source")){
+		} else if (f.endsWith(Const.MODERATOR) || f.endsWith(Const.LEAD)){
 			return new URL(node + "/").toURI();
 			
-		} else if (f.contains("x-node")){
-			return new URL(f.substring(0, f.indexOf("x-node")) + "x-node/").toURI();
+		} else if (f.contains(Const.MODERATOR)){
+			return new URL(f.substring(0, f.indexOf(Const.MODERATOR)) + Const.MODERATOR + "/").toURI();
 			
-		} else if (f.contains("x-source")){
-			return new URL(f.substring(0, f.indexOf("x-source")) + "x-source/").toURI();
+		} else if (f.contains(Const.LEAD)){
+			return new URL(f.substring(0, f.indexOf(Const.LEAD)) + Const.LEAD + "/").toURI();
 			
 		} else {
-			throw new UxException("Node Verification Error.  An inspectable url ends with either x-node or x-source (" + node + ")");
+			throw new UxException("Node Verification Error.  An inspectable url ends with either `lead` or `moderator` (" + node + ")");
 			
 		}
 	}
@@ -641,6 +628,23 @@ public class NodeVerifier {
 	}
 
 
+	public static void main(String[] args) throws Exception {
+		RulebookNodeProperties props = RulebookNodeProperties.instance();
+//
+//		long t0 = Timing.currentTime();
+//		MyTrustNetwork mtn = new MyTrustNetwork(true);
+//
+//		System.out.println(Timing.hasBeenMs(t0) + " " +
+//				mtn.getTrustNetworkWrapper().getNodeInformation().getNodeName());
 
+//		NodeVerifier nv = new NodeVerifier(
+//				URI.create("http://localhost:8080/static/lead/"),
+//				true, true);
+
+		NodeManager nm = new NodeManager("c30");
+		PassStore ps = new PassStore(props.getNodeRoot(), false);
+		nm.setupLead(new URL("https://trust.exonym.io/sybil-rulebook.json"), ps);
+
+	}
 
 }

@@ -18,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 import javax.crypto.Cipher;
 import java.io.*;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class WiderTrustNetworkManagement {
@@ -89,12 +88,12 @@ public class WiderTrustNetworkManagement {
         NodeInformation source = tnw.getNodeInformation();
 
         NetworkParticipant participant = this.tnw.addParticipant(
-                source.getNodeUid(), source.getStaticSourceUrl0(),
+                source.getNodeUid(), source.getStaticLeadUrl0(),
                 source.getRulebookNodeUrl(), source.getBroadcastAddress(),
                 v.getPublicKey(), source.getRegion(), tnw.getMostRecentIssuerParameters());
 
         participant.setRulebookNodeUrl(source.getRulebookNodeUrl());
-        participant.setNetworkName(v.getNodeName());
+        participant.setTrustNetworkName(v.getNodeName());
 
     }
 
@@ -155,18 +154,4 @@ public class WiderTrustNetworkManagement {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-//        WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
-//        wtn.setupWiderTrustNetwork();
-//        wtn.addSource(URI.create("https://trust.exonym.io/sybil-test/sybil/x-source")); //*/
-//        wtn.addSource(URI.create("https://trust.exonym.io/nu2/exonym/x-source")); //*/
-//        wtn.addSource(URI.create("https://trust.exonym.io/nu0/exosources/x-source")); //*/
-//        wtn.addSource(URI.create("https://spectra.plus/spectra/x-source")); //*/
-///        wtn.addSource(URI.create("https://original.spectra.plus/original/x-source")); //*/
-//        wtn.publish();
-
-        String u = "https://trust.exonym.io/sybil-test/sybil/x-source";
-        logger.info(WhiteList.isSourceUrl(u));
-
-    }
 }

@@ -54,7 +54,6 @@ public class RootProperties extends RootPropertyFeatures {
 			this.primarySftpCredentials.setUsernameAndPassword(sftpUsername, sftpPassword);
 			this.primarySftpCredentials.setKnownHosts(knownHost0, knownHost1, knownHost2);
 
-			String failSftpHost=mandatory("FAILOVER_SFTP_HOST");
 			this.authorizedDomain = optional("AUTHORIZED_DOMAIN", null);
 
 			String tokenHost=optional("TOKEN_TRANSFER_HOST", null);

@@ -1,7 +1,5 @@
 package io.exonym.actor.actions;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import eu.abc4trust.xml.*;
 import io.exonym.abc.util.JaxbHelper;
@@ -11,6 +9,7 @@ import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.helpers.PresentationPolicyManager;
 import io.exonym.lite.pojo.*;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.time.Timing;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.PassStore;
@@ -68,7 +67,7 @@ public class TestNodeManager {
 	private void testPPM() {
 		try {
 			NodeVerifier verifier = NodeVerifier.openNode(
-					URI.create("https://trust.exonym.io/ccc-test/x-source"),
+					URI.create("https://trust.exonym.io/ccc-test/lead"),
 					true, false);
 			PresentationPolicyManager ppm = new PresentationPolicyManager(verifier.getPresentationPolicy(),
 					verifier.getCredentialSpecification(), null);
@@ -95,9 +94,9 @@ public class TestNodeManager {
 				networkMap.spawn();
 			}
 			NodeManager network = new NodeManager(sourceName);
-			network.setupNetworkSource(new URL("https://trust.exonym.io/source-rulebook.json"), store);
+			network.setupLead(new URL("https://trust.exonym.io/source-rulebook.json"), store);
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URI url = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url = network.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier nv = NodeVerifier.openNode(url, true, true);
@@ -124,8 +123,8 @@ public class TestNodeManager {
 			assert(ni.getStaticNodeUrl0()!=null);
 			assert(ni.getNodeName()!=null);
 			assert(ni.getIssuerParameterUids().isEmpty());
-			assert(ni.getNodeUid().equals(ni.getSourceUid()));
-			assert(ni.getStaticSourceUrl0()!=null);
+			assert(ni.getNodeUid().equals(ni.getLeadUid()));
+			assert(ni.getStaticLeadUrl0()!=null);
 			assert(ni.getStaticNodeUrl0()!=null);
 			
 			XContainerJSON x = new XContainerJSON(sourceName);
@@ -145,7 +144,7 @@ public class TestNodeManager {
 		try {
 //			resetNode("noborder", orgName);
 			NodeManager network = new NodeManager(sourceName);
-			URI sourceUrl = URI.create("https://trust.exonym.io/ccc-test/x-source");
+			URI sourceUrl = URI.create("https://trust.exonym.io/ccc-test/lead");
 			ProgressReporter r = new ProgressReporter(new String[] {"0", "1", "2", "3", "4", "5", "6"});
 			network.setupAdvocateNode(sourceUrl, advocateName, store, r);
 
@@ -157,12 +156,12 @@ public class TestNodeManager {
 
 			TrustNetwork tn = v.getTargetTrustNetwork();
 			NodeInformation ni = tn.getNodeInformation();
-			assert(ni.getSourceUid()!=null);
-			assert(!ni.getSourceUid().equals(ni.getNodeUid()));
+			assert(ni.getLeadUid()!=null);
+			assert(!ni.getLeadUid().equals(ni.getNodeUid()));
 			assert(ni.getNodeName()!=null);
 			assert(!ni.getIssuerParameterUids().isEmpty());
 			assert(ni.getStaticNodeUrl0()!=null);
-			assert(ni.getStaticSourceUrl0()!=null);
+			assert(ni.getStaticLeadUrl0()!=null);
 			
 		} catch (Exception e) {
 			logger.error("Error", e);
@@ -179,11 +178,11 @@ public class TestNodeManager {
 				networkMap.spawn();
 			}
 			NodeManager network = new NodeManager(sourceName);
-			URI nodeUrl = URI.create("https://trust.exonym.io/ccc-test/x-node");
-			network.addNodeToSource(nodeUrl, store, networkMap, true);
+			URI nodeUrl = URI.create("https://trust.exonym.io/ccc-test/").resolve(Const.MODERATOR);
+			network.addModeratorToLead(nodeUrl, store, networkMap, true);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URI url = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url = network.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier n = NodeVerifier.openNode(url, true, false);
@@ -214,7 +213,7 @@ public class TestNodeManager {
 			NodeManager network = new NodeManager(sourceName);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URI nodeUrl = network.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI nodeUrl = network.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			network.removeNode(nodeUrl, store);
@@ -263,7 +262,7 @@ public class TestNodeManager {
 			m.addScope(s, store);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URI url = m.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url = m.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier v = NodeVerifier.openNode(url, true, true);
@@ -278,7 +277,7 @@ public class TestNodeManager {
 			assert(hasScopeString(v.getPresentationPolicy(), s));
 			
 			m.removeScope(s, store);
-			URI url0 = m.getSourceUrlForThisNode(props.getPrimaryDomain(),
+			URI url0 = m.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			v = NodeVerifier.openNode(url0, true, true);
@@ -302,7 +301,7 @@ public class TestNodeManager {
 	public void testVerifySignature(){
 		try {
 			long t = Timing.currentTime();
-			KeyContainer kc = openXml(new File("resource//trust-networks//publisher//x-source//signatures.xml"), KeyContainer.class);
+			KeyContainer kc = openXml(new File("resource//trust-networks//publisher//lead//signatures.xml"), KeyContainer.class);
 			KeyContainerWrapper kcw = new KeyContainerWrapper(kc);
 			XKey x = kcw.getKey(KeyContainerWrapper.TN_ROOT_KEY);
 			
@@ -341,7 +340,7 @@ public class TestNodeManager {
 		xk.setSignature(p.signData(xk.getPublicKey(), key, null));
 		String xml = JaxbHelper.serializeToXml(pub, KeyContainer.class);
 		RulebookNodeProperties props = RulebookNodeProperties.instance();
-		URI url = p.getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = p.getLeadUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 
 		p.publish(url, xml.getBytes(), "signatures.xml");
@@ -492,8 +491,8 @@ public class TestNodeManager {
 				
 				
 			}
-			File s = new File("resource//trust-networks//" + name + "//x-source");
-			File n = new File("resource//trust-networks//" + name + "//x-node");
+			File s = new File("resource//trust-networks//" + name + "//lead");
+			File n = new File("resource//trust-networks//" + name + "//moderator");
 			if (s.exists()){
 				deleteContentsOfFolder(s);
 				
@@ -524,7 +523,7 @@ public class TestNodeManager {
 				
 				
 			}
-			File n = new File("resource//trust-networks//" + sourceName + "//x-node");
+			File n = new File("resource//trust-networks//" + sourceName + "//" + Const.MODERATOR);
 			if (n.exists()){
 				deleteContentsOfFolder(n);
 				

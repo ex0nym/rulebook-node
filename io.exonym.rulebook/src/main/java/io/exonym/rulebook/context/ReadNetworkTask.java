@@ -51,7 +51,7 @@ public class ReadNetworkTask implements Job {
             Collection<NodeData> node = findNodeData();
             for (NodeData item : node){
                 networkName = item.getNetworkName();
-                boolean source = item.getType().equals(NodeData.TYPE_SOURCE);
+                boolean source = item.getType().equals(NodeData.TYPE_LEAD);
                 ownNode = NodeVerifier.openNode(item.getNodeUrl(), source, source);
                 ownTrustNetwork = new TrustNetworkWrapper(ownNode.getTargetTrustNetwork());
                 processNode(item);
@@ -78,7 +78,7 @@ public class ReadNetworkTask implements Job {
 
     private void updateNodeIfAndOnlyIfNecessary(NodeData self, NodeVerifier source, NetworkParticipant participant) throws Exception {
         KeyContainer kc = openLocalSignatureData(source.getNodeName(), participant.getNodeUid());
-        boolean amISource = self.getType().equals(NodeData.TYPE_SOURCE);
+        boolean amISource = self.getType().equals(NodeData.TYPE_LEAD);
 
         if (kc!=null){ // Local Data Found
             String t = kc.getLastUpdateTime();
@@ -121,12 +121,12 @@ public class ReadNetworkTask implements Job {
     }
 
     private NodeVerifier rootToSource(NodeData self) throws Exception {
-        if (self.getType().equals(NodeData.TYPE_NODE)){
+        if (self.getType().equals(NodeData.TYPE_MODERATOR)){
             NodeVerifier node = NodeVerifier.openNode(self.getNodeUrl(), false, false);
             NodeInformation nodeInformation = node.getTargetTrustNetwork().getNodeInformation();
-            URI sUrl = nodeInformation.getStaticSourceUrl0();
+            URI sUrl = nodeInformation.getStaticLeadUrl0();
             URI fUrl = nodeInformation.getRulebookNodeUrl();
-            URI sUid = nodeInformation.getSourceUid();
+            URI sUid = nodeInformation.getLeadUid();
             KeyContainer localSourceSig = openLocalSignatureData(self.getNetworkName(), sUid);
             NetworkParticipant participant = ownTrustNetwork.getParticipantWithError(sUid);
 
@@ -164,7 +164,7 @@ public class ReadNetworkTask implements Job {
 
                 }
             }
-        } else if (self.getType().equals(NodeData.TYPE_SOURCE)){
+        } else if (self.getType().equals(NodeData.TYPE_LEAD)){
             logger.info("CHRONJOB: I am source and therefore returning own NodeVerifier object");
             return ownNode;
 
@@ -312,12 +312,12 @@ public class ReadNetworkTask implements Job {
         HashMap<String, NodeData> collect = new HashMap<>();
         // Favour the source of a network if it runs on this node.
         for (NodeData item : nodes){
-            if (item.getType().equals(NodeData.TYPE_NODE)){
+            if (item.getType().equals(NodeData.TYPE_MODERATOR)){
                 if (!collect.containsKey(item.getNetworkName())){
                     collect.put(item.getNetworkName(), item);
 
                 }
-            } else if (item.getType().equals(NodeData.TYPE_SOURCE)){
+            } else if (item.getType().equals(NodeData.TYPE_LEAD)){
                 if (collect.containsKey(item.getNetworkName())){
                     collect.remove(item.getNetworkName());
 

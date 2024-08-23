@@ -12,11 +12,8 @@ import io.exonym.lite.exceptions.ProgrammingException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.helpers.*;
 import io.exonym.lite.pojo.*;
-import io.exonym.lite.standard.CryptoUtils;
+import io.exonym.lite.standard.*;
 import io.exonym.lite.time.DateHelper;
-import io.exonym.lite.standard.WhiteList;
-import io.exonym.lite.standard.AsymStoreKey;
-import io.exonym.lite.standard.PassStore;
 import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.node.ProgressReporter;
 import io.exonym.utils.storage.*;
@@ -26,81 +23,86 @@ import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.rmi.UnexpectedException;
 import java.util.*;
 
 public class NodeManager {
 	
 	private static final Logger logger = LogManager.getLogger(NodeManager.class);
-	
-	private final String sourceName;
+	private final String leadName;
 	private final RulebookNodeProperties props = RulebookNodeProperties.instance();
-	private URI networkUid = null;
+	private URI trustNetworkUid = null;
 	private URI nodeUid = null;
 	private TrustNetwork trustNetwork = null;
-
 	private SFTPClient primarySftp = null;
-	// Secondary has been put on hold until entire system working.
-	private SFTPClient secondarySftp = null;
-
 	private String raiHash;
 	private String ppHash;
 
-
-	public NodeManager(String sourceName) throws UxException {
-		validateSourceName(sourceName);
-		this.sourceName =sourceName;
+	public NodeManager(String leadName) throws UxException {
+		validateLeadName(leadName);
+		this.leadName =leadName;
 
 	}
 
-	private void validateSourceName(String sourceName) throws UxException {
-		if (!WhiteList.username(sourceName)){
-			throw new UxException("The Source Name must be between 3 and 32 " +
-					"characters with underscores instead of spaces " + sourceName);
+	private void validateLeadName(String leadName) throws UxException {
+		if (!WhiteList.username(leadName)){
+			throw new UxException("The Lead name must be between 3 and 32 " +
+					"characters with underscores instead of spaces " + leadName);
 
 		}
 	}
 
-	public TrustNetwork setupNetworkSource(URL rulebookURL, PassStore store) throws Exception{
+	public TrustNetwork setupLead(URL rulebookURL, PassStore store) throws Exception{
 		try {
-			XContainerJSON x = establishNewContainer(this.sourceName, store);
+			XContainerJSON x = establishNewContainer(this.leadName, store);
 			try {
-				AsymStoreKey key = establishKey(store, x, "source");
+				AsymStoreKey key = establishKey(store, x, Const.LEAD);
 
 				// create a globally unique uid
 				RulebookVerifier verifier = new RulebookVerifier(rulebookURL);
 				Rulebook rulebook = verifier.getRulebook();
-				URI networkUid = generateSourceUid(rulebook);
+				URI trustNetworkUid = generateTrustNetworkUid(rulebook);
 
 				// create a credential specification
 				CredentialSpecification cred = generateCredentialSpecification(verifier);
 
 				// create a presentation policy
-				PresentationPolicy policy = generatePolicy(networkUid, cred, x);
+				PresentationPolicy policy = generatePolicy(trustNetworkUid, cred, x);
 
 				// define trust network
-				URI primaryUrl =  getSourceUrlForThisNode(props.getPrimaryDomain(),
-						props.getPrimaryStaticDataFolder());
-				logger.debug("PRIMARY >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " + primaryUrl);
+//				URI primaryStaticUrl = getLeadUrlForThisNode(props.getPrimaryDomain(),
+//						props.getPrimaryStaticDataFolder());
+//				logger.debug("PRIMARY >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> " + primaryStaticUrl);
 
 				NodeInformation nodeInfo = new NodeInformation();
-				nodeInfo.setSourceUid(networkUid);
-				nodeInfo.setRulebookNodeUrl(URI.create(props.getRulebookNodeURL()));
+				nodeInfo.setLeadUid(trustNetworkUid);
+				nodeInfo.setRulebookNodeUrl(
+						UIDHelper.ensureTrailingSlash(props.getRulebookNodeURL()));
 				nodeInfo.setBroadcastAddress(URI.create(props.getBroadcastUrl()));
-				nodeInfo.setNodeUid(networkUid);
-				nodeInfo.setStaticSourceUrl0(primaryUrl);
-				nodeInfo.setStaticNodeUrl0(primaryUrl);
-				nodeInfo.setNodeName(sourceName);
+
+				nodeInfo.setNodeUid(trustNetworkUid);
+				URI staticUrl = nodeInfo.getRulebookNodeUrl()
+						.resolve("/static/")
+						.resolve(Const.LEAD + "/");
+
+				nodeInfo.setStaticLeadUrl0(staticUrl);
+				nodeInfo.setStaticNodeUrl0(staticUrl);
+				nodeInfo.setNodeName(leadName);
 				nodeInfo.setRegion(props.getIsoCountryCode());
 
 				TrustNetwork network = new TrustNetwork();
 				network.setNodeInformation(nodeInfo);
-				network.setNodeInformationUid(URI.create(networkUid + ":ni"));
+				network.setNodeInformationUid(Const.TRUST_NETWORK_URN);
 				network.setLastUpdated(DateHelper.currentIsoUtcDateTime());
 
 				// save all files
@@ -136,36 +138,40 @@ public class NodeManager {
 				toSign.put(policy.getPolicyUID(), new ByteArrayBuffer(pSign));
 				toSign.put(network.getNodeInformationUid(), new ByteArrayBuffer(tnSign));
 
-				URI url0 = getSourceUrlForThisNode(props.getPrimaryDomain(),
-						props.getPrimaryStaticDataFolder());
+				URI url0 = staticUrl;
 
 				signatureUpdateXml(key, toSign, wrapper, url0);
 				String xml = JaxbHelper.serializeToXml(wrapper.getKeyContainer(), KeyContainer.class);
 
-				publishOnlyIfNew(url0, xml.getBytes(), "signatures.xml");
+				publishOnlyIfNew(url0, xml.getBytes(), Const.SIGNATURES_XML);
 				publish(url0, cSpecBytes, XContainerJSON.uidToXmlFileName(cred.getSpecificationUID()));
 				publish(url0, cPolicy, XContainerJSON.uidToXmlFileName(policy.getPolicyUID()));
-				publish(url0, trust, XContainerJSON.uidToXmlFileName(network.getNodeInformationUid()));
+				publish(url0, trust, XContainerJSON.uidToXmlFileName(Const.TRUST_NETWORK_URN));
 
 				try {
-					String filename = "/rulebook.json";
-					String path = props.getPrimaryStaticDataFolder() + "/" + nodeInfo.getNodeName();
+					Path rulebookPath = Path.of(staticUrl.getPath()).getParent();
+
+					URI rulebookUrl = nodeInfo.getRulebookNodeUrl().resolve(rulebookPath.toUri());
+
 					String xnd = JaxbHelper.serializeToJson(rulebook, Rulebook.class);
-					try {
-						primarySftp.overwrite(path + filename, xnd, false);
+					writeLocal(rulebookUrl, xnd.getBytes(StandardCharsets.UTF_8),
+							"rulebook.json");
 
-					} catch (Exception e) {
-						primarySftp.overwrite(path + filename, xnd, true);
-
-					}
+//					try {
+//						primarySftp.overwrite(path + filename, xnd, false);
+//
+//					} catch (Exception e) {
+//						primarySftp.overwrite(path + filename, xnd, true);
+//
+//					}
 				} catch (Exception e) {
-					logger.warn("Failed to write model XNodeDescription", e);
+					logger.warn("Failed to write model rulebook.json", e);
 
 				}
 				return network;
 
 			} catch (Exception e){
-				logger.info("Tidy up XNodeContainer");
+				logger.info("Tidy up IdContainer");
 				x.delete();
 				throw e;
 
@@ -195,7 +201,7 @@ public class NodeManager {
 
 			// Establish Identifiers
 			CredentialSpecification cs = verifiedSource.getCredentialSpecification();
-			String root = computeAdvocateUID(source.getSourceUid(), nodeName);
+			String root = computeAdvocateUID(source.getLeadUid(), nodeName);
 			String issuerUid = ":" + establishNodeName(null);
 			URI iUid = URI.create(root + issuerUid + ":i");
 			URI rapUid = URI.create(root + issuerUid + ":ra");
@@ -215,8 +221,8 @@ public class NodeManager {
 
 			nodeInfo.getIssuerParameterUids().add(iUid);
 
-			nodeInfo.setSourceUid(source.getSourceUid());
-			nodeInfo.setStaticSourceUrl0(sourceUrl);
+			nodeInfo.setLeadUid(source.getLeadUid());
+			nodeInfo.setStaticLeadUrl0(sourceUrl);
 
 			NetworkParticipant sourceParticipant = new NetworkParticipant();
 			sourceParticipant.setNodeUid(source.getNodeUid());
@@ -224,9 +230,9 @@ public class NodeManager {
 			sourceParticipant.setPublicKey(verifiedSource.getPublicKey());
 			sourceParticipant.setBroadcastAddress(nodeInfo.getBroadcastAddress());
 			sourceParticipant.setAvailableOnMostRecentRequest(true);
-			sourceParticipant.setStaticNodeUrl0(source.getStaticSourceUrl0());
+			sourceParticipant.setStaticNodeUrl0(source.getStaticLeadUrl0());
 			logger.info("sourceUid " + source.getNodeUid());
-			logger.info("sourceUrl " + source.getStaticSourceUrl0());
+			logger.info("sourceUrl " + source.getStaticLeadUrl0());
 
 			TrustNetwork network = new TrustNetwork();
 			network.setNodeInformation(nodeInfo);
@@ -241,7 +247,7 @@ public class NodeManager {
 			progress.setComplete(pending.get(1));
 
 			// Sign Public Key
-			AsymStoreKey key = establishKey(store, hostXContainer, "host");
+			AsymStoreKey key = establishKey(store, hostXContainer, Const.MODERATOR);
 
 			KeyContainer pub = new KeyContainer();
 			KeyContainerWrapper wrapper = new KeyContainerWrapper(pub);
@@ -366,19 +372,18 @@ public class NodeManager {
 	// Do not delete until the system has a large number of users.
 	public void freshIssuer(PassStore store) throws Exception {
 		
-		TrustNetwork network = openMyTrustNetwork(false);
-		TrustNetworkWrapper tnw = new TrustNetworkWrapper(network);
+		TrustNetworkWrapper tnw = openMyTrustNetwork(false);
 
 		NodeInformation info = tnw.getNodeInformation();
 		String username = info.getNodeName().split("-")[0];
-		XContainerJSON x = openContainer(sourceName, store);
+		XContainerJSON x = openContainer(leadName, store);
 		String root = info.getNodeUid() + ":" + establishNodeName(null);
 		
 		KeyContainer kcPrivate= x.openResource("keys.xml", store.getDecipher());
 		KeyContainerWrapper kcwPrivate = new KeyContainerWrapper(kcPrivate);
 		AsymStoreKey key = openKey(kcwPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
 		
-		URI cUid = URI.create(info.getSourceUid() + ":c");
+		URI cUid = URI.create(info.getLeadUid() + ":c");
 		URI iUid = URI.create(root + ":i");
 		URI raUid = URI.create(root + ":ra");
 		URI raiUid = URI.create(root + ":rai");
@@ -393,11 +398,12 @@ public class NodeManager {
 		IssuerParameters i = x.openResource(iUid);
 		
 		tnw.getNodeInformation().getIssuerParameterUids().add(iUid);
+		TrustNetwork network = tnw.finalizeTrustNetwork();
 
 		String rapString = XContainerJSON.convertObjectToXml(rap);
 		String raiString = XContainerJSON.convertObjectToXml(ri);
 		String iString = XContainerJSON.convertObjectToXml(i);
-		String niString = JaxbHelper.serializeToXml(network, TrustNetwork.class);
+		String niString = JaxbHelper.serializeToXml(tnw.finalizeTrustNetwork(), TrustNetwork.class);
 
 		String rapSign = NodeVerifier.stripStringToSign(rapString);
 		String raiSign = NodeVerifier.stripStringToSign(raiString);
@@ -429,7 +435,7 @@ public class NodeManager {
 	}
 
 	public void publishTrustNetwork(TrustNetwork tn, KeyContainer publicKeyContainer, PassStore store) throws Exception {
-		XContainerJSON x = openContainer(sourceName, store);
+		XContainerJSON x = openContainer(leadName, store);
 		KeyContainer kcPrivate= x.openResource("keys.xml", store.getDecipher());
 		KeyContainerWrapper kcwPrivate = new KeyContainerWrapper(kcPrivate);
 		AsymStoreKey key = openKey(kcwPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
@@ -503,9 +509,14 @@ public class NodeManager {
 
 	}
 
-	private URI generateSourceUid(Rulebook rulebook) {
+	private URI generateTrustNetworkUid(Rulebook rulebook) {
 		String rulebookId = rulebook.getRulebookId().split(":")[2];
-		String uid = Namespace.URN_PREFIX_COLON + sourceName + ":" +  rulebookId;
+
+		String uid = Namespace.URN_PREFIX_COLON
+				+ rulebook.getDescription().getName().toLowerCase() + ":"
+				+ leadName + ":"
+				+ rulebookId;
+
 		return URI.create(uid);
 		
 	}
@@ -543,7 +554,7 @@ public class NodeManager {
 	 * @return the UID of the Node Added
 	 * @throws Exception
 	 */
-	public URI addNodeToSource(URI nodeUrl, PassStore store, AbstractNetworkMap networkMap, boolean testnet) throws Exception{
+	public URI addModeratorToLead(URI nodeUrl, PassStore store, AbstractNetworkMap networkMap, boolean testnet) throws Exception{
 		NodeVerifier nodeToAdd = NodeVerifier.openNode(nodeUrl, false, true);
 		IssuerParametersUID sybilUid = defineIssuerParams(nodeToAdd, networkMap, testnet); // null if we're adding a sybil node
 		TrustNetworkWrapper addingNetworkWrapper = new TrustNetworkWrapper(nodeToAdd.getTargetTrustNetwork());
@@ -553,10 +564,10 @@ public class NodeManager {
 		
 		InspectorPublicKey addingIns = nodeToAdd.getInspectorPublicKey();
 
-		TrustNetwork myNetwork = openMyTrustNetwork(true);
-		TrustNetworkWrapper myNetworkWrapper = new TrustNetworkWrapper(myNetwork);
+		TrustNetworkWrapper myNetworkWrapper = openMyTrustNetwork(true);
+
 		NodeInformation addingNi = addingNetworkWrapper.getNodeInformation();
-		LinkedList<URI> currentIssuerParams = myNetwork.getNodeInformation().getIssuerParameterUids();
+		LinkedList<URI> currentIssuerParams = myNetworkWrapper.getNodeInformation().getIssuerParameterUids();
 		currentIssuerParams.remove(addingIssuerUid);
 
 		myNetworkWrapper.addParticipant(addingNi.getNodeUid(),
@@ -564,10 +575,10 @@ public class NodeManager {
 				nodeToAdd.getPublicKey(), addingNi.getRegion(),
 				addingNetworkWrapper.getMostRecentIssuerParameters());
 
-		myNetwork = myNetworkWrapper.finalizeTrustNetwork();
+		TrustNetwork myNetwork = myNetworkWrapper.finalizeTrustNetwork();
 
 		// From source
-		XContainerJSON x = openContainer(this.sourceName, store);
+		XContainerJSON x = openContainer(this.leadName, store);
 		CredentialSpecification cred = x.openResource(helper.getCredentialSpecFileName());
 		PresentationPolicy myPresentationPolicy = x.openResource(helper.getPresentationPolicyFileName());
 		if (myPresentationPolicy==null) {
@@ -583,7 +594,7 @@ public class NodeManager {
 
 		x.saveLocalResource(myPresentationPolicy, true);
 		
-		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(), props.getPrimaryStaticDataFolder());
+		URI url = getLeadUrlForThisNode(props.getPrimaryDomain(), props.getPrimaryStaticDataFolder());
 		
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
 		
@@ -657,7 +668,7 @@ public class NodeManager {
 			NodeInformation targetInfo = v.getTargetTrustNetwork().getNodeInformation();
 
 			if (!isSource(targetInfo)) {
-				TrustNetwork tn = openMyTrustNetwork(true);
+				TrustNetworkWrapper tn = openMyTrustNetwork(true);
 				NodeInformation myInfo = tn.getNodeInformation();
 				XContainerJSON x = openContainer(myInfo.getNodeName(), store);
 				URI ppaUid = URI.create(myInfo.getNodeUid() + ":pp");
@@ -684,12 +695,12 @@ public class NodeManager {
 
 					}
 				}
-				tn = new TrustNetworkWrapper(tn).finalizeTrustNetwork();
+				TrustNetwork tnet = tn.finalizeTrustNetwork();
 
 				pp = ppm.build();
 
 				String ppaString = XContainerJSON.convertObjectToXml(pp);
-				String niString = JaxbHelper.serializeToXml(tn, TrustNetwork.class);
+				String niString = JaxbHelper.serializeToXml(tnet, TrustNetwork.class);
 
 				String ppaSign = NodeVerifier.stripStringToSign(ppaString);
 				String niSign = NodeVerifier.stripStringToSign(niString);
@@ -703,9 +714,9 @@ public class NodeManager {
 
 				HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
 				toSign.put(pp.getPolicyUID(), new ByteArrayBuffer(ppaSign.getBytes()));
-				toSign.put(tn.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
+				toSign.put(tnet.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
 
-				URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+				URI url = getLeadUrlForThisNode(props.getPrimaryDomain(),
 						props.getPrimaryStaticDataFolder());
 
 				KeyContainerWrapper kcw = openSignaturesContainer(url);
@@ -716,10 +727,10 @@ public class NodeManager {
 				String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
 				publish(url, xml.getBytes(), "signatures.xml");
 				publish(url, ppaBytes, XContainerJSON.uidToXmlFileName(pp.getPolicyUID()));
-				publish(url, niBytes, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
+				publish(url, niBytes, XContainerJSON.uidToXmlFileName(tnet.getNodeInformationUid()));
 
 			} else {
-				throw new Exception("To poll for new paramaters, select a x-node");
+				throw new Exception("To poll for new paramaters, select a Rulebook Node");
 
 			}
 		} else {
@@ -734,7 +745,7 @@ public class NodeManager {
 			return false; 
 			
 		}
-		return info.getNodeUid().equals(info.getSourceUid());
+		return info.getNodeUid().equals(info.getLeadUid());
 		
 	}
 
@@ -757,7 +768,7 @@ public class NodeManager {
 
 	public void removeNode(String issuerUid, PassStore store) throws Exception {
 		URI iUid = URI.create(issuerUid);
-		XContainerJSON x = openContainer(sourceName, store);
+		XContainerJSON x = openContainer(leadName, store);
 		KeyContainer kcSecret = x.openResource("keys.xml");
 		KeyContainerWrapper kcwSecret = new KeyContainerWrapper(kcSecret);
 		XKey xkey = kcwSecret.getKey(KeyContainerWrapper.TN_ROOT_KEY);
@@ -775,10 +786,10 @@ public class NodeManager {
 		ppa0 = ppm.build();
 		x.saveLocalResource(ppa0, true);
 
-		TrustNetwork network = openMyTrustNetwork(true);
-		TrustNetworkWrapper networkWrapper = new TrustNetworkWrapper(trustNetwork);
+		TrustNetworkWrapper networkWrapper = openMyTrustNetwork(true);
+
 		networkWrapper.removeParticipant(URI.create(issuerUid));
-		network = networkWrapper.finalizeTrustNetwork();
+		TrustNetwork network = networkWrapper.finalizeTrustNetwork();
 
 		String ppString = XContainerJSON.convertObjectToXml(ppa0);
 		this.ppHash = CryptoUtils.computeSha256HashAsHex(ppString);
@@ -795,7 +806,7 @@ public class NodeManager {
 		toSign.put(ppa0.getPolicyUID(), new ByteArrayBuffer(ppSign.getBytes()));
 		toSign.put(network.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
 
-		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = getLeadUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 		
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
@@ -810,72 +821,28 @@ public class NodeManager {
 	}
 
 	public KeyContainerWrapper openSignaturesContainer(URI url) throws Exception {
-		String uStr = url.toString();
-		if (uStr.endsWith("signatures.xml")) {
+		Path path = Path.of(url.getPath());
+		if (path.getFileName().equals(Const.SIGNATURES_XML)){
 			// do nothing
-			
-		} else if (uStr.endsWith("x-node/") || uStr.endsWith("x-source/")){
-			uStr += "signatures.xml";
-			
-		} else if (uStr.endsWith("x-node") || uStr.endsWith("x-source")){
-			uStr += "/signatures.xml";
-			
+
+		} else if (path.getFileName().equals(Const.LEAD) || path.getFileName().equals(Const.MODERATOR)){
+			url = url.resolve(Const.SIGNATURES_XML);
+
 		} else {
 			throw new UxException("There is no signature file associated with this URL: " + url);
-			
+
 		}
-		URL l = new URL(uStr);
-		
-		String source = new String(UrlHelper.read(l));
-		KeyContainer kcPublic = JaxbHelper.xmlToClass(source, KeyContainer.class);
+		String sigs = new String(UrlHelper.read(url.toURL()));
+		KeyContainer kcPublic = JaxbHelper.xmlToClass(sigs, KeyContainer.class);
 		KeyContainerWrapper kcw = new KeyContainerWrapper(kcPublic);
 		return kcw;
 		
 	}
 	
-	public TrustNetwork openMyTrustNetwork(boolean isSource) throws Exception {
-		logger.info("Opening Trust Network " + isSource);
-		if (trustNetwork!=null) {
-			return trustNetwork;
-			
-		} else {
-			URI url = null;
-			if (isSource) {
-				url = getSourceUrlForThisNode(props.getPrimaryDomain(),
-						props.getPrimaryStaticDataFolder());
-				
-			} else {
-				url = getAdvocateUrlForThisNode(props.getPrimaryDomain(),
-						props.getPrimaryStaticDataFolder());
-				
-			}
-			try {
-				KeyContainerWrapper kcw = openSignaturesContainer(url);
-				Set<URI> uids = kcw.getKeyRingUids();
-				
-				URI networkInformationUid = null; 
-				for (URI uid : uids) {
-					if (uid.toString().endsWith(":ni")) {
-						networkInformationUid = uid; 
-						break; 
-						
-					}
-				}
-				String fileName = XContainerJSON.uidToFileName(networkInformationUid);
-				URL netInfoUrl = new URL(url + "/" + fileName + ".xml");
-				byte[] niBytes  = UrlHelper.read(netInfoUrl);
-				String ni = new String(niBytes);
-				trustNetwork = JaxbHelper.xmlToClass(ni, TrustNetwork.class);
-				logger.info("Read Trust Network from " + netInfoUrl);
-				this.networkUid = trustNetwork.getNodeInformation().getSourceUid();
-				return trustNetwork;
-				
-			} catch (FileNotFoundException e) {
-				logger.warn("File not found exception - happens when the node is being established" + e.getMessage());
-				return null; 
-				
-			} 
-		}
+	public TrustNetworkWrapper openMyTrustNetwork(boolean amILead) throws Exception {
+		MyTrustNetwork mtn = new MyTrustNetwork(amILead);
+		return mtn.getTrustNetworkWrapper();
+
 	}
 
 	public void addScope(String scope,  PassStore store) throws Exception {
@@ -886,7 +853,7 @@ public class NodeManager {
 	}
 
 	public void addScope(ArrayList<String> scope, PassStore store) throws Exception {
-		XContainerJSON x = openContainer(sourceName, store);
+		XContainerJSON x = openContainer(leadName, store);
 		KeyContainer kcSecret = x.openResource("keys.xml");
 		KeyContainerWrapper kcwSecret = new KeyContainerWrapper(kcSecret);
 		XKey xkey = kcwSecret.getKey(KeyContainerWrapper.TN_ROOT_KEY);
@@ -903,7 +870,7 @@ public class NodeManager {
 		ppm.addNym(scope);
 		ppa0 = ppm.build();
 		
-		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = getLeadUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
@@ -927,7 +894,7 @@ public class NodeManager {
 	}
 
 	public void removeScope(String scope, PassStore store) throws Exception {
-		XContainerJSON x = openContainer(sourceName, store);
+		XContainerJSON x = openContainer(leadName, store);
 		KeyContainer kcSecret = x.openResource("keys.xml");
 		KeyContainerWrapper kcwSecret = new KeyContainerWrapper(kcSecret);
 		XKey xkey = kcwSecret.getKey(KeyContainerWrapper.TN_ROOT_KEY);
@@ -945,7 +912,7 @@ public class NodeManager {
 		ppa0 = ppm.build();
 		x.saveLocalResource(ppa0, true);
 		
-		URI url = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI url = getLeadUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 		KeyContainerWrapper kcw = openSignaturesContainer(url);
 
@@ -1062,10 +1029,10 @@ public class NodeManager {
 		String name = info.getNodeName() + "test";
 		NodeManager nm = new NodeManager(name);
 		RulebookNodeProperties props = RulebookNodeProperties.instance();
-		URI sourceUrl = nm.getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI sourceUrl = nm.getLeadUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 		logger.info("To " + sourceUrl);
-		info.setStaticSourceUrl0(sourceUrl);
+		info.setStaticLeadUrl0(sourceUrl);
 
 		if (!info.getNodeName().equals("adasda")){
 			throw new Exception("You need to establish the failover");
@@ -1074,7 +1041,7 @@ public class NodeManager {
 		// info.setFailOverSourceUrl(URI.create(failover));
 
 		XContainerJSON x = nm.establishNewContainer(name, store);
-		AsymStoreKey key = nm.establishKey(store, x, "host");
+		AsymStoreKey key = nm.establishKey(store, x, Const.MODERATOR);
 
 		CredentialSpecification cs = v.getCredentialSpecification();
 		PresentationPolicy ppa = v.getPresentationPolicy();
@@ -1130,11 +1097,11 @@ public class NodeManager {
 		t.setTransferToBeCompletedBy(DateHelper.isoUtcDateTime(dt));
 		t.setDestinationUrl(destinationUrl);
 
-		URI sourceUrl = getSourceUrlForThisNode(props.getPrimaryDomain(),
+		URI sourceUrl = getLeadUrlForThisNode(props.getPrimaryDomain(),
 				props.getPrimaryStaticDataFolder());
 
 		KeyContainerWrapper kcwPublic = openSignaturesContainer(sourceUrl);
-		XContainerJSON x = openContainer(sourceName, store);
+		XContainerJSON x = openContainer(leadName, store);
 		KeyContainer kcPrivate = x.openResource("keys.xml");
 		KeyContainerWrapper kcwPrivate = new KeyContainerWrapper(kcPrivate);
 		AsymStoreKey key = openKey(kcwPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
@@ -1278,58 +1245,90 @@ public class NodeManager {
 			return nodeName + "-" +  parts[1];
 
 		} else {
-			throw new UxException("Nodename is invalid " + nodeName);
+			throw new UxException("Node name is invalid " + nodeName);
 
 		}
 	}
 
 
 	private void primaryPutNew(URI url, byte[] xml, String xmlFileName) throws Exception {
+		writeNewLocal(url, xml, xmlFileName);
+//		try {
+//			if (primarySftp ==null || !primarySftp.isActive()) {
+//				primarySftp = new SFTPClient(props.getPrimarySftpCredentials());
+//				primarySftp.connect();
+//
+//			}
+//			logger.debug("url >>>>>>>>>>>>>>>>>>>>>>>>>" + url);
+//			String path = url.toString().replace(
+//					root(props.getPrimaryDomain()), "/");
+//			logger.debug("PATH0 >>>>>>>>>>>>>>>>>>>>>>>>>" + path);
+//			String xml0 = new String(xml);
+//			try {
+//				primarySftp.put(path + "//" + xmlFileName, xml0, false);
+//
+//			} catch (Exception e) {
+//				primarySftp.put(path + "//" + xmlFileName, xml0, true);
+//
+//			}
+//		} catch (ProgrammingException e) {
+//			throw new UxException("Files have already been published to this space - Please delete them and try again", e);
+//
+//		}
+	}
+
+	private void primaryPut(URI url, byte[] xml, String xmlFileName) throws Exception {
+		writeLocal(url, xml, xmlFileName);
+//		if (primarySftp ==null || !primarySftp.isActive()) {
+//			primarySftp = new SFTPClient(props.getPrimarySftpCredentials());
+//			primarySftp.connect();
+//
+//		}
+//		String path = url.toString().replace(
+//				root(props.getPrimaryDomain()), "/");
+//		String xml0 = new String(xml);
+//		try {
+//			primarySftp.overwrite(path + "//" + xmlFileName, xml0, false);
+//
+//		} catch (Exception e) {
+//			primarySftp.overwrite(path + "//" + xmlFileName, xml0, true);
+//
+//		}
+	}
+
+
+	private void writeNewLocal(URI url, byte[] xml, String xmlFileName) throws Exception {
 		try {
-			if (primarySftp ==null || !primarySftp.isActive()) {
-				primarySftp = new SFTPClient(props.getPrimarySftpCredentials());
-				primarySftp.connect();
+			Path writeLocation = computeWriteLocation(url);
+			Files.createDirectories(writeLocation);
+			Files.write(writeLocation.resolve(xmlFileName), xml, StandardOpenOption.CREATE_NEW);
 
-			}
-			logger.debug("url >>>>>>>>>>>>>>>>>>>>>>>>>" + url);
-			String path = url.toString().replace(
-					root(props.getPrimaryDomain()), "/");
-			logger.debug("PATH0 >>>>>>>>>>>>>>>>>>>>>>>>>" + path);
-			String xml0 = new String(xml);
-			try {
-				primarySftp.put(path + "//" + xmlFileName, xml0, false);
-
-			} catch (Exception e) {
-				primarySftp.put(path + "//" + xmlFileName, xml0, true);
-
-			}
-		} catch (ProgrammingException e) {
+		} catch (IOException e) {
 			throw new UxException("Files have already been published to this space - Please delete them and try again", e);
 
 		}
 	}
 
-	private String root(String rootProp){
-		return (rootProp.endsWith("/") ? rootProp : rootProp + "/");
+	private void writeLocal(URI url, byte[] xml, String xmlFileName) throws Exception {
+		Path writeLocation = computeWriteLocation(url);
+		Files.createDirectories(writeLocation);
+		Files.write(writeLocation.resolve(xmlFileName), xml, StandardOpenOption.CREATE);
 
 	}
 
-	private void primaryPut(URI url, byte[] xml, String xmlFileName) throws Exception {
-		if (primarySftp ==null || !primarySftp.isActive()) {
-			primarySftp = new SFTPClient(props.getPrimarySftpCredentials());
-			primarySftp.connect();
 
-		}
-		String path = url.toString().replace(
-				root(props.getPrimaryDomain()), "/");
-		String xml0 = new String(xml);
-		try {
-			primarySftp.overwrite(path + "//" + xmlFileName, xml0, false);
+	private Path computeWriteLocation(URI url) {
+		String ofUrl = url.getPath();
+		Path writeLocation = Path.of(Const.PATH_OF_HTML, ofUrl);
 
-		} catch (Exception e) {
-			primarySftp.overwrite(path + "//" + xmlFileName, xml0, true);
+		logger.info("Path of URL: " + url.getPath() + " write: " + writeLocation.toAbsolutePath());
+		return writeLocation;
 
-		}
+	}
+
+	private String root(String rootProp){
+		return (rootProp.endsWith("/") ? rootProp : rootProp + "/");
+
 	}
 
 	public NodeInformation getNodeInformation() {
@@ -1342,14 +1341,14 @@ public class NodeManager {
 		}
 	}
 
-	public URI getSourceUrlForThisNode(String root, String folder) throws UxException, MalformedURLException {
-		String r = constructBaseNodeUrl(root, folder) + "/x-source";
+	public URI getLeadUrlForThisNode(String root, String folder) throws UxException, MalformedURLException {
+		String r = constructBaseNodeUrl(root, folder) + Const.LEAD;
 		return URI.create(r);
 
 	}
 	
 	public URI getAdvocateUrlForThisNode(String root, String folder) throws UxException, MalformedURLException {
-		String baseUrl = constructBaseNodeUrl(root, folder) + "/x-node";
+		String baseUrl = constructBaseNodeUrl(root, folder) + Const.MODERATOR;
 		logger.info("Built URL=" + baseUrl);
 		return URI.create(baseUrl);
 
@@ -1379,20 +1378,19 @@ public class NodeManager {
 			networkFolder = "";
 			
 		}
-		logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> URL: " + root + networkFolder + this.sourceName);
-		return root + networkFolder + this.sourceName;
+		logger.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> URL: " + root + networkFolder + this.leadName);
+		return root + networkFolder + "/" + this.leadName;
 		
 	}
 
 
-
 	public URI discoverNetworkUid() throws Exception {
-		if (networkUid!=null) {
-			return networkUid;
+		if (trustNetworkUid !=null) {
+			return trustNetworkUid;
 			
 		} else {
 			this.openMyTrustNetwork(false);
-			return networkUid;
+			return trustNetworkUid;
 			
 		}
 	}
@@ -1402,7 +1400,7 @@ public class NodeManager {
 			return nodeUid;
 			
 		} else {
-			TrustNetwork tn = openMyTrustNetwork(false);
+			TrustNetworkWrapper tn = openMyTrustNetwork(false);
 			this.nodeUid = tn.getNodeInformation().getNodeUid();
 			return nodeUid;
 			
@@ -1421,7 +1419,7 @@ public class NodeManager {
 				return parts[parts.length-1];
 				
 			} else {
-				throw new Exception("Invalid URI: Expected 'x-source' or 'x-node' in the path: " + url);	
+				throw new Exception("Invalid URI: Expected 'lead' or 'moderator' in the path: " + url);
 				
 			}
 		} else {
@@ -1430,8 +1428,8 @@ public class NodeManager {
 		}
 	}
 
-	public void setNetworkUid(URI networkUid) {
-		this.networkUid = networkUid;
+	public void setTrustNetworkUid(URI trustNetworkUid) {
+		this.trustNetworkUid = trustNetworkUid;
 		
 	}
 

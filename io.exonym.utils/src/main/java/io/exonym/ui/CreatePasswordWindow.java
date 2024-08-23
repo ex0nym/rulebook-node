@@ -44,7 +44,7 @@ public class CreatePasswordWindow extends JFrame {
 			this.setLocationRelativeTo(null);
 			this.setResizable(false);
 			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			this.setTitle("X-Node");
+			this.setTitle("Rulebook Node");
 			this.getRootPane().setDefaultButton(btnOk);
 			this.setVisible(true);
 

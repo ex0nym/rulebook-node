@@ -495,7 +495,8 @@ public abstract class AbstractXContainer {
 			throw new Exception("Null uri");
 
 		}
-		return uri.replaceAll(":", ".").replace(NamespaceMngt.URN_PREFIX_DOTTED_DOTTED, "") + ".xml";
+		return uri.replaceAll(":", ".")
+				.replace(NamespaceMngt.URN_PREFIX_DOTTED_DOTTED, "") + ".xml";
 
 	}
 

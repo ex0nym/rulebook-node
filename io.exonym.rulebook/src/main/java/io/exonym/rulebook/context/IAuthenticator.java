@@ -178,7 +178,7 @@ public class IAuthenticator extends StandardAuthenticator {
             HashSet<String> sources = new HashSet<>();
 
             for (NodeData node : local){
-                if (node.getType().equals(NodeData.TYPE_NODE)){
+                if (node.getType().equals(NodeData.TYPE_MODERATOR)){
                     this.networkNameForNode = node.getNetworkName();
                     this.containerNameForNode = node.getName();
                     this.nodeUid = node.getNodeUid();
@@ -186,7 +186,7 @@ public class IAuthenticator extends StandardAuthenticator {
                     this.nodeShortName = parts[2] + ":" + parts[4];
                     break;
 
-                } else if (node.getType().equals(NodeData.TYPE_SOURCE)){
+                } else if (node.getType().equals(NodeData.TYPE_LEAD)){
                     sources.add(node.getNetworkName());
 
                 }

@@ -10,6 +10,7 @@ import io.exonym.actor.storage.SFTPLogonData;
 import io.exonym.actor.storage.SignatureOn;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.*;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.PassStore;
@@ -27,8 +28,8 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
     /*
 
-    /x-node/exox/
-    /x-node/exoy/
+    /moderator/exox/
+    /moderator/exoy/
 
 
     <00-2-hex>.xml = signatures on all 00, 01, etc...
@@ -298,7 +299,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
     private void write(String xOrYList, String pokeString, String n3, String n6) throws Exception {
         activateSftpOut();
         String r0 = staticFolder;
-        String name = "/" + myNmia.getSourceName() + "/x-node";
+        String name = "/" + myNmia.getSourceName() + "/" + Const.MODERATOR;
 
         String pokePath0 = r0 + name + computePokePathToFile(xOrYList);
         String n3Path0 = r0 + name + computeN3PathToFile(matrix.getNibble3(), xOrYList);

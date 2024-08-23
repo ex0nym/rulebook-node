@@ -6,12 +6,11 @@ import io.exonym.lite.pojo.Namespace;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import java.net.URI;
-import java.net.URL;
 
 @XmlType(name="NetworkParticipant", namespace = Namespace.EX)
 public class NetworkParticipant {
 	
-	private String networkName;
+	private String trustNetworkName;
 	private URI staticNodeUrl0;
 	private URI staticNodeUrl1;
 	private URI rulebookNodeUrl;
@@ -33,13 +32,13 @@ public class NetworkParticipant {
 		this.rulebookNodeUrl = rulebookNodeUrl;
 	}
 
-	@XmlElement(name = "NetworkName", namespace = Namespace.EX)
-	public String getNetworkName() {
-		return networkName;
+	@XmlElement(name = "TrustNetworkName", namespace = Namespace.EX)
+	public String getTrustNetworkName() {
+		return trustNetworkName;
 	}
 
-	public void setNetworkName(String networkName) {
-		this.networkName = networkName;
+	public void setTrustNetworkName(String trustNetworkName) {
+		this.trustNetworkName = trustNetworkName;
 	}
 
 	public URI getNodeUid() {

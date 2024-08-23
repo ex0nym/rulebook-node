@@ -18,12 +18,12 @@ public class TestNodeVerifier {
 	}
 
 	public void name() throws Exception {
-		URI url0 = URI.create("https://existence.global/jti/x-source");
-		URI url1 = URI.create("https://existence.global/jti/x-source/");
-		URI url2 = URI.create("https://existence.global/jti/x-source/abc.xml");
-		URI url3 = URI.create("https://existence.global/jti/x-node");
-		URI url4 = URI.create("https://existence.global/jti/x-node/");
-		URI url5 = URI.create("https://existence.global/jti/x-node/abc.xml/");
+		URI url0 = URI.create("https://existence.global/jti/lead");
+		URI url1 = URI.create("https://existence.global/jti/lead/");
+		URI url2 = URI.create("https://existence.global/jti/lead/abc.xml");
+		URI url3 = URI.create("https://existence.global/jti/lead");
+		URI url4 = URI.create("https://existence.global/jti/lead/");
+		URI url5 = URI.create("https://existence.global/jti/lead/abc.xml/");
 
 		assert(url1.equals(NodeVerifier.trainAtFolder(url0)));
 		assert(url1.equals(NodeVerifier.trainAtFolder(url1)));

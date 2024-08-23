@@ -41,7 +41,7 @@ public class AuthenticationFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         try {
-            testFileWrite();
+//            testFileWrite();
             filterConfig.getServletContext();
 
             // updOpen();

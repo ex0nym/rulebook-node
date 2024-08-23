@@ -9,6 +9,7 @@ import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.ProgrammingException;
 import io.exonym.lite.exceptions.UxException;
+import io.exonym.lite.standard.Const;
 import io.exonym.rulebook.exceptions.ItemNotFoundException;
 import io.exonym.lite.pojo.NodeData;
 import org.apache.logging.log4j.LogManager;
@@ -58,7 +59,7 @@ public class NodeStore {
 
             QueryBasic q = new QueryBasic();
             q.getSelector().put(NodeData.FIELD_NODE_UID, nodeUid);
-            q.getSelector().put(NodeData.FIELD_TYPE, NodeData.TYPE_NETWORK_NODE);
+            q.getSelector().put(NodeData.FIELD_TYPE, NodeData.TYPE_RULEBOOK_NODE);
 			List<NodeData> containers = store.read(q);
 
 			if (containers.isEmpty()) {
@@ -170,7 +171,7 @@ public class NodeStore {
 	}
 
 	public synchronized NodeData openThisAdvocate() throws Exception {
-		ArrayList<NodeData> nodes = findType(NodeData.TYPE_NODE);
+		ArrayList<NodeData> nodes = findType(NodeData.TYPE_MODERATOR);
 		if (nodes.isEmpty()){
 			return null;
 
@@ -184,7 +185,7 @@ public class NodeStore {
 	}
 
 	public synchronized NodeData openThisSource() throws Exception {
-		ArrayList<NodeData> nodes = findType(NodeData.TYPE_SOURCE);
+		ArrayList<NodeData> nodes = findType(NodeData.TYPE_LEAD);
 		if (nodes.isEmpty()){
 			return null;
 
@@ -226,7 +227,7 @@ public class NodeStore {
 	public synchronized ArrayList<NodeData> findAllNetworkNodes(String networkName) throws Exception {
 		try {
             QueryBasic q = new QueryBasic();
-            q.getSelector().put("type", NodeData.TYPE_NETWORK_NODE);
+            q.getSelector().put("type", NodeData.TYPE_RULEBOOK_NODE);
             q.getSelector().put("name", networkName);
 
 //            String query = "{\"selector\": {\"name\":\"<replace>\", \"type\":\"" + NodeData.TYPE_NETWORK_NODE + "\"}}";
@@ -254,7 +255,7 @@ public class NodeStore {
 	public synchronized ArrayList<NodeData> findAllNetworkNodes() throws Exception {
 		try {
             QueryBasic q = new QueryBasic();
-            q.getSelector().put("type", NodeData.TYPE_NETWORK_NODE);
+            q.getSelector().put("type", NodeData.TYPE_RULEBOOK_NODE);
 			// String query = "{\"selector\": {\"type\":\"" + NodeData.TYPE_NETWORK_NODE + "\"}}";
 			List<NodeData> containers = store.read(q);
 			if (containers.isEmpty()) {
@@ -277,18 +278,18 @@ public class NodeStore {
 
 	public synchronized ArrayList<NodeData> findAllLocalNodes() throws Exception {
 		try {
-			// String query = "{\"selector\": {\"$or\": [{\"type\": \"node\"},{\"type\": \"source\"}]}}";
+			// String query = "{\"selector\": {\"$or\": [{\"type\": \"moderator\"},{\"type\": \"lead\"}]}}";
 			ArrayList options = new ArrayList<>();
-			options.add("node");
-			options.add("source");
+			options.add(Const.MODERATOR);
+			options.add(Const.LEAD);
 			QueryOrGate query = new QueryOrGate("type", options);
 
 			List<NodeData> containers = store.read(query);
 			if (containers.isEmpty()) {
-				throw new ItemNotFoundException("NodeData(source)");
+				throw new ItemNotFoundException("NodeData(lead)");
 
 			} else {
-				logger.debug("Returned " + containers.size() + " results for source");
+				logger.debug("Returned " + containers.size() + " results for lead");
 
 			}
 			return new ArrayList<>(containers);

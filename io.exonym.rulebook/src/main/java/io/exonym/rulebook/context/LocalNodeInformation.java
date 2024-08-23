@@ -151,14 +151,14 @@ public class LocalNodeInformation {
 		int node = 0; 
 		
 		for (NodeData d : sources) {
-			if (d.getType().equals(NodeData.TYPE_SOURCE)) {
+			if (d.getType().equals(NodeData.TYPE_LEAD)) {
 				networkList.add(d.getNetworkName());
 				JsonObject networkItem = new JsonObject();
 				networkItem.addProperty("networkName", d.getName());
 				networkItem.addProperty("sourceUrl", d.getNodeUrl().toString());
 				networkData.add(d.getName(), networkItem);
 				
-			} else if (d.getType().equals(NodeData.TYPE_NODE)) {
+			} else if (d.getType().equals(NodeData.TYPE_MODERATOR)) {
 				if (node==0) {
 					node++;
 					nodeAttached=d.getNodeUrl();
@@ -334,7 +334,7 @@ public class LocalNodeInformation {
 				fetchNetworkMembers();
 
 				for (NodeData n: localNodes) {
-					boolean isSource = n.getType().equals(NodeData.TYPE_SOURCE);
+					boolean isSource = n.getType().equals(NodeData.TYPE_LEAD);
 					NodeVerifier v = NodeVerifier.openNode(n.getNodeUrl(), isSource, isSource);
 					
 					if (isSource) {
