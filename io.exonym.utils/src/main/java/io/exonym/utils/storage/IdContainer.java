@@ -46,10 +46,10 @@ import io.exonym.utils.adapters.PresentationPolicyAlternativesAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class XContainer extends AbstractXContainer {
+public final class IdContainer extends AbstractIdContainer {
 	
 
-	private static final Logger logger = LogManager.getLogger(XContainer.class);
+	private static final Logger logger = LogManager.getLogger(IdContainer.class);
 
 	private final ArrayList<String> actionParamsList = new ArrayList<>();
 	private final ArrayList<String> demParmasList = new ArrayList<>();
@@ -90,7 +90,7 @@ public final class XContainer extends AbstractXContainer {
 	}
 
 	
-	public XContainer(String containerName) throws Exception {
+	public IdContainer(String containerName) throws Exception {
 		super(containerName);
 		URI base = NamespaceMngt.BASE_LOCATION.resolve(containerName + "/");
 		
@@ -120,7 +120,7 @@ public final class XContainer extends AbstractXContainer {
 
 	}
 
-	public XContainer(String containerName, boolean create) throws Exception {
+	public IdContainer(String containerName, boolean create) throws Exception {
 		super(containerName);
 		URI base = NamespaceMngt.BASE_LOCATION.resolve(containerName + "/");
 		root += containerName + "/";
@@ -538,7 +538,7 @@ public final class XContainer extends AbstractXContainer {
 	
 	public static boolean exists(String name){
 		try {
-			new XContainer(name);
+			new IdContainer(name);
 			return true; 
 			
 		} catch (Exception e) {

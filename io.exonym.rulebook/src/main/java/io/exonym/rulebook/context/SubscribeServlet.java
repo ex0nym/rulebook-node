@@ -11,7 +11,7 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.utils.ExtractObject;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -93,7 +93,7 @@ public class SubscribeServlet extends HttpServlet {
             JoinProcessor join = joinRequests.get(hashOfNonce);
             if (join != null) {
                 IssuanceMessageAndBoolean imab = join.join(message, issuanceToken);
-                String response = XContainer.convertObjectToXml(imab);
+                String response = IdContainer.convertObjectToXml(imab);
                 resp.getWriter().write(response);
 
             } else {

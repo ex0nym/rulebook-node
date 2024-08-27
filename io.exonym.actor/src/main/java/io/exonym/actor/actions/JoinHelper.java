@@ -4,7 +4,7 @@ import eu.abc4trust.smartcard.Base64;
 import eu.abc4trust.xml.*;
 import io.exonym.helpers.BuildPresentationPolicy;
 import io.exonym.helpers.UIDHelper;
-import io.exonym.lite.pojo.NetworkMapItemSource;
+import io.exonym.lite.pojo.NetworkMapItemLead;
 import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.storage.ExternalResourceContainer;
 import java.net.URI;
@@ -39,11 +39,11 @@ public class JoinHelper {
 
     }
 
-    private static void filterSourceList(ArrayList<NetworkMapItemSource> acceptableSources, RulebookVerifier verifier) {
+    private static void filterSourceList(ArrayList<NetworkMapItemLead> acceptableSources, RulebookVerifier verifier) {
         String rid = UIDHelper.computeRulebookHashFromRulebookId(verifier.getRulebook().getRulebookId());
-        ArrayList<NetworkMapItemSource> result = new ArrayList<>();
-        for (NetworkMapItemSource source : acceptableSources){
-            if (source.getSourceUID().toString().contains(rid)){
+        ArrayList<NetworkMapItemLead> result = new ArrayList<>();
+        for (NetworkMapItemLead source : acceptableSources){
+            if (source.getLeadUID().toString().contains(rid)){
                 result.add(source);
             }
         }

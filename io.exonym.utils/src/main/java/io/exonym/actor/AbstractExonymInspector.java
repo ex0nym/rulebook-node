@@ -7,7 +7,7 @@ import eu.abc4trust.cryptoEngine.inspector.CryptoEngineInspector;
 import eu.abc4trust.returnTypes.InspectorPublicAndSecretKey;
 import eu.abc4trust.xml.*;
 import io.exonym.lite.standard.PassStore;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,7 +23,7 @@ public abstract class AbstractExonymInspector extends AbstractBaseActor {
 	private CredentialManager credentialManagerInspector;
 	
 	
-	protected AbstractExonymInspector(AbstractXContainer container) throws Exception {
+	protected AbstractExonymInspector(AbstractIdContainer container) throws Exception {
 		super(container);
 		initSystemParameters();
 		ceInspector = INJECTOR.providesCryptoEngineInspectorAbc();

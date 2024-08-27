@@ -17,8 +17,9 @@ public class Const {
 	public static final String MODERATOR = "moderator";
 
 	public static final String SIGNATURES_XML = "signatures.xml";
+	public static final String LEADS_XML = "leads.xml";
 
-	public static final URI TRUST_NETWORK_URN = URI.create("urn:rulebook:trust-network:ni");
+	public static final URI TRUST_NETWORK_UID = URI.create("urn:rulebook:trust-network:ni");
 
 	public static final String PATH_OF_HTML = Path.of("/var", "www", "html").toString();
 	public static final String PATH_OF_STATIC = PATH_OF_HTML + "/static";

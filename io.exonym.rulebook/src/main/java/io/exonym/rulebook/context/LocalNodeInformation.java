@@ -9,6 +9,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import eu.abc4trust.xml.PresentationPolicy;
 import eu.abc4trust.xml.PseudonymInPolicy;
+import io.exonym.actor.actions.MyStaticData;
 import io.exonym.actor.actions.NodeVerifier;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.HubException;
@@ -36,7 +37,7 @@ public class LocalNodeInformation {
 	private static final Logger logger = LogManager.getLogger(LocalNodeInformation.class);
 	private static LocalNodeInformation instance = null;
 
-	private final ArrayList<TrustNetwork> sourceInformationList = new ArrayList<TrustNetwork>();
+	private final ArrayList<TrustNetwork> leadInfoList = new ArrayList<TrustNetwork>();
 	private final ArrayList<TrustNetwork> nodeInformationList = new ArrayList<TrustNetwork>();
 
 	private final ConcurrentHashMap<String, PresentationPolicy> networkNameToPresentationPolicy = new ConcurrentHashMap<String, PresentationPolicy>();
@@ -53,7 +54,7 @@ public class LocalNodeInformation {
 	private NodeReader nodeReader = null;
 
 	public JsonObject discover(ArrayList<NodeData> sources) throws Exception {
-		if (sourceInformationList.isEmpty()) {
+		if (leadInfoList.isEmpty()) {
 			JsonObject parent = generateQuickList(sources);
 			computeNodeInformation(sources);
 			return parent;
@@ -70,7 +71,7 @@ public class LocalNodeInformation {
 	}
 	
 	public NodeInformation fetchNodeInformation(String networkName) throws HubException {
-		for (TrustNetwork t : sourceInformationList) {
+		for (TrustNetwork t : leadInfoList) {
 			NodeInformation i = t.getNodeInformation();
 			if (i.getNodeName().contentEquals(networkName)) {
 				return i; 
@@ -178,7 +179,7 @@ public class LocalNodeInformation {
 		if (this.complete!=null) {
 			return complete;
 			
-		} else if (!this.sourceInformationList.isEmpty() || !this.nodeInformationList.isEmpty()) {
+		} else if (!this.leadInfoList.isEmpty() || !this.nodeInformationList.isEmpty()) {
 			return buildJsonObject();
 			
 		} else {
@@ -242,7 +243,7 @@ public class LocalNodeInformation {
 		JsonObject networkData = new JsonObject();
 		complete.add("networkData", networkData);
 
-		for (TrustNetwork t : this.sourceInformationList) {
+		for (TrustNetwork t : this.leadInfoList) {
 			NodeInformation i = t.getNodeInformation();
 			String name = i.getNodeName();
 			networkList.add(name);
@@ -294,7 +295,7 @@ public class LocalNodeInformation {
 
 	public synchronized void clear() {
 		logger.debug("Calling CLEAR!!!!! << ------ ");
-		sourceInformationList.clear();
+		leadInfoList.clear();
 		networkNameToPresentationPolicy.clear();
 		this.nodeAttached=null;
 		this.networkNodeData = null;
@@ -304,8 +305,8 @@ public class LocalNodeInformation {
 		
 	}
 
-	public ArrayList<TrustNetwork> getSourceInformationList() {
-		return sourceInformationList;
+	public ArrayList<TrustNetwork> getLeadInfoList() {
+		return leadInfoList;
 	}
 
 	public ArrayList<TrustNetwork> getNodeInformationList() {
@@ -328,17 +329,17 @@ public class LocalNodeInformation {
 
 		@Override
 		protected void process() {
-			sourceInformationList.clear();
+			leadInfoList.clear();
 			try {
 				fetchNetworkNodes();
 				fetchNetworkMembers();
 
 				for (NodeData n: localNodes) {
-					boolean isSource = n.getType().equals(NodeData.TYPE_LEAD);
-					NodeVerifier v = NodeVerifier.openNode(n.getNodeUrl(), isSource, isSource);
+					boolean isLead = n.getType().equals(NodeData.TYPE_LEAD);
+					NodeVerifier v = NodeVerifier.openNode(n.getNodeUrl(), isLead, isLead);
 					
-					if (isSource) {
-						sourceInformationList.add(v.getTargetTrustNetwork());
+					if (isLead) {
+						leadInfoList.add(v.getTargetTrustNetwork());
 						networkNameToPresentationPolicy.put(n.getNetworkName(), v.getPresentationPolicy());
 						
 					} else {

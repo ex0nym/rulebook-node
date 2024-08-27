@@ -5,7 +5,7 @@ import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import eu.abc4trust.xml.*;
 import io.exonym.abc.util.JaxbHelper;
 import io.exonym.lite.pojo.IssuanceSigma;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 import org.apache.commons.codec.binary.Base64;
 
 import java.nio.charset.StandardCharsets;
@@ -22,7 +22,7 @@ public class Parser {
     }
 
     public static String parseIssuanceMessageAndBoolean(IssuanceMessageAndBoolean imab) throws Exception {
-        return Base64.encodeBase64String(XContainer.convertObjectToXml(imab).getBytes(StandardCharsets.UTF_8));
+        return Base64.encodeBase64String(IdContainer.convertObjectToXml(imab).getBytes(StandardCharsets.UTF_8));
 
     }
 
@@ -52,21 +52,21 @@ public class Parser {
 
     public static String parsePresentationToken(PresentationToken token) throws Exception {
         return Base64.encodeBase64String(
-                XContainer.convertObjectToXml(token)
+                IdContainer.convertObjectToXml(token)
                 .getBytes(StandardCharsets.UTF_8));
 
     }
 
     public static String parsePresentationPolicyAlt(PresentationPolicyAlternatives ppa) throws Exception {
         return Base64.encodeBase64String(
-                XContainer.convertObjectToXml(ppa)
+                IdContainer.convertObjectToXml(ppa)
                         .getBytes(StandardCharsets.UTF_8));
 
     }
 
     public static String parseIssuancePolicy(IssuancePolicy policy) throws Exception {
         return Base64.encodeBase64String(
-                XContainer.convertObjectToXml(policy)
+                IdContainer.convertObjectToXml(policy)
                         .getBytes(StandardCharsets.UTF_8));
 
     }

@@ -8,8 +8,7 @@ import io.exonym.actor.AbstractExonymIssuer;
 import io.exonym.actor.VerifiedClaim;
 import io.exonym.utils.storage.ExternalResourceContainer;
 import io.exonym.utils.storage.ImabAndHandle;
-import io.exonym.utils.storage.LedgerContainer;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 
 import javax.crypto.Cipher;
 import java.math.BigInteger;
@@ -17,7 +16,7 @@ import java.net.URI;
 
 public final class ExonymIssuer extends AbstractExonymIssuer{
 
-	public ExonymIssuer(XContainerJSON container) throws Exception {
+	public ExonymIssuer(IdContainerJSON container) throws Exception {
 		super(container);
 		
 	}
@@ -141,8 +140,8 @@ public final class ExonymIssuer extends AbstractExonymIssuer{
 	}
 
 	@Override
-	protected XContainer getContainer() {
-		return (XContainer) super.getContainer();
+	protected IdContainer getContainer() {
+		return (IdContainer) super.getContainer();
 	}
 
 	@Override

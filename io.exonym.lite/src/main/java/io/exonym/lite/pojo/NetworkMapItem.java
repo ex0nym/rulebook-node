@@ -4,12 +4,11 @@ package io.exonym.lite.pojo;
 import io.exonym.lite.couchdb.AbstractCouchDbObject;
 
 import java.net.URI;
-import java.net.URL;
 
 public class NetworkMapItem extends AbstractCouchDbObject {
 
     public static final String TYPE = "rulebook";
-    public static final String FIELD_SOURCE_UID = "sourceUID";
+    public static final String FIELD_LEAD_UID = "leadUID";
     public static final String FIELD_NODE_UID = "nodeUID";
     public static final String FIELD_PUBLIC_KEY = "publicKeyB64";
     public static final String FIELD_RULEBOOK_NODE_URL = "rulebookNodeURL";
@@ -18,9 +17,9 @@ public class NetworkMapItem extends AbstractCouchDbObject {
 
     private String lastUpdated;
     private String region;
-    private String sourceName;
-    private String advocateName;
-    private URI sourceUID;
+    private String leadName;
+    private String moderatorName;
+    private URI leadUID;
     private URI nodeUID;
     private URI rulebookNodeURL;
     private URI broadcastAddress;
@@ -36,12 +35,12 @@ public class NetworkMapItem extends AbstractCouchDbObject {
         this.lastUpdated = lastUpdated;
     }
 
-    public URI getSourceUID() {
-        return sourceUID;
+    public URI getLeadUID() {
+        return leadUID;
     }
 
-    public void setSourceUID(URI sourceUID) {
-        this.sourceUID = sourceUID;
+    public void setLeadUID(URI leadUID) {
+        this.leadUID = leadUID;
     }
 
     public URI getNodeUID() {
@@ -85,20 +84,20 @@ public class NetworkMapItem extends AbstractCouchDbObject {
         this.lastIssuerUID = lastIssuerUID;
     }
 
-    public String getSourceName() {
-        return sourceName;
+    public String getLeadName() {
+        return leadName;
     }
 
-    public void setSourceName(String sourceName) {
-        this.sourceName = sourceName;
+    public void setLeadName(String leadName) {
+        this.leadName = leadName;
     }
 
-    public String getAdvocateName() {
-        return advocateName;
+    public String getModeratorName() {
+        return moderatorName;
     }
 
-    public void setAdvocateName(String advocateName) {
-        this.advocateName = advocateName;
+    public void setModeratorName(String moderatorName) {
+        this.moderatorName = moderatorName;
     }
 
     public URI getRulebookNodeURL() {

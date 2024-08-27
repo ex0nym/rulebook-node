@@ -7,7 +7,7 @@ import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.KeyContainerWrapper;
 import io.exonym.lite.pojo.XKey;
 import io.exonym.lite.pojo.NodeData;
-import io.exonym.rulebook.schema.XNodeContainer;
+import io.exonym.rulebook.schema.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,7 +27,7 @@ public class Signer {
         NodeData node = ns.openThisAdvocate();
         logger.debug("node name" + node.getName() + " " + node.get_id());
 
-        XNodeContainer x = new XNodeContainer(node.getName());
+        IdContainer x = new IdContainer(node.getName());
         KeyContainer kcSecret = x.openResource("keys.xml");
         KeyContainerWrapper kcwSecret = new KeyContainerWrapper(kcSecret);
         XKey xkey = kcwSecret.getKey(KeyContainerWrapper.TN_ROOT_KEY);

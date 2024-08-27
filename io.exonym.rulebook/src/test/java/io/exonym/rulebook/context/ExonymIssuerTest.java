@@ -7,7 +7,7 @@ import eu.abc4trust.xml.*;
 import io.exonym.actor.AbstractExonymIssuer;
 import io.exonym.actor.VerifiedClaim;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
 import io.exonym.utils.storage.ImabAndHandle;
 
@@ -17,7 +17,7 @@ import java.net.URI;
 
 public class ExonymIssuerTest extends AbstractExonymIssuer {
 
-    protected ExonymIssuerTest(AbstractXContainer container) throws Exception {
+    protected ExonymIssuerTest(AbstractIdContainer container) throws Exception {
         super(container);
     }
 
@@ -67,7 +67,7 @@ public class ExonymIssuerTest extends AbstractExonymIssuer {
     }
 
     @Override
-    protected AbstractXContainer getContainer() {
+    protected AbstractIdContainer getContainer() {
         return super.getContainer();
     }
 
@@ -154,7 +154,7 @@ public class ExonymIssuerTest extends AbstractExonymIssuer {
 
     @Override
     protected ExternalResourceContainer initialzeExternalResourceContainer() {
-        return new PkiExternalResourceContainer();
+        return PkiExternalResourceContainer.getInstance();
     }
 
 

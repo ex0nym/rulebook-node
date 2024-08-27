@@ -3,8 +3,6 @@ package io.exonym.actor.actions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import io.exonym.actor.actions.XContainerJSON;
-
 public class ContainerSuite {
 	
 	private static final Logger logger = LogManager.getLogger(ContainerSuite.class);
@@ -18,7 +16,7 @@ public class ContainerSuite {
 	
 	public static void setup(){
 		try {
-			XContainerJSON xc1 = new XContainerJSON(XC1, true);
+			IdContainerJSON xc1 = new IdContainerJSON(XC1, true);
 			xc1.delete();
 			
 		} catch (Exception e) {
@@ -27,14 +25,14 @@ public class ContainerSuite {
 		}
 
 		try {
-			XContainerJSON base = new XContainerJSON(XC0, true);
+			IdContainerJSON base = new IdContainerJSON(XC0, true);
 			logger.debug("Created container " + base.getUsername());
 			
 		} catch (Exception e) {
 			try {
-				XContainerJSON base = new XContainerJSON(XC0);
+				IdContainerJSON base = new IdContainerJSON(XC0);
 				base.delete();
-				base = new XContainerJSON(XC0, true);
+				base = new IdContainerJSON(XC0, true);
 				logger.debug("Created container after emptying an old container " + base.getUsername());
 				
 			} catch (Exception e1) {

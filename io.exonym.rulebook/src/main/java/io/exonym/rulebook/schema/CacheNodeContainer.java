@@ -1,6 +1,6 @@
 package io.exonym.rulebook.schema;
 
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.CacheContainer;
 
 import java.io.FileNotFoundException;
@@ -18,7 +18,7 @@ public class CacheNodeContainer implements CacheContainer {
         }
     }
 
-    private XNodeContainer x;
+    private IdContainer x;
 
     public static CacheNodeContainer getInstance(){
         return instance;
@@ -26,10 +26,10 @@ public class CacheNodeContainer implements CacheContainer {
 
     private CacheNodeContainer() throws Exception {
         try {
-            x = new XNodeContainer("cache", true);
+            x = new IdContainer("cache", true);
 
         } catch (Exception e) {
-            x = new XNodeContainer("cache", false);
+            x = new IdContainer("cache", false);
 
         }
     }
@@ -64,12 +64,12 @@ public class CacheNodeContainer implements CacheContainer {
 
     public void clear() throws Exception {
         x.delete();
-        x = new XNodeContainer("cache", true);
+        x = new IdContainer("cache", true);
 
     }
 
     @Override
-    public AbstractXContainer getContainer() throws Exception {
+    public AbstractIdContainer getContainer() throws Exception {
         return x;
     }
 }

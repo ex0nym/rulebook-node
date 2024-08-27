@@ -1,12 +1,9 @@
 package io.exonym.rulebook.context;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import eu.abc4trust.xml.*;
 import io.exonym.actor.actions.*;
 import io.exonym.helpers.BuildIssuancePolicy;
 import io.exonym.helpers.UIDHelper;
-import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.*;
 import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.CryptoUtils;
@@ -28,7 +25,7 @@ public class JoinSupportSingleton {
 
     private final NetworkMapWeb networkMap;
     private final PassStore store;
-    private final NetworkMapItemAdvocate myAdvocate;
+    private final NetworkMapItemModerator myAdvocate;
     private final UIDHelper myAdvocateHelper;
     private final UIDHelper sybilHelper;
     private final Cache cache;
@@ -96,7 +93,7 @@ public class JoinSupportSingleton {
         return store;
     }
 
-    protected NetworkMapItemAdvocate getMyAdvocate() {
+    protected NetworkMapItemModerator getMyAdvocate() {
         return myAdvocate;
     }
 

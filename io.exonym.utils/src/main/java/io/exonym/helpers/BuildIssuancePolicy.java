@@ -2,10 +2,9 @@ package io.exonym.helpers;
 
 import com.beust.jcommander.internal.Nullable;
 import eu.abc4trust.xml.*;
-import io.exonym.lite.pojo.Namespace;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.uri.NamespaceMngt;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 
 import java.net.URI;
 
@@ -44,7 +43,7 @@ public class BuildIssuancePolicy {
 	}
 
 	private void definePresentationPolicyUid(URI issuerParameters) throws Exception {
-		String value = XContainer.stripUidSuffix(issuerParameters, 1);
+		String value = IdContainer.stripUidSuffix(issuerParameters, 1);
 		URI policyUid = URI.create(NamespaceMngt.URN_PREFIX_COLON+ value + ":pp");
 		ip.getPresentationPolicy().setPolicyUID(policyUid);
 

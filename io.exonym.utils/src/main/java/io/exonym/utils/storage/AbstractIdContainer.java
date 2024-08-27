@@ -17,11 +17,11 @@ import javax.crypto.Cipher;
 import java.net.URI;
 import java.util.ArrayList;
 
-public abstract class AbstractXContainer {
+public abstract class AbstractIdContainer {
 	
 	protected final static ObjectFactory of = new ObjectFactory();
 
-	private static final Logger logger = LogManager.getLogger(AbstractXContainer.class);
+	private static final Logger logger = LogManager.getLogger(AbstractIdContainer.class);
 	private final String username;
 	private final URI secretUri;
 	
@@ -50,7 +50,7 @@ public abstract class AbstractXContainer {
 	protected ArrayList<String> inspectorList = new ArrayList<>();
 	protected ArrayList<String> revocationAuthList = new ArrayList<>();	
 
-	public AbstractXContainer(String username) throws Exception {
+	public AbstractIdContainer(String username) throws Exception {
 		if (username==null){
 			throw new HubException("No name for container");
 			
@@ -70,7 +70,7 @@ public abstract class AbstractXContainer {
 	
 	@SuppressWarnings("unchecked")
 	public synchronized <T> T openResource(URI uri) throws Exception{
-		return (T)openResource(XContainer.uidToXmlFileName(uri), null);
+		return (T)openResource(IdContainer.uidToXmlFileName(uri), null);
 		
 	}
 	
@@ -82,7 +82,7 @@ public abstract class AbstractXContainer {
 	
 	@SuppressWarnings("unchecked")
 	public synchronized <T> T openResource(URI uri, Cipher dec) throws Exception{
-		return (T)openResource(XContainer.uidToXmlFileName(uri), dec);
+		return (T)openResource(IdContainer.uidToXmlFileName(uri), dec);
 		
 	}
 	

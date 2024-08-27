@@ -6,7 +6,7 @@ import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.actor.XContainerExternal;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
-import io.exonym.actor.actions.XContainerJSON;
+import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.ErrorMessages;
@@ -52,7 +52,7 @@ public class AuthenticationFilter implements Filter {
 
             PkiExternalResourceContainer.getInstance()
                     .setNetworkMapAndCache(map, CacheNodeContainer.getInstance());
-            XContainerJSON.openSystemParameters();
+            IdContainerJSON.openSystemParameters();
             XContainerExternal.openSystemParameters();
 
             logger.info("NetworkMap and Lambda Params initialized");

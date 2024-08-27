@@ -11,31 +11,31 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
 
     public static final String TYPE_NETWORK_MAP_NODE_OVERVIEW = "network-map";
 
-    public static final String GLOBAL_STATE_SOURCE_SET_UNAVAILABLE = "GLOBAL_STATE_SOURCE_SET_UNAVAILABLE";
-    public static final String GLOBAL_STATE_SOURCE_SET_AVAILABLE_THIS_SOURCE_UNLISTED = "GLOBAL_STATE_SOURCE_SET_AVAILABLE_THIS_SOURCE_UNLISTED";
-    public static final String GLOBAL_STATE_DEFINED_SOURCE_LISTED__THIS_HOST_UNLISTED = "GLOBAL_STATE_DEFINED_SOURCE_LISTED__THIS_HOST_UNLISTED";
-    public static final String GLOBAL_STATE_THIS_SOURCE_LISTED_HOST_INDETERMINATE = "GLOBAL_STATE_THIS_SOURCE_LISTED_HOST_INDETERMINATE";
-    public static final String GLOBAL_STATE_THIS_NODE_LISTED = "GLOBAL_STATE_THIS_NODE_LISTED";
+    public static final String GLOBAL_STATE_LEAD_SET_UNAVAILABLE = "GLOBAL_STATE_LEAD_SET_UNAVAILABLE";
+    public static final String GLOBAL_STATE_LEAD_SET_AVAILABLE_THIS_LEAD_UNLISTED = "GLOBAL_STATE_LEAD_SET_AVAILABLE_THIS_LEAD_UNLISTED";
+    public static final String GLOBAL_STATE_DEFINED_LEAD_LISTED__THIS_MODERATOR_UNLISTED = "GLOBAL_STATE_DEFINED_LEAD_LISTED__THIS_MODERATOR_UNLISTED";
+    public static final String GLOBAL_STATE_THIS_LEAD_LISTED_MOD_INDETERMINATE = "GLOBAL_STATE_THIS_LEAD_LISTED_MOD_INDETERMINATE";
+    public static final String GLOBAL_STATE_THIS_MODERATOR_LISTED = "GLOBAL_STATE_THIS_MODERATOR_LISTED";
 
     public static final String LOCAL_STATE_UNDEFINED = "LOCAL_STATE_UNDEFINED";
-    public static final String LOCAL_STATE_HOST = "LOCAL_STATE_HOST";
-    public static final String LOCAL_STATE_SOURCE = "LOCAL_STATE_SOURCE";
-    public static final String LOCAL_STATE_SOURCE_AND_HOST = "LOCAL_STATE_SOURCE_AND_HOST";
-    public static final String LOCAL_STATE_INDEPENDENT_SOURCE_AND_HOST = "LOCAL_STATE_INDEPENDENT_SOURCE_AND_HOST";
+    public static final String LOCAL_STATE_MODERATOR = "LOCAL_STATE_MODERATOR";
+    public static final String LOCAL_STATE_LEAD = "LOCAL_STATE_LEAD";
+    public static final String LOCAL_STATE_LEAD_AND_MODERATOR = "LOCAL_STATE_LEAD_AND_MODERATOR";
+    public static final String LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR = "LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR";
 
-    private ConcurrentHashMap<URI, NetworkMapItemSource> sources = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<URI, NetworkMapItemLead> sources = new ConcurrentHashMap<>();
     private String lastRefresh = null;
     private String currentLocalState = "UNKNOWN";
     private String currentGlobalState = "UNKNOWN";
-    private URI advocateUID;
-    private URI thisAdvocateSourceUID;
+    private URI moderatorUID;
+    private URI thisModeratorLeadUID;
 
-    private URI thisNodeSourceUID;
+    private URI thisNodeLeadUID;
 
-    private HashSet<URI> listeningToSources = new HashSet<>();
+    private HashSet<URI> listeningToLeads = new HashSet<>();
 
     private boolean sybilRequiresUpdate = false;
-    private boolean sourceRequiresUpdate = false;
+    private boolean leadRequiresUpdate = false;
 
     private String latestRevocationInformationHash = null;
     private String latestPresentationPolicyHash = null;
@@ -45,12 +45,12 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
 
     }
 
-    public ConcurrentHashMap<URI, NetworkMapItemSource> getSources() {
+    public ConcurrentHashMap<URI, NetworkMapItemLead> getSources() {
         return sources;
 
     }
 
-    public void setSources(ConcurrentHashMap<URI, NetworkMapItemSource> sources) {
+    public void setLeads(ConcurrentHashMap<URI, NetworkMapItemLead> sources) {
         this.sources = sources;
 
     }
@@ -79,29 +79,29 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
         this.currentGlobalState = currentGlobalState;
     }
 
-    public URI getAdvocateUID() {
-        return advocateUID;
+    public URI getModeratorUID() {
+        return moderatorUID;
     }
 
-    public void setAdvocateUID(URI advocateUID) {
-        this.advocateUID = advocateUID;
+    public void setModeratorUID(URI moderatorUID) {
+        this.moderatorUID = moderatorUID;
     }
 
-    public URI getThisAdvocateSourceUID() {
-        return thisAdvocateSourceUID;
+    public URI getThisModeratorLeadUID() {
+        return thisModeratorLeadUID;
     }
 
-    public void setThisAdvocateSourceUID(URI thisAdvocateSourceUID) {
-        this.thisAdvocateSourceUID = thisAdvocateSourceUID;
+    public void setThisModeratorLeadUID(URI thisModeratorLeadUID) {
+        this.thisModeratorLeadUID = thisModeratorLeadUID;
     }
 
 
-    public HashSet<URI> getListeningToSources() {
-        return listeningToSources;
+    public HashSet<URI> getListeningToLeads() {
+        return listeningToLeads;
     }
 
-    public void setListeningToSources(HashSet<URI> listeningToSources) {
-        this.listeningToSources = listeningToSources;
+    public void setListeningToLeads(HashSet<URI> listeningToLeads) {
+        this.listeningToLeads = listeningToLeads;
     }
 
     public boolean isSybilRequiresUpdate() {
@@ -112,12 +112,12 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
         this.sybilRequiresUpdate = sybilRequiresUpdate;
     }
 
-    public boolean isSourceRequiresUpdate() {
-        return sourceRequiresUpdate;
+    public boolean isLeadRequiresUpdate() {
+        return leadRequiresUpdate;
     }
 
-    public void setSourceRequiresUpdate(boolean sourceRequiresUpdate) {
-        this.sourceRequiresUpdate = sourceRequiresUpdate;
+    public void setLeadRequiresUpdate(boolean leadRequiresUpdate) {
+        this.leadRequiresUpdate = leadRequiresUpdate;
     }
 
     public String getLatestRevocationInformationHash() {
@@ -136,11 +136,11 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
         this.latestPresentationPolicyHash = latestPresentationPolicyHash;
     }
 
-    public URI getThisNodeSourceUID() {
-        return thisNodeSourceUID;
+    public URI getThisNodeLeadUID() {
+        return thisNodeLeadUID;
     }
 
-    public void setThisNodeSourceUID(URI thisNodeSourceUID) {
-        this.thisNodeSourceUID = thisNodeSourceUID;
+    public void setThisNodeLeadUID(URI thisNodeLeadUID) {
+        this.thisNodeLeadUID = thisNodeLeadUID;
     }
 }

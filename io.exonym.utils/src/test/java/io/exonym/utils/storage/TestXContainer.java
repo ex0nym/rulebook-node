@@ -9,7 +9,6 @@ import io.exonym.abc.util.JaxbHelper;
 import io.exonym.helpers.BuildCredentialSpecification;
 import io.exonym.uri.UriDataType;
 import io.exonym.uri.UriEncoding;
-import io.exonym.lite.standard.PassStore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,7 +23,7 @@ public class TestXContainer {
 		
 		// Open Container that does not exist.
 		try {
-			new XContainer(UtilsSuite.XC1);
+			new IdContainer(UtilsSuite.XC1);
 			assert(false);
 			
 		} catch (Exception e) {
@@ -36,7 +35,7 @@ public class TestXContainer {
 		// Create Container
 		try {
 			logger.info("CREATE_AND_DELETE_CONTAINER: Creating contianer xc1");
-			XContainer xc1 = new XContainer(UtilsSuite.XC1, true);
+			IdContainer xc1 = new IdContainer(UtilsSuite.XC1, true);
 			File file = new File(xc1.getRUNTIME_KEYS());
 			
 			logger.info("CREATE_AND_DELETE_CONTAINER: Checking folder in the container exists " + file.getAbsolutePath());
@@ -60,7 +59,7 @@ public class TestXContainer {
 			BuildCredentialSpecification bcs = new BuildCredentialSpecification(URI.create("urn:credential:c"), true);
 			CredentialSpecification cs = bcs.getCredentialSpecification();
 			
-			XContainer xc0 = new XContainer(UtilsSuite.XC0);
+			IdContainer xc0 = new IdContainer(UtilsSuite.XC0);
 			xc0.saveLocalResource(cs);
 			logger.info("SAVE_PLAIN_RESOURCE: Saved a credential specification and checking that it's there");
 			assert(!xc0.getLocalLedgerList().isEmpty());

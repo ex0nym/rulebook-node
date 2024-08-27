@@ -35,7 +35,7 @@ public class ExonymSearch {
 
     private final String root;
 
-    private final NetworkMapItemAdvocate myAdvocate;
+    private final NetworkMapItemModerator myAdvocate;
 
     private final AbstractNetworkMap networkMap;
 
@@ -194,7 +194,7 @@ public class ExonymSearch {
         for (URI hostUuid : hosts){
             try {
                 ExonymMatrixManagerGlobal matrixManager = new ExonymMatrixManagerGlobal(
-                        (NetworkMapItemAdvocate) this.networkMap.nmiForNode(hostUuid),
+                        (NetworkMapItemModerator) this.networkMap.nmiForNode(hostUuid),
                         myAdvocate, n6,  root);
                 ExonymDetailedResult result = matrixManager.detailedResult(x0);
                 resultSet.add(result);

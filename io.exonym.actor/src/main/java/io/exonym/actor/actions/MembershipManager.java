@@ -19,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
 import java.net.URI;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,7 +34,7 @@ public class MembershipManager {
 	private final NodeInformation info;
 	private final URI nodeUrl;
 	private final URI lastIssuerUid;
-	private final XContainerJSON xIssuer;
+	private final IdContainerJSON xIssuer;
 
 	public MembershipManager(String networkName) throws Exception {
 		nodeManager = new NodeManager(networkName);
@@ -53,9 +52,9 @@ public class MembershipManager {
 
 	}
 	
-	protected XContainerJSON initializeContainer(String username) throws Exception {
+	protected IdContainerJSON initializeContainer(String username) throws Exception {
 		try {
-			return new XContainerJSON(username);
+			return new IdContainerJSON(username);
 			
 		} catch (Exception e) {
 			throw new Exception("The core node container did not exist. " + username);
@@ -95,16 +94,16 @@ public class MembershipManager {
 		owner.openContainer(store);
 		URI iuid = v.getTargetTrustNetwork().getNodeInformation()
 					.getIssuerParameterUids().getLast();
-		String raw = XContainerJSON.stripUidSuffix(iuid, 1);
+		String raw = IdContainerJSON.stripUidSuffix(iuid, 1);
 		URI rap = URI.create(raw + ":ra");
 		URI rai = URI.create(raw + ":rai");
 		owner.addRevocationInformation(rap,
-				v.getRevocationInformation(XContainerJSON.uidToXmlFileName(rai)));
+				v.getRevocationInformation(IdContainerJSON.uidToXmlFileName(rai)));
 
 		owner.addRevocationAuthorityParameters(v.getRevocationAuthorityParameters(
-				XContainerJSON.uidToXmlFileName(rap)));
+				IdContainerJSON.uidToXmlFileName(rap)));
 
-		owner.addIssuerParameters(v.getIssuerParameters(XContainerJSON.uidToXmlFileName(iuid)));
+		owner.addIssuerParameters(v.getIssuerParameters(IdContainerJSON.uidToXmlFileName(iuid)));
 
 		owner.addCredentialSpecification(cs);
 		UUID context = UUID.randomUUID();
@@ -133,7 +132,7 @@ public class MembershipManager {
 		}
 	}
 
-	private BigInteger issue(XContainerJSON xUser, PassStore nodePassStore, PassStore userPassStore) throws Exception {
+	private BigInteger issue(IdContainerJSON xUser, PassStore nodePassStore, PassStore userPassStore) throws Exception {
 		URI iUid = lastIssuerUid;
 		UIDHelper helper = new UIDHelper(iUid);
 
@@ -194,7 +193,7 @@ public class MembershipManager {
 		
 	}
 
-	private void loadAvailableInspectorParameters(PresentationToken token, XContainerJSON x, ExonymInspector ins, PassStore store) throws Exception {
+	private void loadAvailableInspectorParameters(PresentationToken token, IdContainerJSON x, ExonymInspector ins, PassStore store) throws Exception {
 		if (x==null){
 			throw new Exception();
 
@@ -205,7 +204,7 @@ public class MembershipManager {
 		for (CredentialInToken cit : token.getPresentationTokenDescription().getCredential()) {
 			URI cUid = cit.getCredentialSpecUID();
 			URI iUid = cit.getIssuerParametersUID();
-			URI raUid = URI.create(NamespaceMngt.URN_PREFIX_COLON + XContainerJSON.stripUidSuffix(iUid.toString(), 1) + ":ra");
+			URI raUid = URI.create(NamespaceMngt.URN_PREFIX_COLON + IdContainerJSON.stripUidSuffix(iUid.toString(), 1) + ":ra");
 			
 			ins.openResourceIfNotLoaded(cUid);
 			ins.openResourceIfNotLoaded(iUid);
@@ -239,7 +238,7 @@ public class MembershipManager {
 				CredentialInToken cit = ptd.getCredential().get(1);
 				
 				if (cit!=null) {
-					String ra = XContainerJSON.stripUidSuffix(cit.getIssuerParametersUID(), 1);
+					String ra = IdContainerJSON.stripUidSuffix(cit.getIssuerParametersUID(), 1);
 					URI raUid = URI.create(NamespaceMngt.URN_PREFIX_COLON + ra + ":ra");
 					BigInteger handle = new BigInteger(discoverRevocationHandle(token, store));
 					ExonymIssuer i = new ExonymIssuer(xIssuer);
@@ -267,13 +266,13 @@ public class MembershipManager {
 	
 	private String publishedRevocationData(RevocationInformation ri, PassStore store) throws Exception {
 		URI raUid = ri.getRevocationAuthorityParametersUID();
-		String root = NamespaceMngt.URN_PREFIX_COLON + XContainerJSON.stripUidSuffix(raUid, 2);
+		String root = NamespaceMngt.URN_PREFIX_COLON + IdContainerJSON.stripUidSuffix(raUid, 2);
 		URI raiUid = URI.create(root + ":rai");
 		
 		TrustNetworkWrapper tnw = nodeManager.openMyTrustNetwork(false);
 		TrustNetwork tn = tnw.finalizeTrustNetwork();
 
-		String riString = XContainerJSON.convertObjectToXml(ri);
+		String riString = IdContainerJSON.convertObjectToXml(ri);
 		String raiHash = CryptoUtils.computeSha256HashAsHex(riString);
 		String niString = JaxbHelper.serializeToXml(tn, TrustNetwork.class);
 
@@ -296,8 +295,8 @@ public class MembershipManager {
 		String xml = JaxbHelper.serializeToXml(kcPublic.getKeyContainer(), KeyContainer.class);
 
 		nodeManager.publish(nodeUrl, xml.getBytes(), "signatures.xml");
-		nodeManager.publish(nodeUrl, rai, XContainerJSON.uidToXmlFileName(raiUid));
-		nodeManager.publish(nodeUrl, ni, XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
+		nodeManager.publish(nodeUrl, rai, IdContainerJSON.uidToXmlFileName(raiUid));
+		nodeManager.publish(nodeUrl, ni, IdContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
 		return raiHash;
 		
 	}

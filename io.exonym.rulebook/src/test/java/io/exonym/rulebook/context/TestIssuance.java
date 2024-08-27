@@ -13,13 +13,12 @@ import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.lite.time.Timing;
-import io.exonym.rulebook.schema.XNodeContainer;
+import io.exonym.rulebook.schema.IdContainer;
 import io.exonym.uri.UriDataType;
 import io.exonym.uri.UriEncoding;
 import io.exonym.utils.ExtractObject;
 import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.storage.ImabAndHandle;
-import io.exonym.utils.storage.XContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -51,36 +50,22 @@ public class TestIssuance {
         PkiExternalResourceContainer.getInstance()
                 .setNetworkMapAndCache(networkMapWeb,cache);
 
-        new XContainerJSON(issuerUsername, true);
-        new XContainerJSON(owner0Username, true);
-        new XContainerJSON(owner1Username, true);
+        new IdContainerJSON(issuerUsername, true);
+        new IdContainerJSON(owner0Username, true);
+        new IdContainerJSON(owner1Username, true);
 
 
     }
 
     @AfterAll
     static void afterAll() throws Exception {
-//        XContainerJSON x = new XContainerJSON(issuerUsername);
-//        x.delete();
-//        XContainerJSON o = new XContainerJSON(owner0Username);
-//        o.delete();
-//        XContainerJSON o0 = new XContainerJSON(owner1Username);
-//        o0.delete();
+        IdContainerJSON x = new IdContainerJSON(issuerUsername);
+        x.delete();
+        IdContainerJSON o = new IdContainerJSON(owner0Username);
+        o.delete();
+        IdContainerJSON o0 = new IdContainerJSON(owner1Username);
+        o0.delete();
 
-    }
-
-    @Test
-    void issuerOpen() {
-        try {
-            RulebookNodeProperties props = RulebookNodeProperties.instance();
-            XNodeContainer node = new XNodeContainer("baseline");
-            ExonymIssuer issuer = new ExonymIssuer(node);
-            PassStore store = new PassStore(props.getNodeRoot(), false);
-            issuer.openContainer(store.getDecipher());
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Test
@@ -90,26 +75,40 @@ public class TestIssuance {
             PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
             external.setNetworkMapAndCache(new NetworkMapWeb(), cache);
 
-            RulebookVerifier sybilRulebook = new RulebookVerifier(new URL("https://trust.exonym.io/sybil-rulebook.json"));
-            Rulebook rulebook = sybilRulebook.getRulebook();
-            CredentialSpecification sybilCredSpec = BuildCredentialSpecification.buildSybilCredentialSpecification(sybilRulebook);
+            RulebookVerifier sybilRulebook = new RulebookVerifier(
+                    new URL("https://trust.exonym.io/sybil-rulebook.json"));
 
-            String xml = XContainer.convertObjectToXml(sybilCredSpec);
+            Rulebook rulebook = sybilRulebook.getRulebook();
+            CredentialSpecification sybilCredSpec = BuildCredentialSpecification
+                    .buildSybilCredentialSpecification(sybilRulebook);
+
+            String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(sybilCredSpec);
             logger.debug(xml);
+
             String rulebookHash = UIDHelper.stripPrefix(rulebook.getRulebookId());
 
             URI sybilIssuerUID = URI.create(Namespace.URN_PREFIX_COLON
-                    +"sybil:testnet:" +
-                    rulebookHash + ":" +
+                    + rulebook.getDescription().getName().toLowerCase() + ":"
+                    + "sybil:testnet:"
+                    + rulebookHash + ":" +
                     UUID.randomUUID().toString().split("-")[0]
-                    + ":i"
-            );
+                    + ":i");
+
+
+//            URI sybilIssuerUID = URI.create(Namespace.URN_PREFIX_COLON
+//                    +"sybil:testnet:" +
+//                    rulebookHash + ":" +
+//                    UUID.randomUUID().toString().split("-")[0]
+//                    + ":i"
+//            );
             UIDHelper sybilHelper = new UIDHelper(sybilIssuerUID);
+
+            sybilHelper.out();
 
             PassStore store = new PassStore(password, false);
 
-            XContainerJSON issuerX = new XContainerJSON(issuerUsername);
-            ExonymIssuerTest sybilIssuer = new ExonymIssuerTest(issuerX);
+            IdContainerJSON issuerId = new IdContainerJSON(issuerUsername);
+            ExonymIssuerTest sybilIssuer = new ExonymIssuerTest(issuerId);
             sybilIssuer.openContainer(store.getDecipher());
 
             sybilIssuer.setupAsRevocationAuthority(sybilHelper.getIssuerParameters(), store.getEncrypt());
@@ -137,7 +136,7 @@ public class TestIssuance {
             //
             RulebookVerifier rulebookRulebook = new RulebookVerifier(new URL("https://trust.exonym.io/sources-rulebook.json"));
 
-            String rootIssuerUid = Namespace.URN_PREFIX_COLON + "badass:badass-two:" +
+            String rootIssuerUid = Namespace.URN_PREFIX_COLON + "badass:badass-lead:badass-mod:" +
                     UIDHelper.computeRulebookHashFromRulebookId(
                             rulebookRulebook.getRulebook().getRulebookId()) + "1213:i" ;
             UIDHelper rulebookHelper = new UIDHelper(rootIssuerUid);
@@ -147,7 +146,7 @@ public class TestIssuance {
                     rulebookHelper.getCredentialSpec(), true);
 
             CredentialSpecification credSpec = builder.getCredentialSpecification();
-            XContainerJSON xIssuer = new XContainerJSON(issuerUsername);
+            IdContainerJSON xIssuer = new IdContainerJSON(issuerUsername);
             ExonymIssuerTest issuerRulebook = new ExonymIssuerTest(xIssuer);
 
             issuerRulebook.addCredentialSpecification(credSpec);
@@ -227,7 +226,7 @@ public class TestIssuance {
         bpp.addCredentialInPolicy(cspecs, issuers, "urn:io:exonym:sybil", URI.create("urn:io:exonym"));
         bpp.addDisclosableAttributeForCredential(rulebook.computeCredentialSpecId(), ad);
         PresentationPolicyAlternatives ppa = bpp.getPolicyAlternatives();
-        String policyXml = XContainer.convertObjectToXml(ppa);
+        String policyXml = io.exonym.utils.storage.IdContainer.convertObjectToXml(ppa);
         logger.debug(policyXml);
 
         PresentationTokenDescription ptd = owner.canProveClaimFromPolicy(ppa);
@@ -244,7 +243,7 @@ public class TestIssuance {
     }
 
     private ExonymOwnerTest setupExistingOwner(String ownerUsername, PassStore store) throws Exception {
-        XContainerJSON ownerX = new XContainerJSON(ownerUsername);
+        IdContainerJSON ownerX = new IdContainerJSON(ownerUsername);
         ExonymOwnerTest owner = new ExonymOwnerTest(ownerX);
         owner.openContainer(store);
         owner.setupContainerSecret(store.getEncrypt(), store.getDecipher());
@@ -290,7 +289,7 @@ public class TestIssuance {
 
             BuildCredentialSpecification builder = new BuildCredentialSpecification(cUid, true);
             CredentialSpecification credSpec = builder.getCredentialSpecification();
-            XContainerJSON xIssuer = new XContainerJSON(issuerUsername);
+            IdContainerJSON xIssuer = new IdContainerJSON(issuerUsername);
             ExonymIssuerTest issuer = new ExonymIssuerTest(xIssuer);
             PassStore store = new PassStore(password, false);
 
@@ -304,7 +303,7 @@ public class TestIssuance {
             RevocationInformation rai = xIssuer.openResource(raiUid);
 
             logger.info("Defining Main Container");
-            XContainerJSON xUser = new XContainerJSON(owner0Username);
+            IdContainerJSON xUser = new IdContainerJSON(owner0Username);
             ExonymOwnerTest owner = new ExonymOwnerTest(xUser);
             owner.openContainer(store);
             owner.addCredentialSpecification(credSpec);

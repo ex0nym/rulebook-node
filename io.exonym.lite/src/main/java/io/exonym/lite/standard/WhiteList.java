@@ -49,8 +49,8 @@ public class WhiteList {
 		return true; 
 	}
 
-	public static boolean isAdvocateUid(URI uid){
-		return isAdvocateUid(uid.toString());
+	public static boolean isModeratorUid(URI uid){
+		return isModeratorUid(uid.toString());
 
 	}
 	public static boolean isSourceUid(URI uid){
@@ -67,7 +67,7 @@ public class WhiteList {
 
 	}
 
-	public static boolean isAdvocateUid(String uid){
+	public static boolean isModeratorUid(String uid){
 		if (uid==null){
 			return false;
 

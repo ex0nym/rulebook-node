@@ -28,7 +28,7 @@ public class WiderTrustNetworkManagement {
     private TrustNetworkWrapper tnw = null;
 
     private final RulebookNodeProperties props = RulebookNodeProperties.instance();
-    private final String path = props.getPrimaryStaticDataFolder() + "/sources.xml";
+    private final String path = props.getPrimaryStaticDataFolder() + "/" + Const.LEADS_XML;
 
     public WiderTrustNetworkManagement() throws Exception {
         TrustNetwork wtn = openWiderTrustNetwork();
@@ -65,7 +65,7 @@ public class WiderTrustNetworkManagement {
         TrustNetworkWrapper tnw = new TrustNetworkWrapper(tn);
         tn = tnw.finalizeTrustNetwork();
         byte[] trust = JaxbHelper.serializeToXml(tn, TrustNetwork.class).getBytes();
-        publish(URI.create(props.getPrimaryStaticDataFolder()), trust, "sources.xml");
+        publish(URI.create(props.getPrimaryStaticDataFolder()), trust, Const.LEADS_XML);
         return tn;
 
     }
@@ -73,11 +73,11 @@ public class WiderTrustNetworkManagement {
     public void publish() throws Exception {
         TrustNetwork wtn = tnw.finalizeTrustNetwork();
         byte[] trust = JaxbHelper.serializeToXml(wtn, TrustNetwork.class).getBytes();
-        publish(URI.create(props.getPrimaryStaticDataFolder()), trust, "sources.xml");
+        publish(URI.create(props.getPrimaryStaticDataFolder()), trust, Const.LEADS_XML);
 
     }
 
-    public void addSource(URI sourceUrl, boolean production) throws Exception {
+    public void addLead(URI sourceUrl, boolean production) throws Exception {
         NodeVerifier v = NodeVerifier.openNode(sourceUrl, true, false);
         boolean prod = v.getRulebook().getDescription().isProduction();
         if (prod!=production){
@@ -85,15 +85,18 @@ public class WiderTrustNetworkManagement {
 
         }
         TrustNetworkWrapper tnw = new TrustNetworkWrapper(v.getTargetTrustNetwork());
-        NodeInformation source = tnw.getNodeInformation();
+        NodeInformation lead = tnw.getNodeInformation();
 
         NetworkParticipant participant = this.tnw.addParticipant(
-                source.getNodeUid(), source.getStaticLeadUrl0(),
-                source.getRulebookNodeUrl(), source.getBroadcastAddress(),
-                v.getPublicKey(), source.getRegion(), tnw.getMostRecentIssuerParameters());
+                lead.getNodeUid(),
+                lead.getStaticLeadUrl0(),
+                lead.getRulebookNodeUrl(), lead.getBroadcastAddress(),
+                v.getPublicKey(),
+                lead.getRegion(),
+                tnw.getMostRecentIssuerParameters());
 
-        participant.setRulebookNodeUrl(source.getRulebookNodeUrl());
-        participant.setTrustNetworkName(v.getNodeName());
+        participant.setRulebookNodeUrl(lead.getRulebookNodeUrl());
+        participant.setTrustNetworkName(lead.getNodeName());
 
     }
 
@@ -122,7 +125,7 @@ public class WiderTrustNetworkManagement {
         tn = tnw.finalizeTrustNetwork();
 
         byte[] trust = JaxbHelper.serializeToXml(tn, TrustNetwork.class).getBytes();
-        publish(URI.create(props.getPrimaryStaticDataFolder()), trust, "sources.xml");
+        publish(URI.create(props.getPrimaryStaticDataFolder()), trust, Const.LEADS_XML);
 
         return tn;
 
@@ -152,6 +155,13 @@ public class WiderTrustNetworkManagement {
             throw new SecurityException("The value passed was not XML");
 
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
+        wtn.setupWiderTrustNetwork();
+        wtn.addLead(URI.create("http://exonym-x-03:8080/static/lead/"), false);
+        wtn.publish();
     }
 
 }

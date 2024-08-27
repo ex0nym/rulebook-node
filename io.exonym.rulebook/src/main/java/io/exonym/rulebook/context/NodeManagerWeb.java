@@ -1,14 +1,13 @@
 package io.exonym.rulebook.context;
 
-import eu.abc4trust.xml.CredentialInPolicy;
 import io.exonym.actor.actions.NodeManager;
-import io.exonym.actor.actions.XContainerJSON;
+import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.exceptions.ProgrammingException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.standard.WhiteList;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.lite.pojo.XKey;
-import io.exonym.rulebook.schema.XNodeContainer;
+import io.exonym.rulebook.schema.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,10 +24,10 @@ public final class NodeManagerWeb extends NodeManager {
 
 
 	@Override
-	protected XContainerJSON establishNewContainer(String name, PassStore store) throws Exception {
+	protected IdContainerJSON establishNewContainer(String name, PassStore store) throws Exception {
 		try {
 			if (WhiteList.username(name)){
-				return new XNodeContainer(name, true);
+				return new IdContainer(name, true);
 				
 			} else {
 				throw new UxException("A valid name is between 3 and 32 characters with underscores replacing spaces (" +  name + ")");	
@@ -44,9 +43,9 @@ public final class NodeManagerWeb extends NodeManager {
 	}
 
 	@Override
-	protected XContainerJSON openContainer(String name, PassStore store) throws Exception {
+	protected IdContainerJSON openContainer(String name, PassStore store) throws Exception {
 		try {
-			return new XNodeContainer(name);
+			return new IdContainer(name);
 				
 		} catch (Exception e) {
 			throw new UxException("The container '" + name + "' does not exist", e);

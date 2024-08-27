@@ -21,7 +21,7 @@ public class TestXContainerJSON {
 		
 		// Open Container that does not exist.
 		try {
-			new XContainerJSON(ContainerSuite.XC1);
+			new IdContainerJSON(ContainerSuite.XC1);
 			assert(false);
 			
 		} catch (Exception e) {
@@ -33,7 +33,7 @@ public class TestXContainerJSON {
 		// Create Container
 		try {
 			logger.info("CREATE_AND_DELETE_CONTAINER: Creating contianer xc1");
-			XContainerJSON xc1 = new XContainerJSON(ContainerSuite.XC1, true);
+			IdContainerJSON xc1 = new IdContainerJSON(ContainerSuite.XC1, true);
 			
 			logger.info("CREATE_AND_DELETE_CONTAINER: Checking schema container exists");
 			assert(xc1.getSchema()!=null);
@@ -55,7 +55,7 @@ public class TestXContainerJSON {
 			BuildCredentialSpecification bcs = new BuildCredentialSpecification(URI.create("urn:credential:c"), true);
 			CredentialSpecification cs = bcs.getCredentialSpecification();
 			
-			XContainerJSON xc0 = new XContainerJSON(ContainerSuite.XC0);
+			IdContainerJSON xc0 = new IdContainerJSON(ContainerSuite.XC0);
 			xc0.saveLocalResource(cs);
 			logger.info("SAVE_PLAIN_RESOURCE: Saved a credential specification and checking that it's there");
 			assert(!xc0.getLocalLedgerList().isEmpty());
@@ -91,7 +91,7 @@ public class TestXContainerJSON {
 	
 	public void testSaveEncryptedResource(){
 		try {
-			XContainerJSON xc0 = new XContainerJSON(ContainerSuite.XC0);
+			IdContainerJSON xc0 = new IdContainerJSON(ContainerSuite.XC0);
 			ExonymOwner owner = new ExonymOwner(xc0);
 			PassStore store = new PassStore("password", false);
 			owner.openContainer(store);

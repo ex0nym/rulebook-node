@@ -5,7 +5,7 @@ import eu.abc4trust.xml.CredentialInPolicy.IssuerAlternatives;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.Const;
 import io.exonym.uri.NamespaceMngt;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -110,15 +110,16 @@ public class PresentationPolicyManager {
 	}
 	
 	private URI createRootUid(URI uid) throws Exception {
+		logger.info("Creating Root UID=" + uid);
 		String[] parts = uid.toString().split(":");
-		if (parts.length==5) {
+		if (parts.length==6) {
 			return uid;
 
-		} else if (parts.length < 5) {
+		} else if (parts.length < 6) {
 			throw new Exception("The UID was invalid " + uid);
 			
 		}
-		return URI.create(parts[0] + ":" + parts[1] + ":" + parts[2] + ":" + parts[3] + ":" + parts[4]);
+		return URI.create(parts[0] + ":" + parts[1] + ":" + parts[2] + ":" + parts[3] + ":" + parts[4] + ":" + parts[5]);
 		
 	}
 
@@ -150,6 +151,7 @@ public class PresentationPolicyManager {
 	}
 
 	public void addIssuer(IssuerParameters i, InspectorPublicKey ins) throws Exception {
+		logger.info("Adding I + INS to PP: " + i.getParametersUID() + " " + ins.getPublicKeyUID());
 		if (cip==null){
 			cip = buildCredentialInPolicy(cSpec, i, ins.getPublicKeyUID());
 
@@ -223,7 +225,7 @@ public class PresentationPolicyManager {
 		policy.getPseudonym().clear();
 		// Build Credential In Policy
 		// Add Single Credential In Policy
-		List<AttributeInPolicy> disclosedAttributes = cip.getDisclosedAttribute();
+		List<AttributeInPolicy> disclosedAttributes = (cip==null ? null : cip.getDisclosedAttribute());
 		if (disclosedAttributes!=null && !disclosedAttributes.isEmpty()){
 			AttributeInPolicy.InspectorAlternatives ia = disclosedAttributes.get(0).getInspectorAlternatives();
 			if (ia!=null){
@@ -240,18 +242,20 @@ public class PresentationPolicyManager {
 
 			}
 		}
-		cip.getIssuerAlternatives().getIssuerParametersUID().clear();
-		cip.getIssuerAlternatives().getIssuerParametersUID().addAll(newList);
-		if (!cip.getIssuerAlternatives().getIssuerParametersUID().isEmpty()){
-			policy.getCredential().add(cip);
+		if (cip!=null){
+			cip.getIssuerAlternatives().getIssuerParametersUID().clear();
+			cip.getIssuerAlternatives().getIssuerParametersUID().addAll(newList);
+			if (!cip.getIssuerAlternatives().getIssuerParametersUID().isEmpty()){
+				policy.getCredential().add(cip);
 
-		}
-		policy.getCredential().add(sybilCip);
-		List<AttributeInPolicy> aips = cip.getDisclosedAttribute();
-		if (!aips.isEmpty()){
-			AttributeInPolicy.InspectorAlternatives ias = aips.get(0).getInspectorAlternatives();
-			if (ias!=null){
-				ias.getInspectorPublicKeyUID().addAll(insUriByNode.values());
+			}
+			policy.getCredential().add(sybilCip);
+			List<AttributeInPolicy> aips = cip.getDisclosedAttribute();
+			if (!aips.isEmpty()){
+				AttributeInPolicy.InspectorAlternatives ias = aips.get(0).getInspectorAlternatives();
+				if (ias!=null){
+					ias.getInspectorPublicKeyUID().addAll(insUriByNode.values());
+				}
 			}
 		}
 		policy.getPseudonym().addAll(pips.values());
@@ -260,7 +264,7 @@ public class PresentationPolicyManager {
 	}
 
 	private CredentialInPolicy buildCredentialInPolicy(CredentialSpecification cred, IssuerParameters ip, URI inspectorUid) throws Exception {
-		String root = NamespaceMngt.URN_PREFIX_COLON + XContainer.stripUidSuffix(ip.getRevocationParametersUID().toString(), 2);
+		String root = NamespaceMngt.URN_PREFIX_COLON + IdContainer.stripUidSuffix(ip.getRevocationParametersUID().toString(), 2);
 		URI cUid = cred.getSpecificationUID();
 
 		URI raiUid = URI.create(root + ":rai");

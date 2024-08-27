@@ -11,7 +11,6 @@ import io.exonym.lite.pojo.AttributeBasedTokenResult;
 import io.exonym.lite.pojo.DecodedAttributeToken;
 import io.exonym.utils.storage.CacheContainer;
 import io.exonym.managers.KeyManagerSingleton;
-import io.exonym.utils.storage.AbstractXContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
 
 import java.net.URI;

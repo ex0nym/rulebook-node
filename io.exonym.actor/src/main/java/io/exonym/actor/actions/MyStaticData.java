@@ -1,30 +1,43 @@
 package io.exonym.actor.actions;
 
+import com.sun.xml.ws.util.ByteArrayBuffer;
 import io.exonym.abc.util.JaxbHelper;
+import io.exonym.helpers.XmlHelper;
+import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.XKey;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.Const;
 import io.exonym.lite.time.Timing;
+import io.exonym.uri.NamespaceMngt;
 import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.KeyContainerWrapper;
 import io.exonym.utils.storage.TrustNetwork;
+
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-public class MyTrustNetwork {
+public class MyStaticData {
 
     private final Path sigPath, trustNetworkPath;
 
-    private final static Logger logger = Logger.getLogger(MyTrustNetwork.class.getName());
+
+    private KeyContainerWrapper kcw;
+
+    private final static Logger logger = Logger.getLogger(MyStaticData.class.getName());
+
+    private AsymStoreKey myPublicKey;
 
     private final TrustNetworkWrapper trustNetworkWrapper;
 
-    public MyTrustNetwork(boolean amILead) throws Exception {
+    public MyStaticData(boolean amILead) throws Exception {
         long t0 = Timing.currentTime();
         Path root = null;
         if (amILead){
@@ -33,24 +46,29 @@ public class MyTrustNetwork {
             root = Path.of(Const.PATH_OF_STATIC, Const.MODERATOR);
         }
         this.sigPath = root.resolve(Const.SIGNATURES_XML);
+        this.kcw = openSignature();
+
+//        ConcurrentHashMap<String, ByteArrayBuffer> bytes = readLocalBytes(root);
+//        ConcurrentHashMap<String, ByteArrayBuffer> signedBytes = NodeVerifier.computeBytesThatWereSigned(bytes);
+//        ConcurrentHashMap<String, Object> deserialized = XmlHelper.deserializeOpenXml(bytes);
 
         this.trustNetworkPath = root.resolve(
-                XContainerJSON.uidToXmlFileName(Const.TRUST_NETWORK_URN));
+                IdContainerJSON.uidToXmlFileName(Const.TRUST_NETWORK_UID));
 
         trustNetworkWrapper = determineOutcome();
+
         logger.info("Time to open trust network " + Timing.hasBeenMs(t0));
 
     }
 
     private TrustNetworkWrapper determineOutcome() throws UxException {
-        KeyContainerWrapper kcw = null;
         try {
-            kcw = openSignature();
-            XKey signature = kcw.getKey(Const.TRUST_NETWORK_URN);
-            XKey myKey = kcw.getKey(KeyContainerWrapper.TN_ROOT_KEY);
-            AsymStoreKey mk = AsymStoreKey.blank();
-            mk.assembleKey(myKey.getPublicKey());
-            return openTrustNetwork(this.trustNetworkPath, signature, mk);
+
+            XKey signature = kcw.getKey(Const.TRUST_NETWORK_UID);
+            XKey xkey = kcw.getKey(KeyContainerWrapper.TN_ROOT_KEY);
+            myPublicKey = AsymStoreKey.blank();
+            myPublicKey.assembleKey(xkey.getPublicKey());
+            return openTrustNetwork(this.trustNetworkPath, signature, myPublicKey);
 
         } catch (InvalidKeySpecException e) {
             throw new UxException(ErrorMessages.DB_TAMPERING, e);
@@ -88,5 +106,13 @@ public class MyTrustNetwork {
 
     public TrustNetworkWrapper getTrustNetworkWrapper() {
         return trustNetworkWrapper;
+    }
+
+    public AsymStoreKey getMyPublicKey() {
+        return myPublicKey;
+    }
+
+    public KeyContainerWrapper getKcw() {
+        return kcw;
     }
 }

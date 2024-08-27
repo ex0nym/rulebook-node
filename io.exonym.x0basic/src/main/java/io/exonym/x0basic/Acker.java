@@ -169,7 +169,7 @@ public class Acker extends ModelCommandProcessor  {
                 try {
                     NetworkMapNodeOverview nm = repo.read(q).get(0);
                     nm.setSybilRequiresUpdate(isSybil);
-                    nm.setSourceRequiresUpdate(!isSybil);
+                    nm.setLeadRequiresUpdate(!isSybil);
                     repo.update(nm);
                     conflicted=false; 
 

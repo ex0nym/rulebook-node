@@ -20,9 +20,9 @@ import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.uri.NamespaceMngt;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,10 +50,10 @@ public abstract class AbstractBaseActor {
 
 	protected final ArrayList<URI> credentialSpecificationList = new ArrayList<>();
 	protected final ArrayList<URI> issuerList = new ArrayList<>();
-	protected final AbstractXContainer container;
+	protected final AbstractIdContainer container;
 	protected ExternalResourceContainer externalResource = null;
 	protected static ExonymComponent INJECTOR = DaggerExonymComponent.create();
-	protected AbstractBaseActor(AbstractXContainer container) {
+	protected AbstractBaseActor(AbstractIdContainer container) {
 
 		this.container=container;
 		// Utils
@@ -134,7 +134,7 @@ public abstract class AbstractBaseActor {
 			logger.info("Failed to find parameters in local container " + uid);
 			
 		}
-		String fn = XContainer.uidToXmlFileName(uid);
+		String fn = IdContainer.uidToXmlFileName(uid);
 		try {
 			return this.externalResource.openResource(fn);
 			
@@ -179,7 +179,7 @@ public abstract class AbstractBaseActor {
 	}
 	
 	private void loadRevocationInformationIf(URI uid) throws Exception {
-		URI raUid = URI.create(NamespaceMngt.URN_PREFIX_COLON + XContainer.stripUidSuffix(uid, 1) + "a");
+		URI raUid = URI.create(NamespaceMngt.URN_PREFIX_COLON + IdContainer.stripUidSuffix(uid, 1) + "a");
 		if (this.keyManager.getRevocationInformation(raUid, uid)==null){
 			openResourceIfNotLoaded(raUid);
 			RevocationAuthorityParameters rap = this.keyManager.getRevocationAuthorityParameters(raUid);
@@ -356,7 +356,7 @@ public abstract class AbstractBaseActor {
 		}
 	}
 	
-	protected AbstractXContainer getContainer() {
+	protected AbstractIdContainer getContainer() {
 		return container;
 	}
 

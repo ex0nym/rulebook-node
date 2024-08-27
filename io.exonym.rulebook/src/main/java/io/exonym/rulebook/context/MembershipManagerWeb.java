@@ -1,9 +1,8 @@
 package io.exonym.rulebook.context;
 
 import io.exonym.actor.actions.MembershipManager;
-import io.exonym.actor.actions.XContainerJSON;
-import io.exonym.lite.exceptions.UxException;
-import io.exonym.rulebook.schema.XNodeContainer;
+import io.exonym.actor.actions.IdContainerJSON;
+import io.exonym.rulebook.schema.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,8 +30,8 @@ public final class MembershipManagerWeb extends MembershipManager {
     }
 
     @Override
-    protected XContainerJSON initializeContainer(String username) throws Exception {
-        return new XNodeContainer(username);
+    protected IdContainerJSON initializeContainer(String username) throws Exception {
+        return new IdContainer(username);
 
     }
 

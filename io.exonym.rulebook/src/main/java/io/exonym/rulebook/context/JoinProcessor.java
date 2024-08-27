@@ -7,7 +7,6 @@ import io.exonym.actor.actions.ExonymIssuer;
 import io.exonym.actor.actions.ExonymMatrix;
 import io.exonym.actor.actions.NodeVerifier;
 import io.exonym.actor.actions.TokenVerifier;
-import io.exonym.helpers.Parser;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.exceptions.ErrorMessages;
@@ -19,9 +18,8 @@ import io.exonym.lite.standard.Form;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.lite.standard.QrCode;
 import io.exonym.lite.time.DateHelper;
-import io.exonym.rulebook.schema.XNodeContainer;
+import io.exonym.rulebook.schema.IdContainer;
 import io.exonym.utils.storage.ImabAndHandle;
-import io.exonym.utils.storage.XContainer;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +37,7 @@ public class JoinProcessor {
     private static final Logger logger = LogManager.getLogger(JoinProcessor.class);
     private final VerifiedClaim claim;
     private ExonymIssuer myAdvocateIssuer;
-    private XNodeContainer myAdvocateContainer;
+    private IdContainer myAdvocateContainer;
     private JoinSupportSingleton support = JoinSupportSingleton.getInstance();
 
     private RulebookNodeProperties props = RulebookNodeProperties.instance();
@@ -51,7 +49,7 @@ public class JoinProcessor {
 
     public JoinProcessor() throws Exception {
         if (support!=null){
-            myAdvocateContainer = new XNodeContainer(support.getMyAdvocate().getAdvocateName());
+            myAdvocateContainer = new IdContainer(support.getMyAdvocate().getModeratorName());
             myAdvocateIssuer = new ExonymIssuer(myAdvocateContainer);
             myAdvocateIssuer.openContainer(support.getStore().getDecipher());
             support.loadAdvocateWithSybilCryptoMaterials(myAdvocateIssuer);
@@ -75,7 +73,7 @@ public class JoinProcessor {
         try {
             IssuanceMessageAndBoolean imab = initIssuance();
             Rulebook challengedRulebook = support.getRulebookVerifier().getDeepCopy();
-            String xml = XContainer.convertObjectToXml(imab);
+            String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(imab);
             logger.debug("Size at XML=" + xml.length());
             byte[] compressed = WebUtils.compress(xml.getBytes(StandardCharsets.UTF_8));
             logger.debug("Size at compressed=" + compressed.length);
@@ -102,7 +100,7 @@ public class JoinProcessor {
         byte[] nonce = policy.getPresentationPolicy().getMessage().getNonce();
         this.hashOfNonce = CryptoUtils.computeSha256HashAsHex(nonce);
 
-        String xml = XContainer.convertObjectToXml(policy);
+        String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(policy);
         logger.debug(xml);
 
         return myAdvocateIssuer.issueInit(claim, policy, support.getStore().getEncrypt(),
@@ -146,7 +144,7 @@ public class JoinProcessor {
                                                             PresentationToken token) throws Exception {
         PresentationTokenDescription ptd = token.getPresentationTokenDescription();
         List<CredentialInToken> credentials = ptd.getCredential();
-        URI sourceUuid = support.getMyAdvocate().getSourceUID();
+        URI sourceUuid = support.getMyAdvocate().getLeadUID();
 
         for (CredentialInToken cit : credentials){
             URI ip = cit.getIssuerParametersUID();
@@ -155,12 +153,12 @@ public class JoinProcessor {
             if (!(ips.contains("sybil") && ips.contains("anticlone"))) { // todo error
                 UIDHelper helper = new UIDHelper(ip);
 
-                if (helper.getSourceUid().equals(sourceUuid)){
+                if (helper.getLeadUid().equals(sourceUuid)){
                     return loadVerifierWithCurrentProofsOfHonesty(verifier, ip, token);
 
                 } else {
                     throw new UxException(ErrorMessages.PROOF_IS_OUT_OF_SCOPE,
-                            helper.getSourceUid().toString(), sourceUuid.toString());
+                            helper.getLeadUid().toString(), sourceUuid.toString());
                 }
             }
         }
@@ -180,7 +178,7 @@ public class JoinProcessor {
          * If the user is already honest we must establish what rules we control
          *
          */
-        return collectUncontrolledRules(uids.getNodeUid(), token);
+        return collectUncontrolledRules(uids.getModeratorUid(), token);
 //        throw new RuntimeException("There was this funny noKeyHere test that you didn't understand - TODO");
 //
 //        if (!files.containsKey("noKeyHere")){
@@ -199,7 +197,7 @@ public class JoinProcessor {
         String unverifiedX0 = Form.toHex(unverifiedX0Bytes);
         String n6 = unverifiedX0.substring(0, 6);
         ExonymMatrixManagerGlobal global = new ExonymMatrixManagerGlobal(
-                (NetworkMapItemAdvocate) support.getNetworkMap().nmiForNode(host),
+                (NetworkMapItemModerator) support.getNetworkMap().nmiForNode(host),
                 support.getMyAdvocate(), n6, this.props.getNodeRoot());
 
         try {

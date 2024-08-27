@@ -95,8 +95,8 @@ public class StartNode implements Closeable {
                     try {
                         NetworkMapNodeOverview status = repo.read(q).get(0);
                         ArrayList<String> acceptableStates = new ArrayList<>();
-                        acceptableStates.add(NetworkMapNodeOverview.GLOBAL_STATE_THIS_NODE_LISTED);
-                        acceptableStates.add(NetworkMapNodeOverview.GLOBAL_STATE_DEFINED_SOURCE_LISTED__THIS_HOST_UNLISTED);
+                        acceptableStates.add(NetworkMapNodeOverview.GLOBAL_STATE_THIS_MODERATOR_LISTED);
+                        acceptableStates.add(NetworkMapNodeOverview.GLOBAL_STATE_DEFINED_LEAD_LISTED__THIS_MODERATOR_UNLISTED);
 
                         if (!acceptableStates.contains(status.getCurrentGlobalState())){
                             logger.info("Node not yet initialized: Status " + status.getCurrentGlobalState() +
@@ -107,7 +107,7 @@ public class StartNode implements Closeable {
 
                         } else {
                             started = true;
-                            props.init(status.getAdvocateUID());
+                            props.init(status.getModeratorUID());
 
                         }
                     } catch (NoDocumentException e) {

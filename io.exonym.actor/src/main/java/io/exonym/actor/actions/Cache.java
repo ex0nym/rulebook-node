@@ -1,22 +1,22 @@
 package io.exonym.actor.actions;
 
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.CacheContainer;
 import java.io.FileNotFoundException;
 import java.net.URI;
 
 public class Cache implements CacheContainer {
 
-    private XContainerJSON x;
+    private IdContainerJSON x;
 
     // todo wednesday - make compatible with web containers.
 
     public Cache() throws Exception {
         try {
-            x = new XContainerJSON("cache", true);
+            x = new IdContainerJSON("cache", true);
 
         } catch (Exception e) {
-            x = new XContainerJSON("cache", false);
+            x = new IdContainerJSON("cache", false);
 
         }
     }
@@ -51,12 +51,12 @@ public class Cache implements CacheContainer {
 
     public void clear() throws Exception {
         x.delete();
-        x = new XContainerJSON("cache", true);
+        x = new IdContainerJSON("cache", true);
 
     }
 
     @Override
-    public AbstractXContainer getContainer() throws Exception {
+    public AbstractIdContainer getContainer() throws Exception {
         return this.x;
     }
 }

@@ -118,11 +118,11 @@ public class TrustNetworkWrapper {
 	private URI computeParticipantUid(URI p) throws HubException {
 		String uid = p.toString();
 		String[] parts = uid.split(":");
-		if (parts.length==5) {
+		if (parts.length==6) {
 			return p;
 			
 		} else if (uid.endsWith(":i")) {
-			return URI.create(parts[0] + ":" + parts[1] + ":" + parts[2] + ":" + parts[3] + ":" + parts[4]);
+			return URI.create(parts[0] + ":" + parts[1] + ":" + parts[2] + ":" + parts[3] + ":" + parts[4]+ ":" + parts[5]);
 			
 		} else {
 			throw new HubException("Unknown Participant Translation " + p);
@@ -156,7 +156,11 @@ public class TrustNetworkWrapper {
 		return trustNetwork;
 		
 	}
-	
+
+	public TrustNetwork getTrustNetwork() {
+		return trustNetwork;
+	}
+
 	public NodeInformation getNodeInformation() {
 		return trustNetwork.getNodeInformation();
 		

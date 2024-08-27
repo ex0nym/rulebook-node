@@ -45,7 +45,7 @@ public class LedgerContainer extends ExternalResourceContainer {
 		String groupContainer = JaxbHelper.serializeToXml(group, LocalLedgerGroup.class);
 		String registrationParams = JaxbHelper.serializeToXml(params, RegistrationParameters.class);
 		String groupFn = fileNameFromUid(params.getGroupUid());
-		String paramFn = XContainer.uidToFileName(params.getGroupUid()) + ".rp.xml";
+		String paramFn = IdContainer.uidToFileName(params.getGroupUid()) + ".rp.xml";
 		IoMngt.saveToFile(groupContainer, ledger.toString() + groupFn, false);
 		IoMngt.saveToFile(registrationParams, ledger.toString() + paramFn, false);
 		

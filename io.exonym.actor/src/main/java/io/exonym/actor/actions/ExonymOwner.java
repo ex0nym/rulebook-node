@@ -9,7 +9,7 @@ import io.exonym.actor.AbstractExonymOwner;
 import io.exonym.actor.CandidateToken;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.standard.PassStore;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +23,7 @@ public class ExonymOwner extends AbstractExonymOwner {
 	
 
 	private static final Logger logger = LogManager.getLogger(ExonymOwner.class);
-	protected ExonymOwner(AbstractXContainer container) {
+	protected ExonymOwner(AbstractIdContainer container) {
 		super(container);
 	}
 
@@ -125,7 +125,7 @@ public class ExonymOwner extends AbstractExonymOwner {
 	}
 
 	@Override
-	protected AbstractXContainer getContainer() {
+	protected AbstractIdContainer getContainer() {
 		return super.getContainer();
 	}
 

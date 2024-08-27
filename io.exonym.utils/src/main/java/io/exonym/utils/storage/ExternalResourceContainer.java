@@ -30,7 +30,7 @@ public abstract class ExternalResourceContainer {
 	protected ExternalResourceContainer(){}
 
 	public synchronized <T> T openResource(URI uid) throws Exception{
-		return openResource(XContainer.uidToXmlFileName(uid));
+		return openResource(IdContainer.uidToXmlFileName(uid));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -90,7 +90,7 @@ public abstract class ExternalResourceContainer {
 	}
 	
 	protected String fileNameFromUid(URI groupUid) throws Exception {
-		return XContainer.uidToFileName(groupUid) + ".gp.xml";
+		return IdContainer.uidToFileName(groupUid) + ".gp.xml";
 		
 	}
 	

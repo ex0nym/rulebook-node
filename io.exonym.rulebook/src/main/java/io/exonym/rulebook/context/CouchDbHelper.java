@@ -3,7 +3,6 @@ package io.exonym.rulebook.context;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
-import io.exonym.actor.actions.ExonymMatrix;
 import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.pojo.*;
 import io.exonym.lite.pojo.XKey;
@@ -100,17 +99,17 @@ public class CouchDbHelper {
 
     }
 
-    protected static CouchRepository<NetworkMapItemSource> repoNetworkMapItemSource() throws Exception {
+    protected static CouchRepository<NetworkMapItemLead> repoNetworkMapItemSource() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.getNetworkMap(), true);
-        return new CouchRepository<>(db, NetworkMapItemSource.class);
+        return new CouchRepository<>(db, NetworkMapItemLead.class);
 
     }
 
-    protected static CouchRepository<NetworkMapItemAdvocate> repoNetworkMapItemAdvocate() throws Exception {
+    protected static CouchRepository<NetworkMapItemModerator> repoNetworkMapItemAdvocate() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.getNetworkMap(), true);
-        return new CouchRepository<>(db, NetworkMapItemAdvocate.class);
+        return new CouchRepository<>(db, NetworkMapItemModerator.class);
 
     }
 

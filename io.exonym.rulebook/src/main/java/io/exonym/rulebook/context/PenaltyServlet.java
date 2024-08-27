@@ -10,7 +10,7 @@ import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.utils.ExtractObject;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -97,7 +97,7 @@ public class PenaltyServlet extends HttpServlet {
             JoinProcessor rejoin = rejoinRequests.get(hashOfNonce);
             if (rejoin!=null){
                 IssuanceMessageAndBoolean imab = rejoin.rejoin(message, issuanceToken);
-                String response = XContainer.convertObjectToXml(imab);
+                String response = IdContainer.convertObjectToXml(imab);
                 resp.getWriter().write(response);
 
             } else {

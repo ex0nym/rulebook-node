@@ -56,7 +56,7 @@ public class RegisterSourceServlet extends HttpServlet {
             if (WhiteList.isSourceUrl(target)){
                 WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
                 wtn.openWiderTrustNetwork();
-                wtn.addSource(URI.create(target), !in.containsKey("test"));
+                wtn.addLead(URI.create(target), !in.containsKey("test"));
                 wtn.publish();
                 WebUtils.success(resp);
 

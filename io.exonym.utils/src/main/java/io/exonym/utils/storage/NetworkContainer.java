@@ -153,7 +153,7 @@ public class NetworkContainer {
 		if (c.isEmpty()){
 			addCategoriesToGroup(group);
 			String xml = JaxbHelper.serializeToXml(group, Group.class);
-			String fn = XContainer.uidToXmlFileName(uid);
+			String fn = IdContainer.uidToXmlFileName(uid);
 			File groupFolder = folder(groups);
 			File f = new File(groupFolder.getPath() + "\\" + fn);
 			save(xml, f, false);
@@ -188,7 +188,7 @@ public class NetworkContainer {
 		}
 		if (ec.isEmpty()){
 			File folder = folder(openNetworkQueries);
-			String fn = XContainer.uidToXmlFileName(onq.getQueryUid());
+			String fn = IdContainer.uidToXmlFileName(onq.getQueryUid());
 			File f = new File(folder.getPath() +"\\" + fn);
 			String xml = JaxbHelper.serializeToXml(onq, OpenNetworkQuery.class);
 			save(xml, f, true);
@@ -232,7 +232,7 @@ public class NetworkContainer {
 			
 		}
 		File folder = folder(groups);
-		String fn = XContainer.uidToXmlFileName(uid);
+		String fn = IdContainer.uidToXmlFileName(uid);
 		File f = new File(folder.getPath() +"\\" + fn);
 		
 		if (f.exists()){
@@ -300,7 +300,7 @@ public class NetworkContainer {
 				}
 			}
 			String xml = JaxbHelper.serializeToXml(g, Group.class);
-			String fn = XContainer.uidToXmlFileName(g.getGroupUid());
+			String fn = IdContainer.uidToXmlFileName(g.getGroupUid());
 			File groupFolder = folder(groups);
 			File f = new File(groupFolder.getPath() + "\\" + fn);
 			save(xml, f, true);
@@ -321,7 +321,7 @@ public class NetworkContainer {
 		}
 		if (c.isEmpty()){
 			File folder = folder(facades);
-			String fn = XContainer.uidToXmlFileName(uid);
+			String fn = IdContainer.uidToXmlFileName(uid);
 			File f = new File(folder.getPath() +"\\" + fn);
 			String xml = JaxbHelper.serializeToXml(facade, NetworkFacade.class);
 			save(xml, f, true);
@@ -339,7 +339,7 @@ public class NetworkContainer {
 	
 	public Group openGroup(URI groupUid) throws Exception{
 		File folder = folder(groups);
-		String fn = XContainer.uidToXmlFileName(groupUid);
+		String fn = IdContainer.uidToXmlFileName(groupUid);
 		File f = new File(folder.getPath() +"\\" + fn);
 		if (f.exists()){
 			return JaxbHelper.xmlFileToClass(JaxbHelper.fileToPath(f), Group.class);
@@ -353,7 +353,7 @@ public class NetworkContainer {
 	
 	public Category openCategory(URI uid) throws Exception{
 		File folder = folder(categories);
-		String fn = XContainer.uidToXmlFileName(uid);
+		String fn = IdContainer.uidToXmlFileName(uid);
 		File f = new File(folder.getPath() +"\\" + fn);
 		if (f.exists()){
 			return JaxbHelper.xmlFileToClass(JaxbHelper.fileToPath(f), Category.class);
@@ -366,7 +366,7 @@ public class NetworkContainer {
 	
 	public NetworkFacade openFacade(URI uid) throws Exception{
 		File folder = folder(facades);
-		String fn = XContainer.uidToXmlFileName(uid);
+		String fn = IdContainer.uidToXmlFileName(uid);
 		File f = new File(folder.getPath() +"\\" + fn);
 		if (f.exists()){
 			return JaxbHelper.xmlFileToClass(JaxbHelper.fileToPath(f), NetworkFacade.class);
@@ -467,7 +467,7 @@ public class NetworkContainer {
 	
 	public void deleteCategory(URI categoryUid) throws Exception{
 		File folder = folder(categories);
-		String fn = XContainer.uidToXmlFileName(categoryUid);
+		String fn = IdContainer.uidToXmlFileName(categoryUid);
 		File f = new File(folder.getPath() +"\\" + fn);
 		
 		if (f.exists()){
@@ -498,7 +498,7 @@ public class NetworkContainer {
 	
 	public void deleteGroup(URI groupUid) throws Exception{
 		File folder = folder(groups);
-		String fn = XContainer.uidToXmlFileName(groupUid);
+		String fn = IdContainer.uidToXmlFileName(groupUid);
 		File f = new File(folder.getPath() +"\\" + fn);
 		
 		if (f.exists()){
@@ -524,7 +524,7 @@ public class NetworkContainer {
 		}
 		if (c.isEmpty()){
 			File folder = folder(categories);
-			String fn = XContainer.uidToXmlFileName(uid);
+			String fn = IdContainer.uidToXmlFileName(uid);
 			File f = new File(folder.getPath() +"\\" + fn);
 			String xml = JaxbHelper.serializeToXml(cat, Category.class);
 			save(xml, f, true);
@@ -642,7 +642,7 @@ public class NetworkContainer {
 	}
 
 	private File generateRoot(URI networkUid) throws Exception {
-		return new File(path + "//" + XContainer.uidToFileName(networkUid));
+		return new File(path + "//" + IdContainer.uidToFileName(networkUid));
 		
 	}
 	

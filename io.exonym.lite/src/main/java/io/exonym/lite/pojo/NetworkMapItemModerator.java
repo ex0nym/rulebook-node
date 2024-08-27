@@ -1,6 +1,6 @@
 package io.exonym.lite.pojo;
 
-public class NetworkMapItemAdvocate extends NetworkMapItem {
+public class NetworkMapItemModerator extends NetworkMapItem {
 
     private boolean hasCredentialFrom = false;
     private String revocationInformationHash;

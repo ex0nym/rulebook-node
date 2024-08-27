@@ -12,7 +12,7 @@ import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.utils.adapters.PresentationPolicyAlternativesAdapter;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.XContainerSchema;
 import org.apache.commons.codec.binary.Base64;
@@ -31,16 +31,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class XContainerJSON extends AbstractXContainer {
+public class IdContainerJSON extends AbstractIdContainer {
 	
-	private static final Logger logger = LogManager.getLogger(XContainerJSON.class);
+	private static final Logger logger = LogManager.getLogger(IdContainerJSON.class);
 	
 	private final XContainerSchema schema;
 	private File testFolder;
 	private File file;
 	private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-	public XContainerJSON(String username) throws Exception {
+	public IdContainerJSON(String username) throws Exception {
 		super(username);
 		testFolder = new File("resource/local/" + this.getUsername());
 		file = new File(testFolder.getAbsolutePath() + "/" + getUsername() + ".json");
@@ -50,7 +50,7 @@ public class XContainerJSON extends AbstractXContainer {
 	}
 	
 
-	public XContainerJSON(String username, boolean create) throws Exception {
+	public IdContainerJSON(String username, boolean create) throws Exception {
 		super(username);
 		testFolder = new File("resource/local/" + this.getUsername());
 		file = new File(testFolder.getAbsolutePath() + "/" + getUsername() + ".json");
@@ -227,7 +227,7 @@ public class XContainerJSON extends AbstractXContainer {
 	}
 
 	public static SystemParameters openSystemParameters() throws Exception {
-		try (InputStream stream = XContainerJSON.class.getClassLoader().getResourceAsStream("lambda.xml")){
+		try (InputStream stream = IdContainerJSON.class.getClassLoader().getResourceAsStream("lambda.xml")){
 			if (stream!=null){
 				byte[] in = new byte[stream.available()];
 				stream.read(in);

@@ -7,7 +7,7 @@ import eu.abc4trust.keyManager.KeyManagerException;
 import eu.abc4trust.xml.*;
 import io.exonym.actor.AbstractExonymInspector;
 import io.exonym.lite.standard.PassStore;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
 
 import java.net.URI;
@@ -15,7 +15,7 @@ import java.util.List;
 
 public final class ExonymInspector extends AbstractExonymInspector {
 
-	protected ExonymInspector(XContainerJSON container) throws Exception {
+	protected ExonymInspector(IdContainerJSON container) throws Exception {
 		super(container);
 		
 	}
@@ -77,7 +77,7 @@ public final class ExonymInspector extends AbstractExonymInspector {
 	}
 
 	@Override
-	protected AbstractXContainer getContainer() {
+	protected AbstractIdContainer getContainer() {
 		return super.getContainer();
 	}
 
@@ -115,7 +115,7 @@ public final class ExonymInspector extends AbstractExonymInspector {
 	}
 
 	public static void main(String[] args) throws Exception {
-		XContainerJSON x = new XContainerJSON("noborder");
+		IdContainerJSON x = new IdContainerJSON("noborder");
 		String ip = "jti.c586115e-aca8-420d-a3f4-38a22df395f6.noborder.41c19148.ip.xml";
 		IssuancePolicy policy = x.openResource(ip);
 		

@@ -63,7 +63,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 					FileType.isRevocationInformation(fileName) ||
 					FileType.isRevocationAuthority(fileName) ||
 					FileType.isIssuerParameters(fileName)) {
-				return verifyAdvocate(fileName);
+				return verifyModerator(fileName);
 
 			} else if (FileType.isRulebook(fileName)){
 				throw new UxException("CANNOT_OPEN_RULEBOOK_EXTERNALLY");
@@ -90,7 +90,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 						.getCredentialSpecification();
 			}
 		} else {
-			URI sourceUID = UIDHelper.computeSourceUidFromNodeUid(UIDHelper.fileNameToUid(fileName));
+			URI sourceUID = UIDHelper.computeLeadUidFromModUid(UIDHelper.fileNameToUid(fileName));
 			NetworkMapItem nmi = getNetworkMap().nmiForNode(sourceUID);
 			NodeVerifier sourceVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
 					nmi.getRulebookNodeURL().resolve("static"), true, false);
@@ -125,21 +125,21 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		return networkMap;
 	}
 
-	private <T> T verifyAdvocate(String fileName) throws Exception {
+	private <T> T verifyModerator(String fileName) throws Exception {
 		URI searchingFor = UIDHelper.fileNameToUid(fileName);
-		URI advocateUID = UIDHelper.computeAdvocateUidFromMaterialUID(searchingFor);
-		NetworkMapItem nmi = getNetworkMap().nmiForNode(advocateUID);
-		NodeVerifier advocateVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
+		URI modUID = UIDHelper.computeModUidFromMaterialUID(searchingFor);
+		NetworkMapItem nmi = getNetworkMap().nmiForNode(modUID);
+		NodeVerifier modVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
 				nmi.getRulebookNodeURL().resolve("static"), false, false);
 
 		CacheContainer cache = this.getCache();
-		TrustNetworkWrapper tnw = new TrustNetworkWrapper(advocateVerifier.getTargetTrustNetwork());
+		TrustNetworkWrapper tnw = new TrustNetworkWrapper(modVerifier.getTargetTrustNetwork());
 		URI issuerUID = tnw.getMostRecentIssuerParameters();
 		UIDHelper helper = new UIDHelper(issuerUID);
-		cache.store(advocateVerifier.getIssuerParameters(helper.getIssuerParametersFileName()));
-		cache.store(advocateVerifier.getRevocationAuthorityParameters(helper.getRevocationAuthorityFileName()));
-		cache.store(advocateVerifier.getInspectorPublicKey());
-		cache.store(advocateVerifier.getRevocationInformation(helper.getRevocationInformationFileName()));
+		cache.store(modVerifier.getIssuerParameters(helper.getIssuerParametersFileName()));
+		cache.store(modVerifier.getRevocationAuthorityParameters(helper.getRevocationAuthorityFileName()));
+		cache.store(modVerifier.getInspectorPublicKey());
+		cache.store(modVerifier.getRevocationInformation(helper.getRevocationInformationFileName()));
 		return cache.open(fileName);
 
 	}

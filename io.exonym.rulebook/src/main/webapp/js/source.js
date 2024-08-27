@@ -56,9 +56,8 @@ var source = {
 				node.internalName==null || 
 				node.internalName=="null"){
 					
-				var i = node.nodeUid.split(":");
-				console.log("HELLO >>>> " + i);
-				node.internalName = i[3];
+				var i = node.nodeUid.split(":");				
+				node.internalName = i[4];
 
 			}			
 			var item = {

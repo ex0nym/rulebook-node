@@ -37,15 +37,15 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
 
     // host becomes corrupt
 
-    private final NetworkMapItemAdvocate targetAdvocate;
+    private final NetworkMapItemModerator targetAdvocate;
     private final String nibble6;
     private final AsymStoreKey signatureKey = AsymStoreKey.blank();
-    private final NetworkMapItemAdvocate myAdvocate;
+    private final NetworkMapItemModerator myAdvocate;
 
 
     private final String root;
 
-    public ExonymMatrixManagerGlobal(NetworkMapItemAdvocate targetAdvocate, NetworkMapItemAdvocate nmiaForMyAdvocate, String nibble6, String root) throws Exception {
+    public ExonymMatrixManagerGlobal(NetworkMapItemModerator targetAdvocate, NetworkMapItemModerator nmiaForMyAdvocate, String nibble6, String root) throws Exception {
         this.targetAdvocate=targetAdvocate;
         this.nibble6=nibble6;
         this.myAdvocate = nmiaForMyAdvocate;

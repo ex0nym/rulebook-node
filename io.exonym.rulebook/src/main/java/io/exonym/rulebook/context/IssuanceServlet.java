@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import eu.abc4trust.xml.IssuanceMessage;
 import eu.abc4trust.xml.IssuanceMessageAndBoolean;
-import io.exonym.actor.actions.XContainerJSON;
+import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
@@ -94,7 +94,7 @@ public class IssuanceServlet extends HttpServlet {
 
     private void respond(IssuanceMessageAndBoolean imab, HttpServletResponse resp) throws Exception {
         String issue0 = Base64.encodeBase64String(
-                XContainerJSON.convertObjectToXml(imab).getBytes(StandardCharsets.UTF_8)
+                IdContainerJSON.convertObjectToXml(imab).getBytes(StandardCharsets.UTF_8)
         );
         JsonObject o = new JsonObject();
         o.addProperty("imab", issue0);
@@ -104,7 +104,7 @@ public class IssuanceServlet extends HttpServlet {
 
     private void respond(ImabAndHandle imab, HttpServletResponse resp) throws Exception {
         String issue0 = Base64.encodeBase64String(
-                XContainerJSON.convertObjectToXml(imab.getImab()).getBytes(StandardCharsets.UTF_8)
+                IdContainerJSON.convertObjectToXml(imab.getImab()).getBytes(StandardCharsets.UTF_8)
         );
         JsonObject o = new JsonObject();
         o.addProperty("imab", issue0);

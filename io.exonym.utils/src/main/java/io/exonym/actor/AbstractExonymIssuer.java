@@ -27,9 +27,9 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.Namespace;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.utils.ExtractObject;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ImabAndHandle;
-import io.exonym.utils.storage.XContainer;
+import io.exonym.utils.storage.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,12 +57,9 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 
 	private BigInteger revocationHandle = null;
 
-
-	
-	
 	private boolean open = false;	
 	
-	protected AbstractExonymIssuer(AbstractXContainer container) throws Exception {
+	protected AbstractExonymIssuer(AbstractIdContainer container) throws Exception {
 		super(container);
 
 
@@ -200,7 +197,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 		itd.setPresentationTokenDescription(ptd);
 		
 		params.getContent().add(of.createAttributeList(al));
-		this.container.saveIssuanceToken(it, XContainer.uidToXmlFileName(internalDataStoreUid), enc);
+		this.container.saveIssuanceToken(it, IdContainer.uidToXmlFileName(internalDataStoreUid), enc);
 		
 	}
 
@@ -213,11 +210,11 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 			RevocationInformation ri = cryptoEngineRaIdmx.updateRevocationInformation(revocationParametersUID, null, null);
 			URI rhUid = Namespace.extendUid(revocationParametersUID, "history");
 			this.keyManager.storeRevocationInformation(revocationParametersUID, ri);
-			String rhFileName = XContainer.stripUidSuffix(revocationParametersUID, 2) + ":rh";
+			String rhFileName = IdContainer.stripUidSuffix(revocationParametersUID, 2) + ":rh";
 			
 			try {
 				if (this.credentialManagerRa.getRevocationHistory(rhUid)==null){
-					RevocationHistory rh = (RevocationHistory) container.openResource(XContainer.uidToXmlFileName(URI.create(rhFileName)));
+					RevocationHistory rh = (RevocationHistory) container.openResource(IdContainer.uidToXmlFileName(URI.create(rhFileName)));
 					this.credentialManagerRa.storeRevocationHistory(rh.getRevocationHistoryUID(), rh);
 					
 				} 
@@ -260,7 +257,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 	 * @throws Exception
 	 */
 	public ImabAndHandle issueStep(IssuanceMessage im, Cipher enc) throws Exception{
-		String xml = XContainer.convertObjectToXml(im);
+		String xml = IdContainer.convertObjectToXml(im);
 		logger.debug(">>>>>>>>> XML For Issuance Message");
 		logger.debug(xml);
 		if (im!=null){
@@ -351,7 +348,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 				
 			}
 			if (storeUid!=null){
-				this.container.saveIssuanceToken(token, XContainer.uidToFileName(storeUid), enc);
+				this.container.saveIssuanceToken(token, IdContainer.uidToFileName(storeUid), enc);
 				
 			}
 		} else {
@@ -420,7 +417,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 			
 			BuildIssuancePolicy bip = new BuildIssuancePolicy(null, credential, issuerParamsUid);
 			if (revocationAuthorityUid!=null){
-				bip.addPseudonym(XContainer.stripUidSuffix(revocationAuthorityUid, 2), 
+				bip.addPseudonym(IdContainer.stripUidSuffix(revocationAuthorityUid, 2),
 										false, "ra", null);
 				
 				if (spec.isKeyBinding()){
@@ -468,7 +465,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 			if (!issuerParamsUid.toString().contains(px)){
 				throw h;
 				
-			} else if (!FileType.isIssuerParameters(XContainer.uidToXmlFileName(issuerParamsUid))){
+			} else if (!FileType.isIssuerParameters(IdContainer.uidToXmlFileName(issuerParamsUid))){
 				throw h; 
 				
 			}
@@ -490,7 +487,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 	 */
 	protected URI setupAsRevocationAuthority(URI issuerParametersUid, Cipher enc) throws Exception{
 	    try {
-	    	if (!FileType.isIssuerParameters(XContainer.uidToXmlFileName(issuerParametersUid))){
+	    	if (!FileType.isIssuerParameters(IdContainer.uidToXmlFileName(issuerParametersUid))){
 	    		throw new UxException("Expected an Issuer Parameter UID " + issuerParametersUid);
 	    		
 	    	}
@@ -542,6 +539,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 		BigIntFactoryImpl bif = new BigIntFactoryImpl();
 		BigInt handle0 = bif.valueOf(handle);
 		URI revocationInfo = this.cryptoEngineRaIdmx.revoke(raUid, handle0);
+
 		RevocationInformation ri = this.keyManager.getRevocationInformation(raUid, revocationInfo);
 		container.saveLocalResource(ri, true);
 		logger.info(revocationInfo);
@@ -625,7 +623,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 	}
 	
 	protected void addRevocationAuthorityKey(URI raUid, PrivateKey sk) throws Exception {
-		if (!FileType.isRevocationAuthority(XContainer.uidToXmlFileName(raUid))){
+		if (!FileType.isRevocationAuthority(IdContainer.uidToXmlFileName(raUid))){
 			throw new RuntimeException("Requires the Revocation Authority Uid");
 			
 		}

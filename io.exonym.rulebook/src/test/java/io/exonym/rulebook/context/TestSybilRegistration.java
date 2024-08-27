@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.UUID;
@@ -60,7 +59,7 @@ public class TestSybilRegistration {
     @BeforeAll
     static void beforeAll() throws Exception {
         logger.debug("TEST >>>>>>>>>>>>>>>>>>> Setting up");
-        XContainerJSON x = new XContainerJSON(usernameMjh, true);
+        IdContainerJSON x = new IdContainerJSON(usernameMjh, true);
         ExonymOwnerTest owner = new ExonymOwnerTest(x);
         PassStore store = new PassStore(password, false);
         owner.openContainer(store);
@@ -91,7 +90,7 @@ public class TestSybilRegistration {
                     true, false);
             UIDHelper helper = advocate.getUidHelperForMostRecentIssuerParameters();
 
-            XContainerJSON x = new XContainerJSON(usernameMjh);
+            IdContainerJSON x = new IdContainerJSON(usernameMjh);
             ExonymOwnerTest owner = new ExonymOwnerTest(x);
             PassStore store = new PassStore(password, false);
             owner.openContainer(store);
@@ -141,7 +140,7 @@ public class TestSybilRegistration {
 
     }
 
-    private AsymStoreKey openUserKey(XContainerJSON x, PassStore store) throws Exception {
+    private AsymStoreKey openUserKey(IdContainerJSON x, PassStore store) throws Exception {
         KeyContainer keys = x.openResource("keys.xml");
         XKey key = keys.getKeyPairs().get(0);
         return AsymStoreKey.build(key.getPublicKey(),
@@ -166,7 +165,7 @@ public class TestSybilRegistration {
     @AfterAll
     static void afterAll() throws Exception {
         logger.debug("TEST >>>>>>>>>>>>>>>>>>> Take down");
-        XContainerJSON x = new XContainerJSON(usernameMjh);
+        IdContainerJSON x = new IdContainerJSON(usernameMjh);
         x.delete();
 
     }

@@ -238,7 +238,7 @@ public class XmlHelper {
 			if (!sig.getKeyUid().equals(KeyContainerWrapper.TN_ROOT_KEY) && 
 					!sig.getKeyUid().equals(KeyContainerWrapper.SIG_CHECKSUM)) {
 
-				String fileName = XContainer.uidToXmlFileName(sig.getKeyUid());
+				String fileName = IdContainer.uidToXmlFileName(sig.getKeyUid());
 				urlToFileName.put(URI.create(root).resolve(fileName), fileName);
 				
 			}

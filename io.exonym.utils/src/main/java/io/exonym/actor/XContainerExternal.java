@@ -14,7 +14,7 @@ import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.utils.adapters.PresentationPolicyAlternativesAdapter;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.XContainerSchema;
 import org.apache.logging.log4j.LogManager;
@@ -33,7 +33,7 @@ import java.nio.file.FileSystemException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public final class XContainerExternal extends AbstractXContainer {
+public final class XContainerExternal extends AbstractIdContainer {
 
 
     private static final Logger logger = LogManager.getLogger(XContainerExternal.class);

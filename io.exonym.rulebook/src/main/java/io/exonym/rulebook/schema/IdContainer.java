@@ -1,24 +1,24 @@
 package io.exonym.rulebook.schema;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import io.exonym.actor.actions.XContainerJSON;
+import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.utils.storage.XContainerSchema;
 import io.exonym.rulebook.context.XNodeContainerStore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class XNodeContainer extends XContainerJSON {
+public class IdContainer extends IdContainerJSON {
 	
-	private static final Logger logger = LogManager.getLogger(XNodeContainer.class);
+	private static final Logger logger = LogManager.getLogger(IdContainer.class);
 	
 	private XNodeContainerStore store = XNodeContainerStore.getInstance();
 
-	public XNodeContainer(String username, boolean create) throws Exception {
+	public IdContainer(String username, boolean create) throws Exception {
 		super(username, create);
 		
 	}
 
-	public XNodeContainer(String username) throws Exception {
+	public IdContainer(String username) throws Exception {
 		super(username, false);
 		
 	}

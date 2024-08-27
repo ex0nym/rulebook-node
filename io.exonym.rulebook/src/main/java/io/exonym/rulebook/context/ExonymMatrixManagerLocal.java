@@ -50,7 +50,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
 
     private static final Logger logger = LogManager.getLogger(ExonymMatrixManagerLocal.class);
-    private final NetworkMapItemAdvocate myNmia;
+    private final NetworkMapItemModerator myNmia;
     private final ArrayList<String> ruleUrns;
     private AsymStoreKey signatureKey = null;
 
@@ -65,11 +65,11 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
     private final String root;
 
-    private final AbstractXContainer advocateContainer;
+    private final AbstractIdContainer advocateContainer;
     private final String staticFolder;
 
-    public ExonymMatrixManagerLocal(AbstractXContainer advocateContainer,
-                                    ArrayList<String> ruleUrns, NetworkMapItemAdvocate myNmia,
+    public ExonymMatrixManagerLocal(AbstractIdContainer advocateContainer,
+                                    ArrayList<String> ruleUrns, NetworkMapItemModerator myNmia,
                                     SFTPLogonData logonData, String root,
                                     String staticFolder) throws Exception {
         try {
@@ -299,7 +299,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
     private void write(String xOrYList, String pokeString, String n3, String n6) throws Exception {
         activateSftpOut();
         String r0 = staticFolder;
-        String name = "/" + myNmia.getSourceName() + "/" + Const.MODERATOR;
+        String name = "/" + myNmia.getLeadName() + "/" + Const.MODERATOR;
 
         String pokePath0 = r0 + name + computePokePathToFile(xOrYList);
         String n3Path0 = r0 + name + computeN3PathToFile(matrix.getNibble3(), xOrYList);

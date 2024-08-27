@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
 
 @WebServlet("/whois")
 public class WhoIsServlet extends HttpServlet {
@@ -50,7 +49,7 @@ public class WhoIsServlet extends HttpServlet {
 //
 //            }
 //            r.setListeningToSources(sources);
-            r.setSources(null);
+            r.setLeads(null);
             resp.getWriter().write(gson.toJson(r));
 
         } catch (NoDocumentException e) {

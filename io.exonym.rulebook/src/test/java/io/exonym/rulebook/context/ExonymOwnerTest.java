@@ -8,10 +8,10 @@ import eu.abc4trust.xml.*;
 import io.exonym.actor.AbstractExonymOwner;
 import io.exonym.actor.CandidateToken;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
-import io.exonym.actor.actions.XContainerJSON;
+import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.standard.PassStore;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
 
 import javax.crypto.Cipher;
@@ -27,7 +27,7 @@ public final class ExonymOwnerTest extends AbstractExonymOwner {
      *
      * @param container
      */
-    protected ExonymOwnerTest(XContainerJSON container) {
+    protected ExonymOwnerTest(IdContainerJSON container) {
         super(container);
     }
 
@@ -82,7 +82,7 @@ public final class ExonymOwnerTest extends AbstractExonymOwner {
     }
 
     @Override
-    protected AbstractXContainer getContainer() {
+    protected AbstractIdContainer getContainer() {
         return super.getContainer();
     }
 

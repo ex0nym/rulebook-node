@@ -73,7 +73,7 @@ public class TestNodeManager {
 					verifier.getCredentialSpecification(), null);
 			ppm.removeNym("Helllo");
 			PresentationPolicy po = ppm.build();
-			String xml = XContainerJSON.convertObjectToXml(po);
+			String xml = IdContainerJSON.convertObjectToXml(po);
 			logger.debug(xml);
 
 
@@ -127,7 +127,7 @@ public class TestNodeManager {
 			assert(ni.getStaticLeadUrl0()!=null);
 			assert(ni.getStaticNodeUrl0()!=null);
 			
-			XContainerJSON x = new XContainerJSON(sourceName);
+			IdContainerJSON x = new IdContainerJSON(sourceName);
 			KeyContainer keyPrivate = x.openResource("keys.xml");
 			KeyContainerWrapper kcw = new KeyContainerWrapper(keyPrivate);
 			assert(kcw.getKey(KeyContainerWrapper.TN_ROOT_KEY)!=null);
@@ -146,10 +146,10 @@ public class TestNodeManager {
 			NodeManager network = new NodeManager(sourceName);
 			URI sourceUrl = URI.create("https://trust.exonym.io/ccc-test/lead");
 			ProgressReporter r = new ProgressReporter(new String[] {"0", "1", "2", "3", "4", "5", "6"});
-			network.setupAdvocateNode(sourceUrl, advocateName, store, r);
+			network.setupModeratorNode(sourceUrl, advocateName, store, r);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
-			URI url = network.getAdvocateUrlForThisNode(props.getPrimaryDomain(),
+			URI url = network.getModUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
 			NodeVerifier v = NodeVerifier.openNode(url, false, false);
@@ -189,11 +189,12 @@ public class TestNodeManager {
 			PresentationPolicy pp = n.getPresentationPolicy();
 			
 			PresentationPolicyManager ppm = new PresentationPolicyManager(pp, n.getCredentialSpecification(), null);
-			URI issuerUid = n.getOwnTrustNetwork().getMostRecentIssuerParameters();
+			URI issuerUid = null; // n.getOwnTrustNetwork().getMostRecentIssuerParameters();
+			// TODO - this was removed when the Trust Network migrated to the network map in the NodeVerifier
 			logger.info("Checking update to public information");
 			assert(ppm.hasIssuer(issuerUid));
 			
-			XContainerJSON x  = new XContainerJSON("ccc-test");
+			IdContainerJSON x  = new IdContainerJSON("ccc-test");
 			URI sourceUid = network.discoverNetworkUid();
 			PresentationPolicy ppaax = x.openResource(URI.create(sourceUid + ":pp"));
 			ppm = new PresentationPolicyManager(ppaax, n.getCredentialSpecification(), null);
@@ -216,7 +217,7 @@ public class TestNodeManager {
 			URI nodeUrl = network.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
-			network.removeNode(nodeUrl, store);
+			network.removeModeratorFromLead(nodeUrl, store);
 
 			NodeVerifier n = NodeVerifier.openNode(nodeUrl, true, true);
 			PresentationPolicy ppaa = n.getPresentationPolicy();
@@ -227,7 +228,7 @@ public class TestNodeManager {
 			logger.info("Checking update to public information");
 			assert(!ppm.hasIssuer(issuerUid));
 			
-			XContainerJSON x  = new XContainerJSON(sourceName);
+			IdContainerJSON x  = new IdContainerJSON(sourceName);
 			URI sourceUid = network.discoverNetworkUid();
 			PresentationPolicy ppaax = x.openResource(URI.create(sourceUid + ":pp"));
 			ppm = new PresentationPolicyManager(ppaax, null);
@@ -267,7 +268,7 @@ public class TestNodeManager {
 
 			NodeVerifier v = NodeVerifier.openNode(url, true, true);
 			
-			XContainerJSON x = new XContainerJSON(sourceName);
+			IdContainerJSON x = new IdContainerJSON(sourceName);
 			
 			URI ppaUid = URI.create(m.discoverNetworkUid() + ":pp");
 			
@@ -283,7 +284,7 @@ public class TestNodeManager {
 			v = NodeVerifier.openNode(url0, true, true);
 			PresentationPolicyManager ppm = new PresentationPolicyManager(v.getPresentationPolicy(),
 					v.getCredentialSpecification());
-			x = new XContainerJSON(sourceName);
+			x = new IdContainerJSON(sourceName);
 			pp = x.openResource(ppaUid);
 			assert(!ppm.hasScope(s));
 			
@@ -330,7 +331,7 @@ public class TestNodeManager {
 		KeyContainerWrapper wrapper = new KeyContainerWrapper(container);
 		wrapper.addKey(xk);
 
-		XContainerJSON x = new XContainerJSON(usernameOwner);
+		IdContainerJSON x = new IdContainerJSON(usernameOwner);
 		x.saveLocalResource(container);
 		
 		KeyContainer pub = new KeyContainer();
@@ -356,8 +357,8 @@ public class TestNodeManager {
 			LocalNetworkMap mapTmp = new LocalNetworkMap();
 			mapTmp.spawn();
 			NetworkMapTest map  = new NetworkMapTest(
-					(NetworkMapItemSource) mapTmp.nmiForNode(mySource),
-					(NetworkMapItemAdvocate) mapTmp.nmiForNode(myAdvocate));
+					(NetworkMapItemLead) mapTmp.nmiForNode(mySource),
+					(NetworkMapItemModerator) mapTmp.nmiForNode(myAdvocate));
 
 			PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
 			external.setNetworkMapAndCache(map, new Cache());
@@ -365,7 +366,7 @@ public class TestNodeManager {
 			Http client = new Http();
 
 			resetOwner(mjh);
-			XContainerJSON x = new XContainerJSON(mjh, true);
+			IdContainerJSON x = new IdContainerJSON(mjh, true);
 			ExonymOwner owner = new ExonymOwner(x);
 			owner.openContainer(store);
 			owner.setupContainerSecret(store.getEncrypt(), store.getDecipher());
@@ -398,11 +399,11 @@ public class TestNodeManager {
 			List<String> sources = map.getSourceFilenamesForRulebook(
 					rulebookVerifier.getRulebook().getRulebookId());
 
-			NetworkMapItemSource nmis = (NetworkMapItemSource) map.nmiForNode(
+			NetworkMapItemLead nmis = (NetworkMapItemLead) map.nmiForNode(
 					map.fromNmiFilename(sources.get(1)));
 
-			NetworkMapItemAdvocate nmia = (NetworkMapItemAdvocate)
-					map.nmiForNode(nmis.getAdvocatesForSource().get(0));
+			NetworkMapItemModerator nmia = (NetworkMapItemModerator)
+					map.nmiForNode(nmis.getModeratorsForLead().get(0));
 
 			URI s0 = nmis.getStaticURL0();
 			URI a0 = nmia.getStaticURL0();
@@ -418,7 +419,7 @@ public class TestNodeManager {
 					rulebookVerifier.getRulebook().getChallengeB64());
 
 			IssuanceMessage imRulebook = owner.issuanceStep(imabRulebook, store.getEncrypt());
-			String xml = XContainer.convertObjectToXml(imRulebook);
+			String xml = IdContainer.convertObjectToXml(imRulebook);
 			String finalMessage = client.basicPost(ax0, xml);
 			if (!finalMessage.contains("error")){
 				imabRulebook = (IssuanceMessageAndBoolean) JaxbHelperClass.deserialize(finalMessage).getValue();
@@ -465,13 +466,13 @@ public class TestNodeManager {
 
 	private static void blankContainer(String name) {
 		try {
-			XContainerJSON x = new XContainerJSON(name);
+			IdContainerJSON x = new IdContainerJSON(name);
 			x.delete();
-			new XContainerJSON(name, true);
+			new IdContainerJSON(name, true);
 			
 		} catch (Exception e) {
 			try {
-				new XContainerJSON(name, true);
+				new IdContainerJSON(name, true);
 				
 			} catch (Exception e1) {
 				logger.error("Error", e);
@@ -483,7 +484,7 @@ public class TestNodeManager {
 	private static void resetSource(String name) {
 		try {
 			try {
-				XContainerJSON x = new XContainerJSON(name);
+				IdContainerJSON x = new IdContainerJSON(name);
 				x.delete();
 				
 			} catch (Exception e) {
@@ -515,7 +516,7 @@ public class TestNodeManager {
 	private static void resetNode(String name, String sourceName) {
 		try {
 			try {
-				XContainerJSON x = new XContainerJSON(name);
+				IdContainerJSON x = new IdContainerJSON(name);
 				x.delete();
 				
 			} catch (Exception e) {
@@ -541,7 +542,7 @@ public class TestNodeManager {
 	private static void resetOwner(String name) {
 		try {
 			try {
-				XContainerJSON x = new XContainerJSON(name);
+				IdContainerJSON x = new IdContainerJSON(name);
 				x.delete();
 				
 			} catch (Exception e) {

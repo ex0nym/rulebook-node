@@ -64,9 +64,10 @@ public class Rulebook extends SerialErrorHandling {
     }
 
     public URI computeCredentialSpecId() {
-        return URI.create(
+        String[] parts = rulebookId.split(":");
+        return URI.create("urn:rulebook:" +
                 this.description.getName().toLowerCase() + ":"
-                + rulebookId + ":c");
+                +  parts[parts.length-1] + ":c");
     }
 
     public void setRulebookId(String rulebookId) {

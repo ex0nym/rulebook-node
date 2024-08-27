@@ -170,7 +170,6 @@ public final class ControlPanelServlet extends HttpServlet {
 				} else if (cmd.equals("sourceNodeManagementAuthorizedNodesDelete")) {
 					sourceNodeManagementAuthorizedNodesDelete(dataReq, req, resp);
 					refreshNetworkMap();
-					throw new RuntimeException("It does get called");
 
 				} else {
 					throw new Exception("Unknown Administrator Request - " + cmd);
@@ -238,7 +237,7 @@ public final class ControlPanelServlet extends HttpServlet {
 			WebUtils.respond(resp, o);
 
 		} else {
-			throw new UxException("No current jobs");
+			throw new UxException("Please refresh your page.");
 
 		}
 	}
@@ -295,7 +294,7 @@ public final class ControlPanelServlet extends HttpServlet {
 						PassStore p = new PassStore(RulebookNodeProperties.instance().getNodeRoot(), false);
 						
 						if (p!=null) {
-							String networkName = NodeManagerWeb.computeNetworkName(sourceUrl);
+							String networkName = NodeManagerWeb.computeLeadNameUncheckedSignature(sourceUrl);
 							NodeManagerWeb n = new NodeManagerWeb(networkName);
 							ProgressReporter reporter = new ProgressReporter(new String[] {
 									"Defining Trust Network",
@@ -314,7 +313,7 @@ public final class ControlPanelServlet extends HttpServlet {
 							new Thread(() -> {
 								try {
 									logger.info("Starting Source Attachment");
-									NodeInformation info = n.setupAdvocateNode(sourceUrl, name, p, reporter);
+									NodeInformation info = n.setupModeratorNode(sourceUrl, name, p, reporter);
 									NodeData d = new NodeData();
 									d.setNetworkName(networkName);
 									d.setName(name);
@@ -610,10 +609,11 @@ public final class ControlPanelServlet extends HttpServlet {
 				broadcast();
 				NodeData d = new NodeData();
 				d.setNodeUrl(nurl);
+				d.setNodeUrl(nurl);
 				d.setNodeUid(nodeUid);
 				d.setType(NodeData.TYPE_RULEBOOK_NODE);
 				d.setName(internalName);
-				d.setSourceUid(UIDHelper.computeSourceUidFromNodeUid(nodeUid));
+				d.setSourceUid(UIDHelper.computeLeadUidFromModUid(nodeUid));
 				d.setNetworkName(networkName);
 				d.setLastPPHash(n.getPpHash());
 				NodeStore.getInstance().add(d);
@@ -639,7 +639,7 @@ public final class ControlPanelServlet extends HttpServlet {
 		ExoNotify notify = new ExoNotify();
 		notify.setT(DateHelper.currentIsoUtcDateTime());
 		URI nodeUuid = IAuthenticator.getInstance().getNodeUid();
-		URI sourceUuid = UIDHelper.computeSourceUidFromNodeUid(nodeUuid);
+		URI sourceUuid = UIDHelper.computeLeadUidFromModUid(nodeUuid);
 		notify.setAdvocateUID(sourceUuid);
 		notify.setType(ExoNotify.TYPE_SOURCE);
 		byte[] toSign = ExoNotify.signatureOnAckAndOrigin(notify);
@@ -666,7 +666,7 @@ public final class ControlPanelServlet extends HttpServlet {
 			
 			if (WhiteList.url(nodeUrl)) {
 				NodeManagerWeb n = new NodeManagerWeb(networkName);
-				URI nodeUid = n.removeNode(URI.create(nodeUrl), p);
+				URI nodeUid = n.removeModeratorFromLead(URI.create(nodeUrl), p);
 				broadcast();
 				NodeStore store = NodeStore.getInstance();
 				NodeData d = store.findNetworkNodeDataItem(nodeUid.toString());
@@ -695,7 +695,7 @@ public final class ControlPanelServlet extends HttpServlet {
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
 			PassStore p = new PassStore(props.getNodeRoot(), false);
 			NodeManagerWeb n = new NodeManagerWeb(networkName);
-			n.removeNode(nodeUid, p);
+			n.removeModeratorFromLead(nodeUid, p);
 			broadcast();
 			NodeStore store = NodeStore.getInstance();
 			NodeData d = store.findNetworkNodeDataItem(nodeUid);

@@ -37,7 +37,7 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.standard.Form;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.utils.ExtractObject;
-import io.exonym.utils.storage.AbstractXContainer;
+import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.AnonCredentialParameters;
 import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.MintedAnonCredential;
@@ -95,7 +95,7 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 	 * 
 	 * @param container
 	 */
-	protected AbstractExonymOwner(AbstractXContainer container) {
+	protected AbstractExonymOwner(AbstractIdContainer container) {
 		super(container);
 		cryptoEngineUser = INJECTOR.provideCryptoEngineUser();
 		credentialManagerUser = INJECTOR.providesCredentialManagerUser();
@@ -270,8 +270,11 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 			OwnedCredential oc = new OwnedCredential(specification,
 					credential.getCredentialDescription().getCredentialUID(),
 					params.getParametersUID(), raUid);
+
 			oc.setAttributes(credential.getCredentialDescription().getAttribute());
+
 			logger.info(oc);
+
 			this.ownedCredentials.add(oc);
 
 			if (credentialManagerUser.getCredential(container.getUsername(), 
@@ -509,13 +512,16 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 			container.saveLocalResource(cred, enc);
 
 		} catch (UxException e) {
-			throw new UxException(ErrorMessages.ALREADY_SUBSCRIBED, "You are already a member at this Advocate", "");
+			throw new UxException(ErrorMessages.ALREADY_SUBSCRIBED,
+					"You are already a member at this Moderator", "");
 
 		}
 		new CredentialWrapper(cred, CredentialWrapper.ENCODE_ATTRIBUTES);
 
-		OwnedCredential oc = new OwnedCredential(cred.getCredentialDescription().getCredentialSpecificationUID(),
-				cred.getCredentialDescription().getCredentialUID(), cred.getCredentialDescription().getIssuerParametersUID());
+		OwnedCredential oc = new OwnedCredential(
+				cred.getCredentialDescription().getCredentialSpecificationUID(),
+				cred.getCredentialDescription().getCredentialUID(),
+				cred.getCredentialDescription().getIssuerParametersUID());
 		this.addCredentialToIdmx(cred, enc);
 		ownedCredentials.add(oc);
 

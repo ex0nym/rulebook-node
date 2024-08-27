@@ -19,7 +19,7 @@ public class UtilsSuite {
 	
 	public static void setup(){
 		try {
-			XContainer xc1 = new XContainer(XC1, true);
+			IdContainer xc1 = new IdContainer(XC1, true);
 			xc1.delete();
 			
 		} catch (Exception e) {
@@ -28,14 +28,14 @@ public class UtilsSuite {
 		}
 
 		try {
-			XContainer base = new XContainer(XC0, true);
+			IdContainer base = new IdContainer(XC0, true);
 			logger.debug("Created container " + base.getUsername());
 			
 		} catch (Exception e) {
 			try {
-				XContainer base = new XContainer(XC0);
+				IdContainer base = new IdContainer(XC0);
 				base.delete();
-				base = new XContainer(XC0, true);
+				base = new IdContainer(XC0, true);
 				logger.debug("Created container after emptying an old container " + base.getUsername());
 				
 			} catch (Exception e1) {

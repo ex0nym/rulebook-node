@@ -5,7 +5,7 @@ import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.actions.NodeManager;
 import io.exonym.actor.actions.NodeVerifier;
 import io.exonym.actor.actions.TrustNetworkWrapper;
-import io.exonym.actor.actions.XContainerJSON;
+import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.actor.storage.SFTPClient;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.connect.UrlHelper;
@@ -17,7 +17,7 @@ import io.exonym.utils.storage.NodeInformation;
 import io.exonym.utils.storage.TrustNetwork;
 import io.exonym.rulebook.exceptions.ItemNotFoundException;
 import io.exonym.lite.pojo.NodeData;
-import io.exonym.rulebook.schema.XNodeContainer;
+import io.exonym.rulebook.schema.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.Job;
@@ -77,7 +77,7 @@ public class ReadNetworkTask implements Job {
     }
 
     private void updateNodeIfAndOnlyIfNecessary(NodeData self, NodeVerifier source, NetworkParticipant participant) throws Exception {
-        KeyContainer kc = openLocalSignatureData(source.getNodeName(), participant.getNodeUid());
+        KeyContainer kc = openLocalSignatureData(self.getNetworkName(), participant.getNodeUid());
         boolean amISource = self.getType().equals(NodeData.TYPE_LEAD);
 
         if (kc!=null){ // Local Data Found
@@ -143,10 +143,11 @@ public class ReadNetworkTask implements Job {
                     return source;
 
                 } else {
-                    URL url = new URL(baseUrl + "/" + node.getNodeName() + "/network/");
+//                    URL url = new URL(baseUrl + "/" + node.getNodeName() + "/network/");
+                    // 24-08 Took the URL out because it's not clear how this will be used after recon.
                     logger.info("No updates since last check " + sUid);
                     participant.setAvailableOnMostRecentRequest(true);
-                    return NodeVerifier.openLocal(url, localSourceSig, false);
+                    return NodeVerifier.openLocal(null, localSourceSig, false);
 
                 }
             } else {
@@ -188,7 +189,7 @@ public class ReadNetworkTask implements Job {
     }
 
     private void writeLocalSourceData(NodeVerifier source) throws Exception {
-        String url = baseUrl + "/" + source.getNodeName() + "/network/";
+//        String url = baseUrl + "/" + source.getNodeName() + "/network/";
         try {
             TrustNetwork tn = source.getTargetTrustNetwork();
             PresentationPolicy pp = source.getPresentationPolicy();
@@ -199,10 +200,10 @@ public class ReadNetworkTask implements Job {
             String csString = JaxbHelper.serializeToXml(cs, CredentialSpecification.class);
             String kcString = JaxbHelper.serializeToXml(kc, KeyContainer.class);
 
-            String tnFileName = XContainerJSON.uidToXmlFileName(tn.getNodeInformationUid());
-            String ppFileName = XContainerJSON.uidToXmlFileName(pp.getPolicyUID());
-            String csFileName = XContainerJSON.uidToXmlFileName(cs.getSpecificationUID());
-            String kcFileName = XContainerJSON.uidToFileName(
+            String tnFileName = IdContainerJSON.uidToXmlFileName(tn.getNodeInformationUid());
+            String ppFileName = IdContainerJSON.uidToXmlFileName(pp.getPolicyUID());
+            String csFileName = IdContainerJSON.uidToXmlFileName(cs.getSpecificationUID());
+            String kcFileName = IdContainerJSON.uidToFileName(
                     tn.getNodeInformation().getNodeUid()) + "-sig.xml";
 
             save(tnString, tnFileName);
@@ -217,23 +218,23 @@ public class ReadNetworkTask implements Job {
     }
 
     private void writeLocalNodeData(NodeVerifier node) throws Exception {
-        String url = baseUrl + "/" + node.getNodeName() + "/network/";
+//        String url = baseUrl + "/" + node.getNodeName() + "/network/";
         try {
             HashMap<String, String> fileNameToXml = new HashMap<>();
             TrustNetwork tn = node.getTargetTrustNetwork();
             String tnXml = JaxbHelper.serializeToXml(tn, TrustNetwork.class);
-            String tnF = XNodeContainer.uidToXmlFileName(tn.getNodeInformationUid());
+            String tnF = IdContainer.uidToXmlFileName(tn.getNodeInformationUid());
             fileNameToXml.put(tnF, tnXml);
 
             InspectorPublicKey ins = node.getInspectorPublicKey();
-            String insF = XNodeContainer.uidToXmlFileName(ins.getPublicKeyUID());
-            String insXml = XNodeContainer.convertObjectToXml(ins);
+            String insF = IdContainer.uidToXmlFileName(ins.getPublicKeyUID());
+            String insXml = IdContainer.convertObjectToXml(ins);
             fileNameToXml.put(insF, insXml);
 
             Set<String> raps = node.getAllRevocationAuthorityFileNames();
             for (String f : raps){
                 RevocationAuthorityParameters rap = node.getRevocationAuthorityParameters(f);
-                String xml = XNodeContainer.convertObjectToXml(rap);
+                String xml = IdContainer.convertObjectToXml(rap);
                 fileNameToXml.put(f, xml);
 
             }
@@ -241,7 +242,7 @@ public class ReadNetworkTask implements Job {
             Set<String> rais = node.getAllRevocationInformationFileNames();
             for (String f : rais){
                 RevocationInformation rai = node.getRevocationInformation(f);
-                String xml = XNodeContainer.convertObjectToXml(rai);
+                String xml = IdContainer.convertObjectToXml(rai);
                 fileNameToXml.put(f, xml);
 
             }
@@ -249,14 +250,14 @@ public class ReadNetworkTask implements Job {
             Set<String> is = node.getIssuerParameterFileNames();
             for (String f : is){
                 IssuerParameters i = node.getIssuerParameters(f);
-                String xml = XNodeContainer.convertObjectToXml(i);
+                String xml = IdContainer.convertObjectToXml(i);
                 fileNameToXml.put(f, xml);
 
             }
 
             KeyContainer kc = node.getRawKeys();
             String kcXml = JaxbHelper.serializeToXml(kc, KeyContainer.class);
-            String kcFileName = XContainerJSON.uidToFileName(
+            String kcFileName = IdContainerJSON.uidToFileName(
                     tn.getNodeInformation().getNodeUid()) + "-sig.xml";
             fileNameToXml.put(kcFileName, kcXml);
 
@@ -288,7 +289,7 @@ public class ReadNetworkTask implements Job {
     private KeyContainer openLocalSignatureData(String networkName, URI nodeUid) throws Exception {
         try {
             String url = baseUrl + "/" + networkName +
-                    "/network/" + XContainerJSON.uidToFileName(nodeUid) + "-sig.xml";
+                    "/network/" + IdContainerJSON.uidToFileName(nodeUid) + "-sig.xml";
 
             byte[] b = UrlHelper.readXml(new URL(url));
             return JaxbHelper.xmlToClass(new String(b, "UTF8"), KeyContainer.class);
