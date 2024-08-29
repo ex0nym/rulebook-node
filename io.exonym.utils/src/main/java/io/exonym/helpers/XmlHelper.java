@@ -6,6 +6,7 @@ import eu.abc4trust.xml.*;
 import io.exonym.abc.util.FileType;
 import io.exonym.abc.util.JaxbHelper;
 import io.exonym.lite.connect.UrlHelper;
+import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.Rulebook;
@@ -19,6 +20,7 @@ import javax.xml.bind.JAXBElement;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -213,12 +215,23 @@ public class XmlHelper {
 
 			}
 		}
-		byte[] desc = UrlHelper.read(new URL(descUrl));
+		ConcurrentHashMap<String, ByteArrayBuffer> result = new ConcurrentHashMap<>();
+		byte[] desc = new byte[0];
+		try {
+			desc = UrlHelper.read(new URL(descUrl));
+			result.put("description", new ByteArrayBuffer(desc));
+
+		} catch (IOException e) {
+			if (!descUrl.contains("/network/")){
+				throw new UxException(ErrorMessages.STATIC_DATA_UNAVAILABLE);
+
+			}
+		}
 
 		URL url = new URL(root + "/signatures.xml");
 		
-		ConcurrentHashMap<String, ByteArrayBuffer> result = new ConcurrentHashMap<>();
-		result.put("description", new ByteArrayBuffer(desc));
+
+
 		KeyContainerWrapper kcPublic = null; 
 		try {
 			byte[] signaturesXml = UrlHelper.read(url);

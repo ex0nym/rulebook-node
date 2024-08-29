@@ -1,4 +1,4 @@
-package io.exonym.x0basic;
+package io.exonym.rulebook.context;
 
 import io.exonym.lite.pojo.ExoNotify;
 import io.exonym.lite.standard.AsymStoreKey;

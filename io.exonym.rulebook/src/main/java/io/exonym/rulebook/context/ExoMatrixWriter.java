@@ -1,11 +1,13 @@
-package io.exonym.x0basic;
+package io.exonym.rulebook.context;
 
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.lite.couchdb.QueryBasic;
+import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoMatrix;
 import io.exonym.lite.pojo.ExoNotify;
+import io.exonym.lite.standard.Const;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,13 +20,13 @@ public class ExoMatrixWriter extends ModelCommandProcessor {
 
     private static final Logger logger = LogManager.getLogger(ExoMatrixWriter.class);
     private final ArrayList<ExoMatrix> toWrite = new ArrayList<>();
-    private final CouchRepository<ExoMatrix> exonymMap;
+    private final UnprotectedCouchRepository<ExoMatrix> exonymMap;
     private final QueryBasic queryExo = new QueryBasic();
     private final ArrayBlockingQueue<Msg> pipeToConflictResolver;
 
     protected ExoMatrixWriter(ArrayBlockingQueue<Msg> pipeToConflictResolver) throws Exception {
-        super(Constants.FLUX_CAPACITY, "ExoMatrixWriter", 1000);
-        this.exonymMap = CouchDbHelper.repoExonymMap();
+        super(Const.FLUX_CAPACITY, "ExoMatrixWriter", 1000);
+        this.exonymMap = CouchDbHelper.repoExoMatrix();
         this.pipeToConflictResolver = pipeToConflictResolver;
 
     }

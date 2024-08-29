@@ -22,6 +22,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -402,8 +404,10 @@ public class TestNodeManager {
 			NetworkMapItemLead nmis = (NetworkMapItemLead) map.nmiForNode(
 					map.fromNmiFilename(sources.get(1)));
 
+			ArrayList<URI> mods = new ArrayList<>(nmis.getModeratorsForLead());
+
 			NetworkMapItemModerator nmia = (NetworkMapItemModerator)
-					map.nmiForNode(nmis.getModeratorsForLead().get(0));
+					map.nmiForNode(mods.get(0));
 
 			URI s0 = nmis.getStaticURL0();
 			URI a0 = nmia.getStaticURL0();

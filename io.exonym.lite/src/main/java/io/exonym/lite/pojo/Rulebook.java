@@ -10,13 +10,15 @@ public class Rulebook extends SerialErrorHandling {
             "800a5e641a0f9e6f2ba77c8a31384df2d034a969ccd565b8b9206fd4f8126296";
 
     public static final URI SYBIL_SOURCE_UID = URI.create(Namespace.URN_PREFIX_COLON
-            + "sybil:" + SYBIL_RULEBOOK_HASH);
+            + "sybil-test-network:c30:" + SYBIL_RULEBOOK_HASH);
+
+
 
     public static final URI SYBIL_TEST_NET_UID =  URI.create(Namespace.URN_PREFIX_COLON
-            + "sybil:test-net:" + SYBIL_RULEBOOK_HASH);
+            + "sybil-test-network:c30:sybil-test:" + SYBIL_RULEBOOK_HASH);
 
     public static final URI SYBIL_MAIN_NET_UID =  URI.create(Namespace.URN_PREFIX_COLON
-            + "sybil:main-net:" + SYBIL_RULEBOOK_HASH);
+            + "sybil:c30:main-net:" + SYBIL_RULEBOOK_HASH);
 
     public static final String SYBIL_CLASS_PERSON = "person";
     public static final String SYBIL_CLASS_ENTITY = "entity";

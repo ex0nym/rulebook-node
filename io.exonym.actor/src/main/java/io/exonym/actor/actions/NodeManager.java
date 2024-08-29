@@ -47,6 +47,10 @@ public class NodeManager {
 	private String raiHash;
 	private String ppHash;
 
+	private String ppB64, ppSigB64;
+	private String raiB64, raiSigB64;
+
+
 	public NodeManager(String leadName) throws UxException {
 		validateLeadName(leadName);
 		this.leadName =leadName;
@@ -108,7 +112,7 @@ public class NodeManager {
 
 				String cs = IdContainerJSON.convertObjectToXml(cred);
 				String p = IdContainerJSON.convertObjectToXml(policy);
-				this.ppHash = CryptoUtils.computeSha256HashAsHex(p);
+
 				String tn = JaxbHelper.serializeToXml(network, TrustNetwork.class);
 
 				byte[] csSign = NodeVerifier.stripStringToSign(cs).getBytes();
@@ -134,6 +138,8 @@ public class NodeManager {
 				toSign.put(cred.getSpecificationUID(), new ByteArrayBuffer(csSign));
 				toSign.put(policy.getPolicyUID(), new ByteArrayBuffer(pSign));
 				toSign.put(network.getNodeInformationUid(), new ByteArrayBuffer(tnSign));
+
+				updatePpSignatures(key, p, pSign);
 
 				URI url0 = staticUrl;
 
@@ -177,6 +183,14 @@ public class NodeManager {
 			throw e;
 			
 		}
+	}
+
+	private void updatePpSignatures(AsymStoreKey key, String p, byte[] pSign) throws Exception {
+		ppHash = CryptoUtils.computeSha256HashAsHex(p);
+		ppB64 = Base64.encodeBase64String(p.getBytes(StandardCharsets.UTF_8));
+		ppSigB64 = Base64.encodeBase64String(
+				signData(pSign, key, null));
+
 	}
 
 	public static URI computeStaticURL(URI rulebookNodeUrl, boolean forLead){
@@ -403,7 +417,7 @@ public class NodeManager {
 	// Do not delete until the system has a large number of users.
 	public void freshIssuer(PassStore store) throws Exception {
 		
-		TrustNetworkWrapper tnw = openMyTrustNetwork(false);
+		TrustNetworkWrapper tnw = new TrustNetworkWrapper(openMyTrustNetwork(false));
 
 		NodeInformation info = tnw.getNodeInformation();
 		String username = info.getNodeName().split("-")[0];
@@ -603,7 +617,7 @@ public class NodeManager {
 		
 		InspectorPublicKey addingIns = nodeToAdd.getInspectorPublicKey();
 
-		TrustNetworkWrapper myNetworkWrapper = openMyTrustNetwork(true);
+		TrustNetworkWrapper myNetworkWrapper = new TrustNetworkWrapper(openMyTrustNetwork(true));
 
 		NodeInformation addingNi = addingModeratorTnw.getNodeInformation();
 		LinkedList<URI> currentIssuerParams = myNetworkWrapper.getNodeInformation().getIssuerParameterUids();
@@ -633,13 +647,13 @@ public class NodeManager {
 
 		x.saveLocalResource(myPresentationPolicy, true);
 		
-		MyStaticData mtn = new MyStaticData(true);
-		URI url = mtn.getTrustNetworkWrapper()
+		MyTrustNetworkAndKeys mtn = new MyTrustNetworkAndKeys(true);
+		URI url = mtn.getTrustNetwork()
 				.getNodeInformation().getStaticNodeUrl0();
 		logger.info("Attempting to publish to URL=" + url);
 
 		KeyContainerWrapper kcw = openSignaturesContainer(
-				mtn.getTrustNetworkWrapper()
+				mtn.getTrustNetwork()
 						.getNodeInformation().getStaticNodeUrl0());
 		
 		KeyContainer secret = x.openResource("keys.xml");
@@ -661,6 +675,8 @@ public class NodeManager {
 		// Sign all files
 		byte[] ppa0Bytes = ppa0String.getBytes();
 		byte[] niBytes = niString.getBytes();
+
+		updatePpSignatures(key, ppa0String, ppa0Sign.getBytes());
 
 		HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
 		toSign.put(myPresentationPolicy.getPolicyUID(), new ByteArrayBuffer(ppa0Sign.getBytes()));
@@ -714,7 +730,7 @@ public class NodeManager {
 			NodeInformation targetInfo = v.getTargetTrustNetwork().getNodeInformation();
 
 			if (!isLead(targetInfo)) {
-				TrustNetworkWrapper tn = openMyTrustNetwork(true);
+				TrustNetworkWrapper tn = new TrustNetworkWrapper(openMyTrustNetwork(true));
 				NodeInformation myInfo = tn.getNodeInformation();
 				IdContainerJSON x = openContainer(myInfo.getNodeName(), store);
 				URI ppaUid = URI.create(myInfo.getNodeUid() + ":pp");
@@ -833,14 +849,14 @@ public class NodeManager {
 		ppa0 = ppm.build();
 		x.saveLocalResource(ppa0, true);
 
-		TrustNetworkWrapper networkWrapper = openMyTrustNetwork(true);
+		TrustNetworkWrapper networkWrapper = new TrustNetworkWrapper(openMyTrustNetwork(true));
 
 		networkWrapper.removeParticipant(URI.create(moderatorUID));
 		TrustNetwork network = networkWrapper.finalizeTrustNetwork();
 
 		String ppString = IdContainerJSON.convertObjectToXml(ppa0);
 
-		this.ppHash = CryptoUtils.computeSha256HashAsHex(ppString);
+
 		String niString = JaxbHelper.serializeToXml(network, TrustNetwork.class);
 
 		logger.info(ppString);
@@ -848,11 +864,14 @@ public class NodeManager {
 
 		String ppSign = NodeVerifier.stripStringToSign(ppString);
 		String niSign = NodeVerifier.stripStringToSign(niString);
+
+		updatePpSignatures(key, ppString, ppSign.getBytes(StandardCharsets.UTF_8));
 		
 		// Sign all files
 		byte[] ppBytes = ppString.getBytes();
 		byte[] niBytes = niString.getBytes();
-		
+
+
 		HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
 		toSign.put(ppa0.getPolicyUID(), new ByteArrayBuffer(ppSign.getBytes()));
 		toSign.put(network.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
@@ -895,9 +914,9 @@ public class NodeManager {
 		
 	}
 	
-	public TrustNetworkWrapper openMyTrustNetwork(boolean amILead) throws Exception {
-		MyStaticData mtn = new MyStaticData(amILead);
-		return mtn.getTrustNetworkWrapper();
+	public TrustNetwork openMyTrustNetwork(boolean amILead) throws Exception {
+		MyTrustNetworkAndKeys mtn = new MyTrustNetworkAndKeys(amILead);
+		return mtn.getTrustNetwork();
 
 	}
 
@@ -1218,7 +1237,8 @@ public class NodeManager {
 	public static void signatureUpdateXml(AsymStoreKey key, HashMap<URI, ByteArrayBuffer> toSign,
 										  KeyContainerWrapper kcw, URI nodeUrl) throws Exception{
 		if (kcw.getKey(KeyContainerWrapper.TN_ROOT_KEY).getPrivateKey()!=null) {
-			throw new SecurityException("Cannot write this KeyContainer Publicly as it contains a Private Key");
+			throw new SecurityException(
+					"Cannot write this KeyContainer Publicly as it contains a Private Key");
 			
 		}
 		for (URI uid : toSign.keySet()){
@@ -1465,7 +1485,7 @@ public class NodeManager {
 			return nodeUid;
 			
 		} else {
-			TrustNetworkWrapper tn = openMyTrustNetwork(false);
+			TrustNetwork tn = openMyTrustNetwork(false);
 			this.nodeUid = tn.getNodeInformation().getNodeUid();
 			return nodeUid;
 			
@@ -1492,9 +1512,6 @@ public class NodeManager {
 		
 	}
 
-	public String getRaiHash() {
-		return raiHash;
-	}
 
 	public void setRaiHash(String raiHash) {
 		this.raiHash = raiHash;
@@ -1504,7 +1521,23 @@ public class NodeManager {
 		return ppHash;
 	}
 
-	public void setPpHash(String ppHash) {
-		this.ppHash = ppHash;
+	public String getPpB64() {
+		return ppB64;
+	}
+
+	public String getPpSigB64() {
+		return ppSigB64;
+	}
+
+	public String getRaiB64() {
+		return raiB64;
+	}
+
+	public String getRaiSigB64() {
+		return raiSigB64;
+	}
+
+	public String getRaiHash() {
+		return raiHash;
 	}
 }

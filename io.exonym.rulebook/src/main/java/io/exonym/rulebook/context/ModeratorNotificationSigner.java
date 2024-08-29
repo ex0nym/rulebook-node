@@ -1,34 +1,43 @@
 package io.exonym.rulebook.context;
 
+import io.exonym.actor.actions.MyTrustNetworkAndKeys;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.PassStore;
+import io.exonym.lite.standard.WhiteList;
 import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.KeyContainerWrapper;
 import io.exonym.lite.pojo.XKey;
-import io.exonym.lite.pojo.NodeData;
 import io.exonym.rulebook.schema.IdContainer;
+import io.exonym.utils.storage.TrustNetwork;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Signer {
+public class ModeratorNotificationSigner {
 
-    private final static Signer instance;
-
-    
-    private static final Logger logger = LogManager.getLogger(Signer.class);
-    
+    private final static ModeratorNotificationSigner instance;
+    private static final Logger logger = LogManager.getLogger(ModeratorNotificationSigner.class);
     private final ConcurrentHashMap<String, AsymStoreKey> nodeUidToRootKey = new ConcurrentHashMap<>();
 
     private void openKey(String nodeUid, PassStore store) throws Exception {
-        NodeStore ns = NodeStore.getInstance();
-        NodeData node = ns.openThisAdvocate();
-        logger.debug("node name" + node.getName() + " " + node.get_id());
+        TrustNetwork tn = null;
+        if (WhiteList.isModeratorUid(nodeUid)){
+            MyTrustNetworkAndKeys mts = new MyTrustNetworkAndKeys(false);
+            tn = mts.getTrustNetwork();
 
-        IdContainer x = new IdContainer(node.getName());
+        } else {
+            MyTrustNetworkAndKeys mts = new MyTrustNetworkAndKeys(true);
+            tn = mts.getTrustNetwork();
+
+        }
+        logger.debug("Node name " + tn.getNodeInformation().getNodeUid());
+
+        IdContainer x = new IdContainer(tn.getNodeInformation().getNodeName());
+
         KeyContainer kcSecret = x.openResource("keys.xml");
+
         KeyContainerWrapper kcwSecret = new KeyContainerWrapper(kcSecret);
         XKey xkey = kcwSecret.getKey(KeyContainerWrapper.TN_ROOT_KEY);
         AsymStoreKey key = AsymStoreKey.build(xkey.getPublicKey(),
@@ -58,27 +67,15 @@ public class Signer {
 
     }
 
-//    protected void checkSignature(String nodeUid, byte[] sig, byte[] data, PassStore store) throws Exception {
-//        if (!nodeUidToRootKey.containsKey(nodeUid)){
-//            openKey(nodeUid, store);
-//
-//        }
-//        AsymStoreKey key = nodeUidToRootKey.get(nodeUid);
-//        if (!key.verifySignature(data, sig)){
-//            throw new UxException("Signature did not verify");
-//
-//        }
-//    }
-
     static{
-        instance = new Signer();
+        instance = new ModeratorNotificationSigner();
 
     }
 
-    protected static Signer getInstance() {
+    protected static ModeratorNotificationSigner getInstance() {
         return instance;
     }
 
-    private Signer() {
+    private ModeratorNotificationSigner() {
     }
 }

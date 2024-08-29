@@ -1,5 +1,6 @@
 package io.exonym.actor.actions;
 
+import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import com.sun.xml.ws.util.ByteArrayBuffer;
 import eu.abc4trust.xml.*;
 import io.exonym.abc.util.JaxbHelper;
@@ -21,11 +22,15 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.mail.URLName;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBIntrospector;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -48,8 +53,8 @@ public class NodeVerifier {
 
 	private boolean openingOwnLead = false;
 	private boolean openingOwnMod = false;
-	private MyStaticData ownLeadTnw;
-	private MyStaticData ownModTnw;
+	private MyTrustNetworkAndKeys ownLeadTnw;
+	private MyTrustNetworkAndKeys ownModTnw;
 	private XKey nodePublicKey = null;
 	private String keyCheck = null;
 	private PresentationPolicy presentationPolicy = null;
@@ -190,7 +195,7 @@ public class NodeVerifier {
 	private static String tryUrl(URI url, boolean isTargetSource, boolean amISource) throws Exception {
 		try {
 			String xml = new String(UrlHelper.readXml(
-					url.resolve("/signatures.xml").toURL()), "UTF8");
+					url.resolve("signatures.xml").toURL()), "UTF8");
 			KeyContainer kc = JaxbHelper.xmlToClass(xml, KeyContainer.class);
 			return kc.getLastUpdateTime();
 
@@ -213,7 +218,7 @@ public class NodeVerifier {
 		if (isTargetLead){
 			if (!node.toString().contains(Const.LEAD)){
 				throw new UxException("URL must be a Lead-URL " + node);
-				
+
 			}
 		}
 		if (openingOwnMod || openingOwnLead){
@@ -222,8 +227,14 @@ public class NodeVerifier {
 			byteContent = readLocalBytes(localContent, keys);
 
 		} else {
-			byteContent = XmlHelper.openXmlBytesAtUrl(this.nodeUrl);
+			try {
+				logger.info("Trying URL: " + this.nodeUrl);
+				byteContent = XmlHelper.openXmlBytesAtUrl(this.nodeUrl);
 
+			} catch (Exception e) {
+				throw new UxException(ErrorMessages.STATIC_DATA_UNAVAILABLE);
+
+			}
 		}
 		signatureBytes = computeBytesThatWereSigned(byteContent);
 		contents = XmlHelper.deserializeOpenXml(byteContent);
@@ -234,7 +245,6 @@ public class NodeVerifier {
 		}
 		// Note that changing to network map will not function properly when
 		// establishing the node.
-
 		verification();
 		logger.info("Opened node static data and verified " + node + " : " + Timing.hasBeenMs(t0));
 		
@@ -296,9 +306,10 @@ public class NodeVerifier {
 		}
 		String fn = "rulebook.json";
 		Path rbpath = root.getParent().resolve(fn);
-		logger.info(rbpath.toString());
 		byte[] b = Files.readAllBytes(rbpath);
 		result.put(fn, new ByteArrayBuffer(b));
+		String kc = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
+		result.put(Const.SIGNATURES_XML, new ByteArrayBuffer(kc.getBytes(StandardCharsets.UTF_8)));
 		return result;
 
 	}
@@ -333,43 +344,43 @@ public class NodeVerifier {
 
 	private void openMyTrustNetworks(URI node) throws Exception {
 		try {
-			this.ownLeadTnw = new MyStaticData(true);
+			this.ownLeadTnw = new MyTrustNetworkAndKeys(true);
 
 		} catch (Exception e) {
 			logger.info("Did not open Own Lead Trust Network");
 
 		}
 		try {
-			this.ownModTnw = new MyStaticData(false);
+			this.ownModTnw = new MyTrustNetworkAndKeys(false);
 
 		} catch (Exception e) {
 			logger.info("Did not open Own Moderator Trust Network");
 
 		}
 		openingOwnLead = ownLeadTnw!=null && node.toString().equals(
-				ownLeadTnw.getTrustNetworkWrapper()
+				ownLeadTnw.getTrustNetwork()
 						.getNodeInformation().getStaticNodeUrl0().toString());
 
 		openingOwnMod = ownModTnw!=null && node.toString().equals(
-				ownModTnw.getTrustNetworkWrapper().getNodeInformation()
+				ownModTnw.getTrustNetwork().getNodeInformation()
 						.getStaticNodeUrl0().toString());
 
 		if (amILead){
 			if (ownLeadTnw!=null){
-				ownTrustNetwork = ownLeadTnw.getTrustNetworkWrapper().getTrustNetwork();
+				ownTrustNetwork = ownLeadTnw.getTrustNetwork();
 			}
 		} else {
 			if (ownModTnw!=null){
-				ownTrustNetwork = ownModTnw.getTrustNetworkWrapper().getTrustNetwork();
+				ownTrustNetwork = ownModTnw.getTrustNetwork();
 			}
 		}
 		logger.info("Opening Own Lead / Mod=" +openingOwnLead + "/" + openingOwnMod);
 
 	}
 
-	public static TrustNetworkWrapper openMyHostTrustNetwork(String name) throws Exception {
-		MyStaticData mtn = new MyStaticData(false);
-		return mtn.getTrustNetworkWrapper();
+	public static TrustNetwork openMyHostTrustNetwork(String name) throws Exception {
+		MyTrustNetworkAndKeys mtn = new MyTrustNetworkAndKeys(false);
+		return mtn.getTrustNetwork();
 	}
 
 	private void verification() throws Exception {
@@ -393,7 +404,6 @@ public class NodeVerifier {
 			verifyChecksum(keys.getKeyRingUids());
 			
 			verifyPublicKey(this.targetTrustNetwork.getNodeInformation().getNodeUid());
-			byteContent.clear();
 			contents.clear();
 			
 		} catch (Exception e) {
@@ -408,7 +418,6 @@ public class NodeVerifier {
 		// otherwise build NMI
 
 		if (this.ownTrustNetwork !=null) {
-
 			NetworkParticipant ownRecord = new TrustNetworkWrapper(ownTrustNetwork)
 					.getParticipant(nodeUid);
 
@@ -707,6 +716,9 @@ public class NodeVerifier {
 		return rulebook;
 	}
 
+	public ConcurrentHashMap<String, ByteArrayBuffer> getByteContent() {
+		return byteContent;
+	}
 
 	public static void main(String[] args) throws Exception {
 		RulebookNodeProperties props = RulebookNodeProperties.instance();
@@ -718,7 +730,7 @@ public class NodeVerifier {
 //				mtn.getTrustNetworkWrapper().getNodeInformation().getNodeName());
 
 		NodeVerifier nv = new NodeVerifier(
-				URI.create("http://exonym-x-03:8080/static/lead/"),
+				URI.create("http://exonym-x-03:8080/static/network/3f726ea3a3c4fec12ad82f27c3f38f9041c4db4701238e3e53597f54cb626662/lead/"),
 				true, true);
 
 

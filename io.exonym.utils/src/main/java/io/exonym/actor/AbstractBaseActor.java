@@ -236,7 +236,7 @@ public abstract class AbstractBaseActor {
 //					}
 //					String systemParameters = new String(l0);
 
-					SystemParameters params = XContainerExternal.openSystemParameters();
+					SystemParameters params = IdContainerExternal.openSystemParameters();
 					SystemParametersWrapper systemParametersFacade = new SystemParametersWrapper(params);
 					
 					// Load the parameters to the key manager

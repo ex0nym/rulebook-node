@@ -10,6 +10,8 @@ public class RootProperties extends RootPropertyFeatures {
 	private final String broadcastUrl;
 	private final SFTPLogonData primarySftpCredentials;
 
+	private final String mqttBroker;
+
 	private final SFTPLogonData tokenTransfer;
 
 	private final String primaryDomain;
@@ -36,6 +38,7 @@ public class RootProperties extends RootPropertyFeatures {
 			this.primaryStaticDataFolder =optional("STATIC_DATA_FOLDER", "");
 			this.broadcastUrl =mandatory("BROADCAST_URL");
 			this.rulebookNodeURL = mandatory("RULEBOOK_NODE_URL");
+			this.mqttBroker = mandatory("MESSAGE_BROKER");
 
 			String sftp = "SFTP data is needed to publish static data.";
 
@@ -154,6 +157,10 @@ public class RootProperties extends RootPropertyFeatures {
 
 	protected boolean isOpenSubscription() {
 		return openSubscription;
+	}
+
+	protected String getMqttBroker() {
+		return mqttBroker;
 	}
 
 	public String getRulebookNodeURL() {

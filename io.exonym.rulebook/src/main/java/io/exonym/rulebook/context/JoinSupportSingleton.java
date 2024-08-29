@@ -42,7 +42,7 @@ public class JoinSupportSingleton {
         this.external.setNetworkMapAndCache(this.networkMap, this.cache);
 
         this.store = new PassStore(props.getNodeRoot(), false);
-        this.myAdvocate = this.networkMap.nmiForMyNodesAdvocate();
+        this.myAdvocate = this.networkMap.nmiForMyNodesModerator();
         this.myAdvocateHelper = new UIDHelper(this.myAdvocate.getLastIssuerUID());
         this.sybilHelper = new UIDHelper(this.networkMap.nmiForSybilTestNet().getLastIssuerUID());
 

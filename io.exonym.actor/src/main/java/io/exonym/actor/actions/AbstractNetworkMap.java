@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -98,8 +99,10 @@ public abstract class AbstractNetworkMap {
         nmis.setLeadUID(source.getNodeUid());
         ArrayList<URI> advocateListForSource = new ArrayList<>();
         ArrayList<NetworkMapItemModerator> advocatesForSource = verifySource(advocateListForSource, source);
-        nmis.setModeratorsForLead(advocateListForSource);
-        String[] parts = source.getNodeUid().toString().split(":");
+        nmis.setModeratorsForLead(new HashSet<>(advocateListForSource));
+        String[] parts = source.getNodeUid()
+                .toString().split(":");
+
         writeVerifiedSource(parts[3], parts[2], nmis, advocatesForSource);
 
     }
@@ -198,7 +201,7 @@ public abstract class AbstractNetworkMap {
         String sourceName = UIDHelper.computeLeadNameFromModOrLeadUid(sourceUid);
         String rulebookId = UIDHelper.computeRulebookHashFromLeadUid(sourceUid);
         Path path = null;
-        if (UIDHelper.isAdvocateUid(sourceOrAdvocate)){
+        if (UIDHelper.isModeratorUid(sourceOrAdvocate)){
             path = pathToSourcePath(rulebookId, sourceName)
                     .resolve(toNmiFilename(sourceOrAdvocate));
 
@@ -210,7 +213,7 @@ public abstract class AbstractNetworkMap {
                         path.toAbsolutePath().toString());
 
             }
-        } else if (UIDHelper.isSourceUid(sourceOrAdvocate)){
+        } else if (UIDHelper.isLeadUid(sourceOrAdvocate)){
             path = pathToRulebookPath(rulebookId).resolve(toNmiFilename(sourceOrAdvocate));
 
             if (Files.exists(path)){
@@ -255,12 +258,12 @@ public abstract class AbstractNetworkMap {
         }
         String fileName = toNmiFilename(uid);
 
-        if (UIDHelper.isSourceUid(uid)){
+        if (UIDHelper.isLeadUid(uid)){
             String rulebookId = UIDHelper.computeRulebookHashFromLeadUid(uid);
             Path nmiPath = pathToRulebookPath(rulebookId).resolve(fileName);
             return JaxbHelper.jsonFileToClass(nmiPath, NetworkMapItemLead.class);
 
-        } else if (UIDHelper.isAdvocateUid(uid)){
+        } else if (UIDHelper.isModeratorUid(uid)){
             String rulebookId = UIDHelper.computeRulebookIdFromAdvocateUid(uid);
             String sourceName = UIDHelper.computeLeadNameFromModOrLeadUid(uid);
             Path nmiPath = pathToSourcePath(rulebookId, sourceName).resolve(fileName);
@@ -284,11 +287,11 @@ public abstract class AbstractNetworkMap {
         return (NetworkMapItemModerator) nmiForNode(Rulebook.SYBIL_MAIN_NET_UID);
     }
 
-    public NetworkMapItemLead nmiForMyNodesSource() throws Exception{
+    public NetworkMapItemLead nmiForMyNodesLead() throws Exception{
         throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "Wallets do not have sources");
     }
 
-    public NetworkMapItemModerator nmiForMyNodesAdvocate() throws Exception{
+    public NetworkMapItemModerator nmiForMyNodesModerator() throws Exception{
         throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "Wallets do not have advocates");
     }
 

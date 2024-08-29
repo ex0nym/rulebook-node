@@ -68,7 +68,7 @@ public class ExonymSearch {
         this.repoExonym = repoExonym;
         this.root = root;
         this.networkMap=networkMap;
-        this.myAdvocate= networkMap.nmiForMyNodesAdvocate();
+        this.myAdvocate= networkMap.nmiForMyNodesModerator();
         List<PseudonymInToken> nyms = token.getPseudonym();
         if (nyms.isEmpty()){
             throw new UxException(ErrorMessages.NO_EXONYMS_IN_TOKEN);

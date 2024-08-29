@@ -30,7 +30,7 @@ public class MembershipManager {
 	private final ConcurrentHashMap<String, RecipientData> contextToRecipientData = new ConcurrentHashMap<>();
 	private final String username;
 	private final NodeManager nodeManager;
-	private final TrustNetworkWrapper trustNetworkWrapper;
+	private final TrustNetwork trustNetwork;
 	private final NodeInformation info;
 	private final URI nodeUrl;
 	private final URI lastIssuerUid;
@@ -38,8 +38,8 @@ public class MembershipManager {
 
 	public MembershipManager(String networkName) throws Exception {
 		nodeManager = new NodeManager(networkName);
-		trustNetworkWrapper = nodeManager.openMyTrustNetwork(false);
-		info = trustNetworkWrapper.getNodeInformation();
+		trustNetwork = nodeManager.openMyTrustNetwork(false);
+		info = trustNetwork.getNodeInformation();
 		if (info.getNodeName()==null) {
 			throw new NullPointerException("Node Name");
 			
@@ -269,8 +269,7 @@ public class MembershipManager {
 		String root = NamespaceMngt.URN_PREFIX_COLON + IdContainerJSON.stripUidSuffix(raUid, 2);
 		URI raiUid = URI.create(root + ":rai");
 		
-		TrustNetworkWrapper tnw = nodeManager.openMyTrustNetwork(false);
-		TrustNetwork tn = tnw.finalizeTrustNetwork();
+		TrustNetwork tn = nodeManager.openMyTrustNetwork(false);
 
 		String riString = IdContainerJSON.convertObjectToXml(ri);
 		String raiHash = CryptoUtils.computeSha256HashAsHex(riString);
@@ -283,8 +282,10 @@ public class MembershipManager {
 		byte[] ni = niString.getBytes();
 
 		KeyContainerWrapper kcPublic = nodeManager.openSignaturesContainer(nodeUrl);
-		KeyContainerWrapper kcPrivate = new KeyContainerWrapper((KeyContainer) xIssuer.openResource("keys.xml"));
-		AsymStoreKey key = nodeManager.openKey(kcPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
+		KeyContainerWrapper kcPrivate = new KeyContainerWrapper(
+				(KeyContainer) xIssuer.openResource("keys.xml"));
+		AsymStoreKey key = nodeManager.openKey(
+				kcPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
 		
 		HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
 		toSign.put(raiUid, new ByteArrayBuffer(riSign));

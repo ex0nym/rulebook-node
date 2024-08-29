@@ -18,7 +18,7 @@
         <module>io.exonym.lite</module>
         <module>io.exonym.utils</module>
         <module>io.exonym.actor</module>
-        <module>io.exonym.x0basic</module>
+<!--        <module>io.exonym.x0basic</module>-->
         <module>io.exonym.rulebook</module>
     </modules>
 

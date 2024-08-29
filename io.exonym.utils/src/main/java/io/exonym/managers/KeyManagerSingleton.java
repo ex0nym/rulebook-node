@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class KeyManagerSingleton {
     
     private static final Logger logger = LogManager.getLogger(KeyManagerSingleton.class);
-    
     private final static KeyManagerSingleton instance;
     private final ConcurrentHashMap<URI, SystemParameters> systemParametersMap = new ConcurrentHashMap();
     private final ConcurrentHashMap<URI, IssuerParameters> issuerParameterMap = new ConcurrentHashMap();

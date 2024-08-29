@@ -28,6 +28,7 @@ public class ErrorMessages {
     public static final String REGISTER_ONE_DEVICE_AT_A_TIME = "REGISTER_ONE_DEVICE_AT_A_TIME";
 
     public static final String MAIN_NET_UNAVAILABLE = "REGISTER_ONE_DEVICE_AT_A_TIME";
+    public static final String STATIC_DATA_UNAVAILABLE = "STATIC_DATA_UNAVAILABLE";
 
     /**
      * This will return the appUuid of the incompletely registered device in the info array

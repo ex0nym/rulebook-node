@@ -5,6 +5,7 @@ import com.cloudant.client.api.Database;
 import io.exonym.actor.storage.RootProperties;
 import io.exonym.actor.storage.SFTPLogonData;
 import io.exonym.lite.couchdb.QueryBasic;
+import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.XKey;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.CryptoUtils;
@@ -186,5 +187,25 @@ public class RulebookNodeProperties extends RootProperties {
     @Override
     public boolean isOpenSourcePublication() {
         return super.isOpenSourcePublication();
+    }
+
+    @Override
+    protected String getMqttBroker() {
+        return super.getMqttBroker();
+    }
+
+    @Override
+    protected String messageOnFail(String env, String message) throws UxException {
+        return super.messageOnFail(env, message);
+    }
+
+    @Override
+    protected String optional(String env, String def) {
+        return super.optional(env, def);
+    }
+
+    @Override
+    protected String mandatory(String env) throws UxException {
+        return super.mandatory(env);
     }
 }

@@ -4,7 +4,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import io.exonym.actor.XContainerExternal;
+import io.exonym.actor.IdContainerExternal;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
 import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.connect.WebUtils;
@@ -17,6 +17,8 @@ import io.exonym.lite.time.DateHelper;
 import io.exonym.rulebook.schema.CacheNodeContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
@@ -41,27 +43,46 @@ public class AuthenticationFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         try {
-//            testFileWrite();
             filterConfig.getServletContext();
 
-            // updOpen();
-            // testSecureRandom();
-            setup();
+            // make sure the box has enough CPU;
+            // each step will take a non-linear increase in computation
+            // time if there aren't enough resources
+            testSecureRandom();
+
+            setupCoreDbTables();
+
             NetworkMapWeb map = new NetworkMapWeb();
             map.spawn();
 
             PkiExternalResourceContainer.getInstance()
                     .setNetworkMapAndCache(map, CacheNodeContainer.getInstance());
+
+            // Load system params
             IdContainerJSON.openSystemParameters();
-            XContainerExternal.openSystemParameters();
+            IdContainerExternal.openSystemParameters();
 
-            logger.info("NetworkMap and Lambda Params initialized");
+//            MqttClient client = new MqttClient("tcp://host.docker.internal:1883", "hello");
+//            client.connect();
+//            MqttMessage message = new MqttMessage("hell".getBytes());
+//            message.setQos(1);
+//            client.publish("test/topic", message);
 
-            // Removed due to super-seeded by the UDP protocols.
+
+            ExonymPublisher.getInstance();
+            ExonymSubscriber.getInstance();
+
+            logger.info("NetworkMap, Publisher, Subscriber, and System Parameters initialized successfully.");
+
+            // Removed as it was superseded by the UDP protocols.
+            // - and then by MQTT; but if you need chron jobs
+            // this is where it is.
+
             // new SyncNetwork();
 
         } catch (Exception e) {
             logger.error("Failed to start network synchronization", e);
+
 
         }
         ServletContext c = filterConfig.getServletContext();
@@ -102,7 +123,7 @@ public class AuthenticationFilter implements Filter {
 
     }
 
-    private void setup() throws Exception {
+    private void setupCoreDbTables() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.getDbUsers(), true);
         CouchRepository<IUser> repo = new CouchRepository<>(db, IUser.class);
@@ -129,21 +150,22 @@ public class AuthenticationFilter implements Filter {
 
 
     private void setupPrimaryAdmin(CouchRepository<IUser> repo) throws Exception {
-
         String password = CryptoUtils.tempPassword();
         IUser user = new IUser();
         user.setType(IUser.I_USER_PRIMARY_ADMIN);
         user.setV(CryptoUtils.computeSha256HashAsHex(
                 CryptoUtils.computeSha256HashAsHex(password)));
-        String username = RulebookNodeProperties.instance().getPrimaryAdminUsername();
+        String username = RulebookNodeProperties.instance()
+                .getPrimaryAdminUsername();
         user.setUsername(username);
         user.setRequiresPassChange(true);
         repo.create(user);
+
         logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         logger.info(">");
         logger.info("> Primary Administrator Created with username(" + username + ")");
         logger.info(">");
-        logger.info("> Password:  " + password);
+        logger.info("> Password: " + password);
         logger.info(">");
         logger.info("> You will be prompted to change your password when you log in.");
         logger.info(">");
@@ -151,7 +173,9 @@ public class AuthenticationFilter implements Filter {
         logger.info("");
         logger.info("");
         logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        IAuthenticator.getInstance().setPrimaryAdminSetup(true);
+
+        IAuthenticator.getInstance()
+                .setPrimaryAdminSetup(true);
 
     }
 
@@ -257,10 +281,12 @@ public class AuthenticationFilter implements Filter {
     @Override
     public void destroy() {
         logger.info("Cleaning up API Context");
-//		try {
-//			ChallengeCleanup.getInstance().close();
-//		} catch (Exception e) {
-//			throw new RuntimeException(e);
-//		}
+        try {
+            ExonymPublisher.getInstance().close();
+
+        } catch (Exception e) {
+            logger.error("Error", e);
+
+        }
     }
 }

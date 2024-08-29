@@ -10,6 +10,8 @@ public class Const {
 	public static final int ASYM_KEY_SIZE = 2048;
 	public static final String SYM_ENCRYPTION_ALGORITHM = "AES";
 	public static final int SYM_KEY_SIZE = 128;
+
+	public static final int FLUX_CAPACITY = 64;
 	public static final String MESSAGE_AUTHENTICATION_CODE_ALGORITHM = "HmacSHA1";
 
 	public static final String BINDING_ALIAS = "urn:io:exonym";
@@ -23,6 +25,7 @@ public class Const {
 
 	public static final String PATH_OF_HTML = Path.of("/var", "www", "html").toString();
 	public static final String PATH_OF_STATIC = PATH_OF_HTML + "/static";
+	public static final String PATH_OF_NETWORK = PATH_OF_STATIC + "/network";
 
 	public static final String LOCAL_PATH_OF_STATIC = Path.of("io.exonym.rulebook", "static").toString();
 

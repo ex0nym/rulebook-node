@@ -33,18 +33,18 @@ import java.nio.file.FileSystemException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public final class XContainerExternal extends AbstractIdContainer {
+public final class IdContainerExternal extends AbstractIdContainer {
 
 
-    private static final Logger logger = LogManager.getLogger(XContainerExternal.class);
+    private static final Logger logger = LogManager.getLogger(IdContainerExternal.class);
     private final XContainerSchema schema;
 
-    public XContainerExternal(String schema) throws Exception {
+    public IdContainerExternal(String schema) throws Exception {
         super("external");
         this.schema = JaxbHelper.jsonToClass(schema, XContainerSchema.class);
     }
 
-    public XContainerExternal() throws Exception {
+    public IdContainerExternal() throws Exception {
         super("external");
         this.schema = new XContainerSchema();
 
@@ -163,7 +163,7 @@ public final class XContainerExternal extends AbstractIdContainer {
     }
 
     public static SystemParameters openSystemParameters() throws Exception{
-        try (InputStream stream = XContainerExternal.class.getClassLoader().getResourceAsStream("lambda.xml")){
+        try (InputStream stream = IdContainerExternal.class.getClassLoader().getResourceAsStream("lambda.xml")){
             if (stream!=null){
                 byte[] in = new byte[stream.available()];
                 stream.read(in);

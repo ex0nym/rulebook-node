@@ -9,16 +9,26 @@ import java.nio.charset.StandardCharsets;
 public class ExoNotify implements Msg {
 
     public static final String TYPE_JOIN = "JOIN";
-    public static final String TYPE_SOURCE = "SOURCE";
-    public static final String TYPE_ACK = "ACK";
+
+    public static final String TYPE_LEAD = "LEAD";
     public static final String TYPE_VIOLATION = "VIOLATION";
 
+    public static final String TYPE_ACK = "ACK";
+
     private String type;
-    private URI advocateUID;
+    private URI nodeUID;
     private String t;
     private String nibble6;
     private String hashOfX0;
     private String sigB64;
+
+    private String ppB64;
+
+    private String raiB64;
+
+    private String ppSigB64;
+
+    private String raiSigB64;
 
     public String getType() {
         return type;
@@ -28,12 +38,12 @@ public class ExoNotify implements Msg {
         this.type = type;
     }
 
-    public URI getAdvocateUID() {
-        return advocateUID;
+    public URI getNodeUID() {
+        return nodeUID;
     }
 
-    public void setAdvocateUID(URI advocateUID) {
-        this.advocateUID = advocateUID;
+    public void setNodeUID(URI nodeUID) {
+        this.nodeUID = nodeUID;
     }
 
     public String getT() {
@@ -68,12 +78,44 @@ public class ExoNotify implements Msg {
         this.sigB64 = sigB64;
     }
 
+    public String getPpB64() {
+        return ppB64;
+    }
+
+    public void setPpB64(String ppB64) {
+        this.ppB64 = ppB64;
+    }
+
+    public String getRaiB64() {
+        return raiB64;
+    }
+
+    public void setRaiB64(String raiB64) {
+        this.raiB64 = raiB64;
+    }
+
+    public String getPpSigB64() {
+        return ppSigB64;
+    }
+
+    public void setPpSigB64(String ppSigB64) {
+        this.ppSigB64 = ppSigB64;
+    }
+
+    public String getRaiSigB64() {
+        return raiSigB64;
+    }
+
+    public void setRaiSigB64(String raiSigB64) {
+        this.raiSigB64 = raiSigB64;
+    }
+
     public static byte[] signatureOn(ExoNotify notify){
         return (notify.getT()
                 + notify.getNibble6()
                 + notify.getType()
                 + notify.getHashOfX0()
-                + notify.getAdvocateUID())
+                + notify.getNodeUID())
                 .getBytes(StandardCharsets.UTF_8);
 
     }
@@ -81,13 +123,13 @@ public class ExoNotify implements Msg {
     public static byte[] signatureOnAckAndOrigin(ExoNotify notify){
         return (notify.getType()
                 + notify.getT()
-                + notify.getAdvocateUID())
+                + notify.getNodeUID())
                 .getBytes(StandardCharsets.UTF_8);
 
     }
 
     @Override
     public String toString() {
-        return this.type + " " + (this.hashOfX0==null ? this.getAdvocateUID() : this.hashOfX0);
+        return this.type + " " + (this.hashOfX0==null ? this.getNodeUID() : this.hashOfX0);
     }
 }

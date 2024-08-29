@@ -78,12 +78,12 @@ public class NetworkMapTest extends AbstractNetworkMap {
 
 
     @Override
-    public NetworkMapItemLead nmiForMyNodesSource() throws Exception {
+    public NetworkMapItemLead nmiForMyNodesLead() throws Exception {
         return nmiForMyLead;
     }
 
     @Override
-    public NetworkMapItemModerator nmiForMyNodesAdvocate() throws Exception {
+    public NetworkMapItemModerator nmiForMyNodesModerator() throws Exception {
         return nmiForMyModerator;
 
     }

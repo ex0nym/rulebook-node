@@ -1,8 +1,9 @@
-package io.exonym.x0basic;
+package io.exonym.rulebook.context;
 
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.couchdb.QueryStandard;
+import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoMatrix;
@@ -19,22 +20,20 @@ public class ViolationIn extends ModelCommandProcessor {
     private static final Logger logger = LogManager.getLogger(ViolationIn.class);
 
 
-    private final ArrayBlockingQueue<Msg> pipeToAck;
-    private final CouchRepository<ExoMatrix> exonymMap;
+    private final UnprotectedCouchRepository<ExoMatrix> exonymMap;
     private final CouchRepository<Vio> vioMap;
 
     private final QueryStandard queryNetwork = new QueryStandard();
     private final QueryBasic queryVio = new QueryBasic();
-    private final KeyManager keyManager;
+    private final NetworkPublicKeyManager keyManager;
 
     /**
      */
-    protected ViolationIn(ArrayBlockingQueue<Msg> pipeToAck, KeyManager keyManager) throws Exception {
+    protected ViolationIn(NetworkPublicKeyManager keyManager) throws Exception {
         super(10, "ViolationIn", 60000);
-        this.pipeToAck=pipeToAck;
         this.keyManager=keyManager;
-        this.exonymMap = CouchDbHelper.repoExonymMap();
-        this.vioMap = CouchDbHelper.repoVioMap();
+        this.exonymMap = CouchDbHelper.repoExoMatrix();
+        this.vioMap = CouchDbHelper.repoVio();
 
     }
 
@@ -45,7 +44,6 @@ public class ViolationIn extends ModelCommandProcessor {
                 ExoNotify notify = (ExoNotify) msg;
                 authenticate(notify);
                 updateVioMap(notify);
-                pipeToAck.put(msg);
 
             }
         } catch (Exception e) {

@@ -69,7 +69,7 @@ public class Acker extends ModelCommandProcessor  {
         try {
             authenticate(notify);
             ackInQuery.addCriteria(BroadcastInProgress.FIELD_CONTEXT, notify.getT());
-            ackInQuery.addCriteria(BroadcastInProgress.FIELD_HOST_UUID, notify.getAdvocateUID().toString());
+            ackInQuery.addCriteria(BroadcastInProgress.FIELD_HOST_UUID, notify.getNodeUID().toString());
             logger.debug("Trying to Remove " + notify );
             BroadcastInProgress broadcast = ackInRepo.read(ackInQuery).get(0);
             logger.debug("Trying to Remove " + broadcast.get_id() + " " + broadcast.get_rev());
@@ -87,7 +87,7 @@ public class Acker extends ModelCommandProcessor  {
     }
 
     private void authenticate(ExoNotify notify) throws Exception {
-        URI advocateUID = notify.getAdvocateUID();
+        URI advocateUID = notify.getNodeUID();
         logger.debug("Getting Key for Advocate " + advocateUID);
         AsymStoreKey key = this.keyManager.getKey(advocateUID);
         Authenticator.authenticateAckAndSource(notify, key);
@@ -100,11 +100,11 @@ public class Acker extends ModelCommandProcessor  {
             ExoNotify ack = new ExoNotify();
             ack.setType(ExoNotify.TYPE_ACK);
             ack.setT(notify.getT());
-            ack.setAdvocateUID(this.hostUuid);
+            ack.setNodeUID(this.hostUuid);
             byte[] signed = ExoNotify.signatureOnAckAndOrigin(ack);
             byte[] sig = ownKey.sign(signed);
             ack.setSigB64(Base64.encodeBase64String(sig));
-            networkMapQuery.addCriteria(NetworkMapItem.FIELD_NODE_UID, notify.getAdvocateUID().toString());
+            networkMapQuery.addCriteria(NetworkMapItem.FIELD_NODE_UID, notify.getNodeUID().toString());
             NetworkMapItem target = networkMap.read(networkMapQuery).get(0);
             InetSocketAddress t0 = buildInetAddress(target.getBroadcastAddress());
             send(ack, t0);
@@ -142,7 +142,7 @@ public class Acker extends ModelCommandProcessor  {
                     logger.debug("AckIn " + notify);
                     ackIn(notify);
 
-                } else if (type.equals(ExoNotify.TYPE_SOURCE)){
+                } else if (type.equals(ExoNotify.TYPE_LEAD)){
                     sourceUpdate(notify);
                     ackOut(notify);
 
@@ -159,7 +159,7 @@ public class Acker extends ModelCommandProcessor  {
 
     private void sourceUpdate(ExoNotify notify) throws Exception {
         authenticate(notify);
-        boolean isSybil = Rulebook.isSybil(notify.getAdvocateUID());
+        boolean isSybil = Rulebook.isSybil(notify.getNodeUID());
         try {
             CouchRepository<NetworkMapNodeOverview> repo = CouchDbHelper.repoNetworkMapSourceData();
             QueryBasic q = QueryBasic.selectType(NetworkMapNodeOverview.TYPE_NETWORK_MAP_NODE_OVERVIEW);

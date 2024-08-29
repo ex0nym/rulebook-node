@@ -23,10 +23,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
-@WebServlet("/subscribe/*")
-public class SubscribeServlet extends HttpServlet {
+@WebServlet("/join/*")
+public class JoinServlet extends HttpServlet {
     
-    private static final Logger logger = LogManager.getLogger(SubscribeServlet.class);
+    private static final Logger logger = LogManager.getLogger(JoinServlet.class);
 
     private final ConcurrentHashMap<String, JoinProcessor> joinRequests = new ConcurrentHashMap<>();
 

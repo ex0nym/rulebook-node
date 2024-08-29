@@ -316,7 +316,7 @@ public class JoinProcessor {
         notify.setType(ExoNotify.TYPE_JOIN);
         notify.setNibble6(n6);
         notify.setHashOfX0(x0Hash);
-        notify.setAdvocateUID(support.getMyAdvocate().getNodeUID());
+        notify.setNodeUID(support.getMyAdvocate().getNodeUID());
         notify.setT(DateHelper.currentIsoUtcDateTime());
         signAndSend(notify);
 
@@ -327,7 +327,7 @@ public class JoinProcessor {
             byte[] toSign = ExoNotify.signatureOn(notify);
             RulebookNodeProperties props = RulebookNodeProperties.instance();
             PassStore store = new PassStore(props.getNodeRoot(), false);
-            Signer signer = Signer.getInstance();
+            ModeratorNotificationSigner signer = ModeratorNotificationSigner.getInstance();
             byte[] sigBytes = signer.sign(toSign,
                     support.getMyAdvocate().getNodeUID().toString(), store);
 

@@ -20,19 +20,19 @@ services:
     networks:
       - rulebook_network
 
-  x0basic:
-   container_name: x0basic
-   image: x0basic:latest
-   environment:
-     - HTTPS_METHOD=noredirect
-     - VIRTUAL_HOST=localhost
-     - VIRTUAL_PORT=9094
-   ports:
-     - 9094:9094/udp
-   env_file:
-     - io.exonym.rulebook/conf/e-vanilla-s.env
-   networks:
-     - rulebook_network
+#  x0basic:
+#   container_name: x0basic
+#   image: x0basic:latest
+#   environment:
+#     - HTTPS_METHOD=noredirect
+#     - VIRTUAL_HOST=localhost
+#     - VIRTUAL_PORT=9094
+#   ports:
+#     - 9094:9094/udp
+#   env_file:
+#     - io.exonym.rulebook/conf/e-vanilla-s.env
+#   networks:
+#     - rulebook_network
 
   couchdb:
     container_name: couchdb

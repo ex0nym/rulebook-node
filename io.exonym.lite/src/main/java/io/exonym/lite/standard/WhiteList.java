@@ -53,8 +53,8 @@ public class WhiteList {
 		return isModeratorUid(uid.toString());
 
 	}
-	public static boolean isSourceUid(URI uid){
-		return isSourceUid(uid.toString());
+	public static boolean isLeadUid(URI uid){
+		return isLeadUid(uid.toString());
 
 	}
 	public static boolean isSourceUrl(String url){
@@ -72,15 +72,15 @@ public class WhiteList {
 			return false;
 
 		}
-		return uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][0-9a-f]{64}");
+		return uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][\\w-]*[:][0-9a-f]{64}");
 
 	}
-	public static boolean isSourceUid(String uid){
+	public static boolean isLeadUid(String uid){
 		if (uid==null){
 			return false;
 
 		}
-		return uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][0-9a-f]{64}");
+		return uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][0-9a-f]{64}");
 
 	}
 

@@ -112,7 +112,7 @@ public class TestFlux {
         notify.setType(ExoNotify.TYPE_JOIN);
         notify.setNibble6(n6);
         notify.setHashOfX0(x0Hash);
-        notify.setAdvocateUID(hostUuid);
+        notify.setNodeUID(hostUuid);
         notify.setT(DateHelper.currentIsoUtcDateTime());
 
         AsymStoreKey key = this.keys.get(hostUuid);
@@ -132,7 +132,7 @@ public class TestFlux {
         notify.setType(ExoNotify.TYPE_JOIN);
         notify.setNibble6(n6);
         notify.setHashOfX0(x0Hash);
-        notify.setAdvocateUID(hostUuid);
+        notify.setNodeUID(hostUuid);
 //        notify.setT(DateHelper.currentIsoUtcDateTime());
 
         AsymStoreKey key = this.keys.get(hostUuid);
@@ -152,7 +152,7 @@ public class TestFlux {
         notify.setType(ExoNotify.TYPE_VIOLATION);
         notify.setNibble6(n6);
         notify.setHashOfX0(x0Hash);
-        notify.setAdvocateUID(hostUuid);
+        notify.setNodeUID(hostUuid);
         notify.setT(DateHelper.currentIsoUtcDateTime());
 
         AsymStoreKey key = this.keys.get(hostUuid);

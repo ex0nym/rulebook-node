@@ -29,9 +29,7 @@ public class UIDHelper {
     private  URI issuancePolicy;
     private  URI issuerParameters;
     private  URI inspectorParams;
-
     private  URI rulebookUID;
-
     private  String credentialSpecFileName;
     private  String presentationPolicyFileName;
     private  String issuedCredentialFileName;
@@ -41,10 +39,13 @@ public class UIDHelper {
     private  String issuerParametersFileName;
     private  String inspectorParamsFileName;
     private  String rulebookFileName;
-
+    private String rulebookTopic;
+    private String rulebookLeadTopic;
+    private String rulebookModTopic;
     private  URI moderatorUid;
-
     private  URI leadUid;
+
+    public static final String MQTT_WILDCARD = "/#";
 
 
     public UIDHelper(URI issuerParameters) throws Exception {
@@ -96,6 +97,23 @@ public class UIDHelper {
 
         this.rulebookFileName = IdContainer.uidToFileName(rulebookUID) + ".json";
 
+        this.rulebookTopic = computeTopicFromRulebook(rulebookUID);
+
+        this.rulebookLeadTopic = this.rulebookTopic  + "/" + leadName;
+
+        this.rulebookModTopic = this.rulebookLeadTopic + "/" + moderatorName;
+
+//        this.rulebookTopic = this.rulebookTopic + "/*";
+//
+//        this.rulebookLeadTopic = this.rulebookLeadTopic + "/*";
+
+    }
+
+
+    public static String computeTopicFromRulebook(URI rulebookUID) {
+        return rulebookUID.toString()
+                .replaceAll("urn:", "")
+                .replaceAll(":", "/");
     }
 
     public static String computeLeadNameFromModOrLeadUid(URI sourceOrAdvocateUid){
@@ -112,23 +130,30 @@ public class UIDHelper {
         return advocateUid.toString().split(":")[3];
     }
 
-    public static String computeRulebookHashFromLeadUid(URI sourceUid){
-        if (sourceUid==null){
+    public static String computeRulebookHashFromLeadUid(URI leadUid){
+        if (leadUid==null){
             return null;
         }
-        return sourceUid.toString().split(":")[3];
+        return leadUid.toString().split(":")[3];
     }
 
     public static String computeRulebookHashFromRulebookId(String rulebookId){
         return rulebookId.split(":")[2];
     }
 
-    public static String computeRulebookIdFromAdvocateUid(URI advocateUid){
-        if (advocateUid==null){
+    public static String computeRulebookIdFromAdvocateUid(URI modUid){
+        if (modUid==null){
             throw new NullPointerException();
         }
-        return advocateUid.toString().split(":")[5];
+        return modUid.toString().split(":")[5];
     }
+
+    public static URI computeRulebookIdFromLeadUid(URI leadUid){
+        String[] parts = leadUid.toString().split(":");
+        return URI.create(Namespace.URN_PREFIX_COLON + parts[2] + ":" + parts[4]);
+
+    }
+
 
 
     public static URI credentialSpecFromSourceUID(URI sourceUid){
@@ -147,12 +172,12 @@ public class UIDHelper {
 
     }
 
-    public static boolean isSourceUid(URI uid){
-        return WhiteList.isSourceUid(uid);
+    public static boolean isLeadUid(URI uid){
+        return WhiteList.isLeadUid(uid);
 
     }
 
-    public static boolean isAdvocateUid(URI uid){
+    public static boolean isModeratorUid(URI uid){
         return WhiteList.isModeratorUid(uid);
 
     }
@@ -276,6 +301,14 @@ public class UIDHelper {
         return moderatorName;
     }
 
+    public String getRulebookLeadTopic() {
+        return rulebookLeadTopic;
+    }
+
+    public String getRulebookModTopic() {
+        return rulebookModTopic;
+    }
+
     public static URI computeModUidFromMaterialUID(URI modMaterialUID) throws Exception {
         if (modMaterialUID==null){
             throw new NullPointerException();
@@ -367,6 +400,13 @@ public class UIDHelper {
 
     }
 
+    public URI getRevocationAuthorityInfo() {
+        return revocationAuthorityInfo;
+    }
+
+    public String getRulebookTopic() {
+        return rulebookTopic;
+    }
 
     public void out(){
         logger.info(">>>>>>>>>>>>> ");
@@ -377,6 +417,7 @@ public class UIDHelper {
         logger.info(leadUid);
         logger.info(moderatorUid);
         logger.info(rulebookUID);
+        logger.info("");
         logger.info(rulebookFileName);
         logger.info(credentialSpec);
         logger.info(credentialSpecFileName);
@@ -395,6 +436,9 @@ public class UIDHelper {
         logger.info(issuerParameters);
         logger.info(issuerParametersFileName);
         logger.info("");
+        logger.info(rulebookTopic);
+        logger.info(rulebookLeadTopic);
+        logger.info(rulebookModTopic);
         logger.info(">>>>>>>>>>>>> ");
 
     }
@@ -411,7 +455,8 @@ public class UIDHelper {
 
         System.out.println(parent);
 
-
     }
+
+
 
 }

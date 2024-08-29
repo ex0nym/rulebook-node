@@ -13,7 +13,6 @@ public class RulebookNodeProperties extends RootProperties {
 
     protected RulebookNodeProperties() throws Exception {
         super();
-
     }
 
     /*
@@ -115,4 +114,21 @@ public class RulebookNodeProperties extends RootProperties {
     protected SFTPLogonData getTokenTransfer() {
         return super.getTokenTransfer();
     }
+
+    @Override
+    protected boolean isOpenSubscription() {
+        return super.isOpenSubscription();
+    }
+
+    @Override
+    protected String getMqttBroker() {
+        return super.getMqttBroker();
+    }
+
+    @Override
+    public boolean isOpenSourcePublication() {
+        return super.isOpenSourcePublication();
+    }
+
+
 }

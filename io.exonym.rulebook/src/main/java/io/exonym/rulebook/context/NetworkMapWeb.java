@@ -3,10 +3,7 @@ package io.exonym.rulebook.context;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.abc.util.JaxbHelper;
-import io.exonym.actor.actions.AbstractNetworkMap;
-import io.exonym.actor.actions.MyStaticData;
-import io.exonym.actor.actions.NodeVerifier;
-import io.exonym.actor.actions.TrustNetworkWrapper;
+import io.exonym.actor.actions.*;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.couchdb.QueryOrGate;
@@ -124,7 +121,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     }
 
     private void defineListeners() {
-        ArrayList<URI> sources = new ArrayList<>(allLeads.getSources().keySet());
+        ArrayList<URI> sources = new ArrayList<>(allLeads.getLeads().keySet());
         String rh = UIDHelper.computeRulebookHashFromLeadUid(
                 allLeads.getThisModeratorLeadUID());
         if (rh!=null){
@@ -266,7 +263,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         logger.debug("all sourceslistening " + allLeads.getListeningToLeads());
         for (URI i : allLeads.getListeningToLeads()){
             if (i.toString().contains(target.toString())){
-                return allLeads.getSources().get(i);
+                return allLeads.getLeads().get(i);
 
             }
         }
@@ -293,7 +290,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                     allLeads.setLastRefresh(t.getLastUpdated());
                     refreshLeads(tnw, allLeads);
 
-                } else if (allLeads.getSources().isEmpty()){
+                } else if (allLeads.getLeads().isEmpty()){
                     allLeads.setLastRefresh(t.getLastUpdated());
                     refreshLeads(tnw, allLeads);
 
@@ -307,7 +304,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                 refreshLeads(tnw, allLeads);
 
             }
-            refreshNodesOnNecessarySource(allLeads);
+            refreshModsOnNecessaryLeads(allLeads);
 
         } catch (FileNotFoundException e) {
             logger.debug("Handled exception thrown");
@@ -339,7 +336,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     protected void refreshPresentationPoliciesIfNecessary() throws UxException {
         try {
             NetworkMapNodeOverview state = openState();
-            ConcurrentHashMap<URI, NetworkMapItemLead> sources = state.getSources();
+            ConcurrentHashMap<URI, NetworkMapItemLead> sources = state.getLeads();
             if (state.isLeadRequiresUpdate()) {
                 sourceCryptoUpdate(sources.get(state.getThisNodeLeadUID()));
 
@@ -425,7 +422,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
     private void refreshLeads(TrustNetworkWrapper tnw, NetworkMapNodeOverview allLeads) {
         logger.debug("Refreshing Leads");
-        ConcurrentHashMap<URI, NetworkMapItemLead> leads = allLeads.getSources();
+        ConcurrentHashMap<URI, NetworkMapItemLead> leads = allLeads.getLeads();
         leads.clear();
         URI thisNodesLead = allLeads.getThisModeratorLeadUID();
         String thisModeratorUID = allLeads.getModeratorUID().toString();
@@ -474,28 +471,18 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         }
     }
 
-    private void refreshNodesOnNecessarySource(NetworkMapNodeOverview allSources) throws Exception {
+    private void refreshModsOnNecessaryLeads(NetworkMapNodeOverview allLeads) throws Exception {
 
-        ConcurrentHashMap<URI, NetworkMapItemLead> leads = allSources.getSources();
+        ConcurrentHashMap<URI, NetworkMapItemLead> leads = allLeads.getLeads();
 
         logger.info("Refreshing Nodes on Necessary Sources " + leads.size());
         CouchRepository<NetworkMapItemLead> repo = CouchDbHelper.repoNetworkMapItemSource();
 
-        MyStaticData mti = null;
-        try {
-            mti = new MyStaticData(true);
+        MyTrustNetworks myTrustNetworks = new MyTrustNetworks();
 
-        } catch (Exception e) {
-            try {
-                mti = new MyStaticData(false);
+        URI myLeadUrl = myTrustNetworks.isLeader() ? myTrustNetworks.getLead()
+                .getTrustNetwork().getNodeInformation().getStaticLeadUrl0() : null;
 
-            } catch (Exception ex) {
-                logger.error("NODE NOTE YET ESTABLISHED");
-
-            }
-        }
-        URI myNodeUrl = mti.getTrustNetworkWrapper()
-                .getNodeInformation().getRulebookNodeUrl();
 
         for (URI sourceUID : leads.keySet()){
             NetworkMapItem lead = leads.get(sourceUID);
@@ -509,11 +496,13 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
                 String fn = io.exonym.utils.storage.IdContainer.uidToXmlFileName(niUid);
                 String urlNi0 = lead.getStaticURL0() + "/" + fn;
-                String urlForNode = lead.getRulebookNodeURL().toString();
-                logger.info("Computed local versus terget=" + urlForNode + " " + myNodeUrl);
+                String urlForStaticData = lead.getStaticURL0().toString();
+                logger.info("Computed local versus terget=" + urlForStaticData + " " + myLeadUrl);
 
 
-                if (!urlForNode.toString().equals(myNodeUrl.toString())){
+                if (myLeadUrl!=null && !urlForStaticData.toString()
+                        .equals(myLeadUrl.toString())){
+
                     byte[] signature = UrlHelper.read(new URL(url0)); // , new URL(url1));
                     KeyContainer kc = JaxbHelper.xmlToClass(signature, KeyContainer.class);
                     KeyContainerWrapper kcw = new KeyContainerWrapper(kc);
@@ -535,9 +524,11 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                     tn = JaxbHelper.xmlToClass(ni, TrustNetwork.class);
 
                 } else {
-                    tn = mti.getTrustNetworkWrapper().getTrustNetwork();
-                    pkBytes = mti.getKcw().getKey(
-                            KeyContainerWrapper.TN_ROOT_KEY).getPublicKey();
+                    tn = myTrustNetworks.getLead().getTrustNetwork();
+                    logger.info("Number of participants=" + tn.getParticipants().size());
+                    pkBytes = myTrustNetworks.getLead()
+                            .getKcw().getKey(KeyContainerWrapper.TN_ROOT_KEY)
+                            .getPublicKey();
 
                 }
 
@@ -551,7 +542,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                     DateTime lastRemoteUpdate = new DateTime(tn.getLastUpdated());
                     logger.debug("Remote Date Time " + DateHelper.isoUtcDateTime(lastLocalUpdate));
                     if (lastRemoteUpdate.isAfter(lastLocalUpdate)){
-                        refreshNodes(tn, pkBytes, allSources, q, repo);
+                        refreshNodes(tn, pkBytes, allLeads, q, repo);
 
                     }
                 } catch (NoDocumentException e) {
@@ -559,7 +550,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                     NetworkMapItemLead n = new NetworkMapItemLead();
                     n.setNodeUID(sourceUID);
                     repo.create(n);
-                    refreshNodes(tn, pkBytes, allSources, q, repo);
+                    refreshNodes(tn, pkBytes, allLeads, q, repo);
 
                 }
 
@@ -584,7 +575,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         TrustNetworkWrapper tnw = new TrustNetworkWrapper(tnSource);
         Collection<NetworkParticipant> moderators = tnw.getAllParticipants();
 
-        ArrayList<URI> modsForLead = nmis.getModeratorsForLead();
+        HashSet<URI> modsForLead = nmis.getModeratorsForLead();
         for (NetworkParticipant p : moderators){
             modsForLead.add(p.getNodeUid());
             logger.debug("Mod for Lead = " + p.getNodeUid());
@@ -732,7 +723,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     }
 
     @Override
-    public NetworkMapItemLead nmiForMyNodesSource() throws Exception {
+    public NetworkMapItemLead nmiForMyNodesLead() throws Exception {
         if (myNodesLeadUID ==null){
             populateNodeFields();
 
@@ -744,7 +735,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
     }
 
-    public NetworkMapItemLead nmiForMyAdvocatesSource() throws Exception {
+    public NetworkMapItemLead nmiForMyModeratorsSource() throws Exception {
         if (myModeratorsLeadUID ==null){
             populateNodeFields();
 
@@ -757,7 +748,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     }
 
     @Override
-    public NetworkMapItemModerator nmiForMyNodesAdvocate() throws Exception {
+    public NetworkMapItemModerator nmiForMyNodesModerator() throws Exception {
         if (myModeratorUID ==null){
             populateNodeFields();
 

@@ -11,6 +11,8 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.xml.messaging.saaj.util.ByteOutputStream;
+import eu.abc4trust.smartcard.Base64;
+import eu.abc4trust.xml.PresentationPolicy;
 import io.exonym.lite.couchdb.Base64TypeAdapter;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
@@ -74,11 +76,23 @@ public class JaxbHelper {
 		
 	}
 
+	public static String b64XmlToString(String b64Bytes) throws Exception{
+		return new String(Base64.decode(b64Bytes), StandardCharsets.UTF_8);
+
+	}
+
+
+	public static <T> T b64XmlToClass(String b64Bytes, Class<T> clazz) throws Exception{
+		String xml = b64XmlToString(b64Bytes);
+		return xmlToClass(xml, clazz);
+
+	}
+
 	public static <T> T xmlToClass(byte[] bytes, Class<T> clazz) throws Exception{
 		return xmlToClass(new String(bytes, "UTF8"), clazz);
 
 	}
-	
+
 	public static <T> T xmlToClass(String string, Class<T> clazz) throws Exception{
 		XMLStreamReader reader = xmlToXmlStream(string);
 		return xmlToClass(reader, clazz);

@@ -9,7 +9,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import eu.abc4trust.xml.PresentationPolicy;
 import eu.abc4trust.xml.PseudonymInPolicy;
-import io.exonym.actor.actions.MyStaticData;
 import io.exonym.actor.actions.NodeVerifier;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.HubException;

@@ -45,7 +45,7 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
 
     }
 
-    public ConcurrentHashMap<URI, NetworkMapItemLead> getSources() {
+    public ConcurrentHashMap<URI, NetworkMapItemLead> getLeads() {
         return sources;
 
     }

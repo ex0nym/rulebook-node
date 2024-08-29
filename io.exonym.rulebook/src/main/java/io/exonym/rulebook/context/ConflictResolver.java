@@ -1,7 +1,8 @@
-package io.exonym.x0basic;
+package io.exonym.rulebook.context;
 
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.lite.couchdb.QueryBasic;
+import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoMatrix;
@@ -18,13 +19,13 @@ public class ConflictResolver extends ModelCommandProcessor {
     
     private static final Logger logger = LogManager.getLogger(ConflictResolver.class);
 
-    private final CouchRepository<ExoMatrix> exonymMap;
+    private final UnprotectedCouchRepository<ExoMatrix> exonymMap;
     private final CouchRepository<Vio> violations;
 
     protected ConflictResolver() throws Exception {
         super(10, "ConflictResolver", 60000l);
-        this.exonymMap = CouchDbHelper.repoExonymMap();
-        this.violations = CouchDbHelper.repoVioMap();
+        this.exonymMap = CouchDbHelper.repoExoMatrix();
+        this.violations = CouchDbHelper.repoVio();
 
     }
 

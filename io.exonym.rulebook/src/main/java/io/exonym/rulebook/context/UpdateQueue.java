@@ -1,9 +1,10 @@
-package io.exonym.x0basic;
+package io.exonym.rulebook.context;
 
 import com.google.gson.Gson;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoNotify;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.WhiteList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,20 +27,21 @@ public class UpdateQueue extends ModelCommandProcessor {
     private final ArrayList<ArrayBlockingQueue<Msg>> pipesToJoin;
     private final ArrayBlockingQueue<Msg> pipeToViolation;
     private final ArrayBlockingQueue<Msg> pipeToLocalBlob;
-    private final ArrayBlockingQueue<Msg> pipeToAck;
+    private final ArrayBlockingQueue<Msg> pipeToPraIn;
     private final URI hostUuid;
 
     protected UpdateQueue(ArrayList<ArrayBlockingQueue<Msg>> pipesToJoin,
                           ArrayBlockingQueue<Msg> pipeToViolation,
                           ArrayBlockingQueue<Msg> pipeToLocalBlob,
-                          ArrayBlockingQueue<Msg> pipeToAck) throws Exception {
-        super(Constants.FLUX_CAPACITY, "UpdateQueue", 60000l);
+                          ArrayBlockingQueue<Msg> pipeToPraIn) throws Exception {
+        super(Const.FLUX_CAPACITY, "UpdateQueue", 60000l);
         this.pipesToJoin=pipesToJoin;
         this.pipeToViolation=pipeToViolation;
         this.pipeToLocalBlob=pipeToLocalBlob;
-        this.pipeToAck=pipeToAck;
+        this.pipeToPraIn = pipeToPraIn;
         this.joinSize=this.pipesToJoin.size();
-        this.hostUuid = X0Properties.getInstance().getAdvocateUID();
+        // Todo, this needs to be established via the trust networks object.
+        this.hostUuid = null;
 
     }
 
@@ -84,10 +86,14 @@ public class UpdateQueue extends ModelCommandProcessor {
             violation(notify);
 
         } else if (type.equals(ExoNotify.TYPE_LEAD)){
-            ackIn(notify);
+            prain(notify);
 
         } else if (type.equals(ExoNotify.TYPE_ACK)){
-            ackIn(notify);
+            logger.info("5took something out!");
+            logger.info("6took something out!");
+            logger.info("7took something out!");
+            logger.info("8took something out!");
+
 
         }
         // If message originates from own Node, update blob.
@@ -97,6 +103,10 @@ public class UpdateQueue extends ModelCommandProcessor {
 
             }
         }
+    }
+
+    private void prain(ExoNotify notify) throws Exception {
+        this.pipeToPraIn.put(notify);
     }
 
     private void join(ExoNotify notify) throws Exception {
@@ -113,16 +123,6 @@ public class UpdateQueue extends ModelCommandProcessor {
 
     private void blob(ExoNotify notify) throws Exception {
         this.pipeToLocalBlob.put(notify);
-
-    }
-
-    private void ackIn(ExoNotify notify) throws Exception {
-        this.pipeToAck.put(notify);
-
-    }
-
-    private void ackOut(ExoNotify notify) throws Exception {
-        this.pipeToAck.put(notify);
 
     }
 

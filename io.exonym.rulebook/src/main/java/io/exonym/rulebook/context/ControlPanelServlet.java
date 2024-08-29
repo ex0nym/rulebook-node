@@ -150,11 +150,11 @@ public final class ControlPanelServlet extends HttpServlet {
 					refreshNetworkMap();
 
 				} else if (cmd.equals("sourceNodeManagementAdd")) {
-					sourceNodeManagementAdd(dataReq, resp);
+					leadNodeManagementAdd(dataReq, resp);
 					refreshNetworkMap();
 
 				} else if (cmd.equals("sourceNodeManagementRemove")) {
-					sourceNodeManagementRemove(dataReq, resp);
+					leadNodeManagementRemove(dataReq, resp);
 					refreshNetworkMap();
 
 				} else if (cmd.equals("nodeSourceAttachmentAttach")) {
@@ -254,7 +254,9 @@ public final class ControlPanelServlet extends HttpServlet {
 								  HttpServletRequest req, HttpServletResponse resp) throws Exception {
 		try {
 			String rawB64Token = dataReq.get("token");
-			PresentationToken token = this.sidToPresentationTokenMap.get(req.getSession().getId());
+			PresentationToken token = this.sidToPresentationTokenMap
+					.get(req.getSession().getId());
+
 			if (token==null){
 				if (rawB64Token!=null){
 					byte[] rawToken = Base64.decodeBase64(rawB64Token);
@@ -302,7 +304,7 @@ public final class ControlPanelServlet extends HttpServlet {
 									"Computing Revocation Authority Key - Please be patient...",
 									"Computing Credential Issuer Key - Please be patient...",
 									"Computing Inspector Key - Last key before publishing...",
-									"Publishing Network to Replication URLs",
+									"Publishing static data",
 									"Almost done!"
 
 							});
@@ -312,7 +314,7 @@ public final class ControlPanelServlet extends HttpServlet {
 
 							new Thread(() -> {
 								try {
-									logger.info("Starting Source Attachment");
+									logger.info("Starting Lead Attachment");
 									NodeInformation info = n.setupModeratorNode(sourceUrl, name, p, reporter);
 									NodeData d = new NodeData();
 									d.setNetworkName(networkName);
@@ -591,13 +593,15 @@ public final class ControlPanelServlet extends HttpServlet {
 		}
 	}
 	
-	private void sourceNodeManagementAdd(HashMap<String, String> dataReq, HttpServletResponse resp) throws Exception{
+	private void leadNodeManagementAdd(HashMap<String, String> dataReq, HttpServletResponse resp) throws Exception{
 		String networkName = dataReq.get("networkName");
 		try {
 
 			String nodeUrl = dataReq.get("nodeUrl");
 			String internalName = dataReq.get("internalName");
-			boolean testNet = Boolean.parseBoolean(dataReq.getOrDefault("testNet", "true"));
+			boolean testNet = Boolean.parseBoolean(dataReq
+					.getOrDefault("testNet", "true"));
+
 			PassStore passStore = new PassStore(RulebookNodeProperties.instance().getNodeRoot(), false);
 			passStore.setUsername(networkName);
 			
@@ -606,7 +610,7 @@ public final class ControlPanelServlet extends HttpServlet {
 				NetworkMapWeb networkMap = new NetworkMapWeb();
 				URI nurl = URI.create(nodeUrl);
 				URI nodeUid = n.addModeratorToLead(nurl, passStore, networkMap, testNet);
-				broadcast();
+				broadcast(n.getPpB64(), n.getPpSigB64());
 				NodeData d = new NodeData();
 				d.setNodeUrl(nurl);
 				d.setNodeUrl(nurl);
@@ -635,30 +639,35 @@ public final class ControlPanelServlet extends HttpServlet {
 		}
 	}
 
-	private void broadcast() throws Exception {
+	private void broadcast(String ppB64, String ppSigB64) throws Exception {
 		ExoNotify notify = new ExoNotify();
 		notify.setT(DateHelper.currentIsoUtcDateTime());
 		URI nodeUuid = IAuthenticator.getInstance().getNodeUid();
-		URI sourceUuid = UIDHelper.computeLeadUidFromModUid(nodeUuid);
-		notify.setAdvocateUID(sourceUuid);
-		notify.setType(ExoNotify.TYPE_SOURCE);
-		byte[] toSign = ExoNotify.signatureOnAckAndOrigin(notify);
-		Signer signer = Signer.getInstance();
-		String pwd = RulebookNodeProperties.instance().getNodeRoot();
-		PassStore store = new PassStore(pwd, false);
-		byte[] sig = signer.sign(toSign, sourceUuid.toString(), store);
-		notify.setSigB64(Base64.encodeBase64String(sig));
-		Broadcaster broadcaster = new Broadcaster(notify,
-				CouchDbHelper.repoNetworkMapItem());
-		broadcaster.execute();
-		broadcaster.close();
+		URI leadUid = UIDHelper.computeLeadUidFromModUid(nodeUuid);
+		notify.setNodeUID(leadUid);
+		notify.setType(ExoNotify.TYPE_LEAD);
+		notify.setPpB64(ppB64);
+		notify.setPpSigB64(ppSigB64);
+		ExonymPublisher.getInstance()
+				.getPipe().put(notify);
+
+//		byte[] toSign = ExoNotify.signatureOnAckAndOrigin(notify);
+//		Signer signer = Signer.getInstance();
+//		String pwd = RulebookNodeProperties.instance().getNodeRoot();
+//		PassStore store = new PassStore(pwd, false);
+//		byte[] sig = signer.sign(toSign, leadUid.toString(), store);
+//		notify.setSigB64(Base64.encodeBase64String(sig));
+//		Broadcaster broadcaster = new Broadcaster(notify,
+//				CouchDbHelper.repoNetworkMapItem());
+//		broadcaster.execute();
+//		broadcaster.close();
 
 	}
 
 	/*
 	 * Remove by URL
 	 */
-	private void sourceNodeManagementRemove(HashMap<String, String> dataReq, HttpServletResponse resp) throws Exception{
+	private void leadNodeManagementRemove(HashMap<String, String> dataReq, HttpServletResponse resp) throws Exception{
 		try {
 			String networkName = dataReq.get("networkName");
 			String nodeUrl = dataReq.get("nodeUrl");
@@ -667,7 +676,8 @@ public final class ControlPanelServlet extends HttpServlet {
 			if (WhiteList.url(nodeUrl)) {
 				NodeManagerWeb n = new NodeManagerWeb(networkName);
 				URI nodeUid = n.removeModeratorFromLead(URI.create(nodeUrl), p);
-				broadcast();
+				broadcast(n.getPpB64(), n.getPpSigB64());
+
 				NodeStore store = NodeStore.getInstance();
 				NodeData d = store.findNetworkNodeDataItem(nodeUid.toString());
 				d.setLastPPHash(n.getPpHash());
@@ -696,7 +706,7 @@ public final class ControlPanelServlet extends HttpServlet {
 			PassStore p = new PassStore(props.getNodeRoot(), false);
 			NodeManagerWeb n = new NodeManagerWeb(networkName);
 			n.removeModeratorFromLead(nodeUid, p);
-			broadcast();
+			broadcast(n.getPpB64(), n.getPpSigB64());
 			NodeStore store = NodeStore.getInstance();
 			NodeData d = store.findNetworkNodeDataItem(nodeUid);
 			store.delete(d);

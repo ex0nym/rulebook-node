@@ -2,12 +2,14 @@ package io.exonym.lite.pojo;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class NetworkMapItemLead extends NetworkMapItem {
 
     private boolean defaultAllow = true;
 
-    private ArrayList<URI> moderatorsForLead = new ArrayList<>();
+    private HashSet<URI> moderatorsForLead = new HashSet<>();
 
     public boolean isDefaultAllow() {
         return defaultAllow;
@@ -18,11 +20,11 @@ public class NetworkMapItemLead extends NetworkMapItem {
     }
 
 
-    public ArrayList<URI> getModeratorsForLead() {
+    public HashSet<URI> getModeratorsForLead() {
         return moderatorsForLead;
     }
 
-    public void setModeratorsForLead(ArrayList<URI> moderatorsForLead) {
+    public void setModeratorsForLead(HashSet<URI> moderatorsForLead) {
         this.moderatorsForLead = moderatorsForLead;
     }
 }
