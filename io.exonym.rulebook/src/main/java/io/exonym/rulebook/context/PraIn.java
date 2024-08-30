@@ -55,9 +55,9 @@ public class PraIn extends ModelCommandProcessor {
     protected PraIn() {
         super(Const.FLUX_CAPACITY, "PraIn", 60000);
         PkiExternalResourceContainer pki = PkiExternalResourceContainer.getInstance();
-        networkMap = pki.getNetworkMap();
-        cache = pki.getCache();
-        keyManagerSingleton = KeyManagerSingleton.getInstance();
+        this.networkMap = pki.getNetworkMap();
+        this.cache = pki.getCache();
+        this.keyManagerSingleton = KeyManagerSingleton.getInstance();
         this.publicKeyManager = NetworkPublicKeyManager.getInstance();
 
     }
@@ -79,6 +79,7 @@ public class PraIn extends ModelCommandProcessor {
                     Object obj = checkSignature(xml, notify);
 
                     if (obj instanceof PresentationPolicy){
+                        // todo update trust network
                         updateLocalLeadData((PresentationPolicy)obj, xml,
                                 pathToLocalFolder, notify.getPpSigB64());
                         cache.store(obj);

@@ -160,7 +160,7 @@ public class WiderTrustNetworkManagement {
     public static void main(String[] args) throws Exception {
         WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
         wtn.setupWiderTrustNetwork();
-        wtn.addLead(URI.create("http://exonym-x-03:8080/static/lead/"), false);
+        wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), false);
         wtn.publish();
     }
 

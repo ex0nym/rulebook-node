@@ -1,19 +1,17 @@
 package io.exonym.rulebook.context;
 
 import com.google.gson.Gson;
-import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.actions.MyTrustNetworks;
 import io.exonym.helpers.UIDHelper;
+import io.exonym.lite.exceptions.ErrorMessages;
+import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoNotify;
-import io.exonym.lite.pojo.Join;
-import io.exonym.lite.pojo.Violation;
 import io.exonym.utils.storage.NodeInformation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.net.URI;
@@ -57,26 +55,33 @@ public class ExonymPublisher extends ModelCommandProcessor {
 
             mqttClient = new MqttClient(props.getMqttBroker(), uid);
 
-            mqttClient.connect();
 
             MyTrustNetworks myTrustNetworks = new MyTrustNetworks();
-            NodeInformation ni = myTrustNetworks.getOnePrioritizeModerator()
-                    .getTrustNetwork().getNodeInformation();
-            if (myTrustNetworks.isModerator()){
-                URI mod = ni.getNodeUid();
-                URI lead = ni.getLeadUid();
-                UIDHelper helper = new UIDHelper(mod);
-                uidToTopic.put(mod.toString(), helper.getRulebookModTopic());
-                uidToTopic.put(lead.toString(), helper.getRulebookLeadTopic());
-                uidToTopic.put(TOPIC_RULEBOOK, helper.getRulebookTopic());
+            if (myTrustNetworks.isDefined()){
+                mqttClient.connect();
+                NodeInformation ni = myTrustNetworks.getOnePrioritizeModerator()
+                        .getTrustNetwork().getNodeInformation();
+                if (myTrustNetworks.isModerator()){
+                    URI mod = ni.getNodeUid();
+                    URI lead = ni.getLeadUid();
+                    UIDHelper helper = new UIDHelper(mod);
+                    uidToTopic.put(mod.toString(), helper.getRulebookModTopic());
+                    uidToTopic.put(lead.toString(), helper.getRulebookLeadTopic());
+                    uidToTopic.put(TOPIC_RULEBOOK, helper.getRulebookTopic());
 
-            } else if (myTrustNetworks.isLeader()){
-                URI lead = ni.getLeadUid();
-                UIDHelper helper = new UIDHelper(lead);
-                uidToTopic.put(lead.toString(), helper.getRulebookLeadTopic());
-                uidToTopic.put(TOPIC_RULEBOOK, helper.getRulebookTopic());
+                } else if (myTrustNetworks.isLeader()){
+                    URI lead = ni.getLeadUid();
+                    String topic = UIDHelper.computeRulebookTopicFromUid(lead);
+                    uidToTopic.put(TOPIC_RULEBOOK, topic);
+
+                }
+            } else {
+                throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED);
 
             }
+        } catch (UxException e) {
+            logger.info(e.getMessage());
+
         } catch (Exception e) {
             logger.error("Error", e);
 

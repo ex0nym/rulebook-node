@@ -137,8 +137,7 @@ public class TestIssuance {
             RulebookVerifier rulebookRulebook = new RulebookVerifier(new URL("https://trust.exonym.io/sources-rulebook.json"));
 
             String rootIssuerUid = Namespace.URN_PREFIX_COLON + "badass:badass-lead:badass-mod:" +
-                    UIDHelper.computeRulebookHashFromRulebookId(
-                            rulebookRulebook.getRulebook().getRulebookId()) + "1213:i" ;
+                    UIDHelper.computeRulebookHashUid(rulebookRulebook.getRulebook().getRulebookId());
             UIDHelper rulebookHelper = new UIDHelper(rootIssuerUid);
             rulebookHelper.out();
 

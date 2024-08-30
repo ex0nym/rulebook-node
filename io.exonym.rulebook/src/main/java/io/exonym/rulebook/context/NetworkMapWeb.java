@@ -84,10 +84,8 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
 
     @Override
-    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, URI
-            staticNodeUrl1, boolean isTargetSource) throws Exception {
-        return NodeVerifier.tryNode(staticNodeUrl0,
-                staticNodeUrl1, true, false);
+    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, boolean isTargetSource) throws Exception {
+        return NodeVerifier.openNode(staticNodeUrl0, true, false);
     }
 
     protected void refresh(){
@@ -120,10 +118,11 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         }
     }
 
-    private void defineListeners() {
+    private void defineListeners() throws UxException {
         ArrayList<URI> sources = new ArrayList<>(allLeads.getLeads().keySet());
-        String rh = UIDHelper.computeRulebookHashFromLeadUid(
+        String rh = UIDHelper.computeRulebookHashUid(
                 allLeads.getThisModeratorLeadUID());
+
         if (rh!=null){
             HashSet<URI> listenTo = allLeads.getListeningToLeads();
             for (URI uri : sources) {
@@ -365,9 +364,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     @Deprecated
     private void sourceCryptoUpdate(NetworkMapItem source) throws Exception {
         if (source!=null){
-            NodeVerifier verifier = openNodeVerifier(source.getStaticURL0(),
-                    source.getRulebookNodeURL().resolve("static"),
-                    true);
+            NodeVerifier verifier = openNodeVerifier(source.getStaticURL0(), true);
             IAuthenticator auth = IAuthenticator.getInstance();
             IdContainer container = new IdContainer(auth.getContainerNameForNode());
             container.saveLocalResource(verifier.getPresentationPolicy(), true);
@@ -425,7 +422,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         ConcurrentHashMap<URI, NetworkMapItemLead> leads = allLeads.getLeads();
         leads.clear();
         URI thisNodesLead = allLeads.getThisModeratorLeadUID();
-        String thisModeratorUID = allLeads.getModeratorUID().toString();
+        URI thisModeratorUID = allLeads.getModeratorUID();
 
         thisNodesLead = (thisNodesLead==null ?
                 allLeads.getThisNodeLeadUID() : thisNodesLead);
@@ -499,9 +496,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                 String urlForStaticData = lead.getStaticURL0().toString();
                 logger.info("Computed local versus terget=" + urlForStaticData + " " + myLeadUrl);
 
-
-                if (myLeadUrl!=null && !urlForStaticData.toString()
-                        .equals(myLeadUrl.toString())){
+                if (myLeadUrl==null || !urlForStaticData.toString().equals(myLeadUrl.toString())){
 
                     byte[] signature = UrlHelper.read(new URL(url0)); // , new URL(url1));
                     KeyContainer kc = JaxbHelper.xmlToClass(signature, KeyContainer.class);
@@ -524,12 +519,17 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                     tn = JaxbHelper.xmlToClass(ni, TrustNetwork.class);
 
                 } else {
-                    tn = myTrustNetworks.getLead().getTrustNetwork();
-                    logger.info("Number of participants=" + tn.getParticipants().size());
-                    pkBytes = myTrustNetworks.getLead()
-                            .getKcw().getKey(KeyContainerWrapper.TN_ROOT_KEY)
-                            .getPublicKey();
+                    if (myTrustNetworks.isDefined()){
+                        tn = myTrustNetworks.getLead().getTrustNetwork();
+                        logger.info("Number of participants=" + tn.getParticipants().size());
+                        pkBytes = myTrustNetworks.getLead()
+                                .getKcw().getKey(KeyContainerWrapper.TN_ROOT_KEY)
+                                .getPublicKey();
 
+                    } else {
+                        logger.info(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED, "My trust networks not defined.");
+
+                    }
                 }
 
                 QueryBasic q = new QueryBasic();

@@ -109,7 +109,7 @@ public class RulebookVerifier {
 
         }
         String rulebookId = CryptoUtils.computeSha256HashAsHex(builder.toString());
-        String id = rulebook.getRulebookId().split(":")[2];
+        String id = rulebook.getRulebookId().split(":")[3];
         if (!id.equals(rulebookId)){
             throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE, "The Rulebook ID is invalid.");
 

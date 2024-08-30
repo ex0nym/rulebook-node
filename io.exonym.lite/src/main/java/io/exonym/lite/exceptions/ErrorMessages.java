@@ -7,7 +7,7 @@ public class ErrorMessages {
      * Generic error, when insufficient parameters have been provided
      * Check required[]
      */
-    public static final String INCORRECT_PARAMETERS = "ERROR_INCORRECT_PARAMETERS";
+    public static final String INCORRECT_PARAMETERS = "INCORRECT_PARAMETERS";
 
     public static final String INSPECTION_RESULT_REQUIRED = "INSPECTION_RESULT_REQUIRED";
 

@@ -44,7 +44,7 @@ public class JoinSupportSingleton {
         this.store = new PassStore(props.getNodeRoot(), false);
         this.myAdvocate = this.networkMap.nmiForMyNodesModerator();
         this.myAdvocateHelper = new UIDHelper(this.myAdvocate.getLastIssuerUID());
-        this.sybilHelper = new UIDHelper(this.networkMap.nmiForSybilTestNet().getLastIssuerUID());
+        this.sybilHelper = new UIDHelper(this.networkMap.nmiForSybilModTest().getLastIssuerUID());
 
         this.rulebookVerifier = openRulebookVerifier();
         this.myRules = rulebookVerifier.toRulebookUIDs();

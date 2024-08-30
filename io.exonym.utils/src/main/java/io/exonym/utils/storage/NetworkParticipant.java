@@ -12,7 +12,6 @@ public class NetworkParticipant {
 	
 	private String trustNetworkName;
 	private URI staticNodeUrl0;
-	private URI staticNodeUrl1;
 	private URI rulebookNodeUrl;
 	private URI broadcastAddress;
 	private URI nodeUid;
@@ -93,15 +92,6 @@ public class NetworkParticipant {
 
 	public void setPublicKey(XKey publicKey) {
 		this.publicKey = publicKey;
-	}
-
-	@XmlElement(name = "StaticNodeURL1", namespace = Namespace.EX)
-	public URI getStaticNodeUrl1() {
-		return staticNodeUrl1;
-	}
-
-	public void setStaticNodeUrl1(URI staticNodeUrl1) {
-		this.staticNodeUrl1 = staticNodeUrl1;
 	}
 
 	@XmlElement(name = "NodeRegion", namespace = Namespace.EX)

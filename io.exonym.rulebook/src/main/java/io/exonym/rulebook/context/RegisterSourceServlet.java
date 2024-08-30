@@ -53,7 +53,7 @@ public class RegisterSourceServlet extends HttpServlet {
     private void addToSourcesList(HashMap<String, String> in, HttpServletResponse resp) throws Exception {
         try {
             String target = in.get("sourceUrl");
-            if (WhiteList.isSourceUrl(target)){
+            if (WhiteList.isLeadUrl(target)){
                 WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
                 wtn.openWiderTrustNetwork();
                 wtn.addLead(URI.create(target), !in.containsKey("test"));

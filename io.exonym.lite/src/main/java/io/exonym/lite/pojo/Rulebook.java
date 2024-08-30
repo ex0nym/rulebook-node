@@ -6,19 +6,47 @@ import java.util.UUID;
 
 public class Rulebook extends SerialErrorHandling {
 
-    public static final String SYBIL_RULEBOOK_HASH =
-            "800a5e641a0f9e6f2ba77c8a31384df2d034a969ccd565b8b9206fd4f8126296";
 
-    public static final URI SYBIL_SOURCE_UID = URI.create(Namespace.URN_PREFIX_COLON
-            + "sybil-test-network:c30:" + SYBIL_RULEBOOK_HASH);
+    public static final String SYBIL_RULEBOOK_NAME = "sybil";
+    public static final String SYBIL_LEAD = "the-cyber";
+    public static final String SYBIL_MOD_TEST = "thirty-test";
+    public static final String SYBIL_MOD_MAIN = "thirty";
 
+    public static final String SYBIL_RULEBOOK_HASH_TEST =
+            "2c859cff31d5889ab75027713926056323e6aeebe0fbee6bd126aae12713257c";
 
+    public static final String SYBIL_RULEBOOK_HASH_MAIN =
+            "996a36c1d3fcfcc831bca4f9061110ebdd738a2b9389929b86fb152e4211ced0";
 
-    public static final URI SYBIL_TEST_NET_UID =  URI.create(Namespace.URN_PREFIX_COLON
-            + "sybil-test-network:c30:sybil-test:" + SYBIL_RULEBOOK_HASH);
+    public static final URI SYBIL_RULEBOOK_UID_TEST = URI.create(Namespace.URN_PREFIX_COLON
+            + SYBIL_RULEBOOK_NAME + ":"
+            + SYBIL_RULEBOOK_HASH_TEST);
 
-    public static final URI SYBIL_MAIN_NET_UID =  URI.create(Namespace.URN_PREFIX_COLON
-            + "sybil:c30:main-net:" + SYBIL_RULEBOOK_HASH);
+    public static final URI SYBIL_RULEBOOK_UID_MAIN = URI.create(Namespace.URN_PREFIX_COLON
+            + SYBIL_RULEBOOK_NAME + ":"
+            + SYBIL_RULEBOOK_HASH_MAIN);
+
+    public static final URI SYBIL_LEAD_UID_TEST = URI.create(Namespace.URN_PREFIX_COLON
+            + SYBIL_RULEBOOK_NAME + ":"
+            + SYBIL_LEAD + ":"
+            + SYBIL_RULEBOOK_HASH_TEST);
+
+    public static final URI SYBIL_LEAD_UID_MAIN = URI.create(Namespace.URN_PREFIX_COLON
+            + SYBIL_RULEBOOK_NAME + ":"
+            + SYBIL_LEAD + ":"
+            + SYBIL_RULEBOOK_HASH_MAIN);
+
+    public static final URI SYBIL_MOD_UID_TEST =  URI.create(Namespace.URN_PREFIX_COLON
+            + SYBIL_RULEBOOK_NAME + ":"
+            + SYBIL_LEAD + ":"
+            + SYBIL_MOD_TEST + ":"
+            + SYBIL_RULEBOOK_HASH_TEST);
+
+    public static final URI SYBIL_MOD_UID_MAIN =  URI.create(Namespace.URN_PREFIX_COLON
+            + SYBIL_RULEBOOK_NAME + ":"
+            + SYBIL_LEAD + ":"
+            + SYBIL_MOD_MAIN + ":"
+            + SYBIL_RULEBOOK_HASH_MAIN);
 
     public static final String SYBIL_CLASS_PERSON = "person";
     public static final String SYBIL_CLASS_ENTITY = "entity";
@@ -67,7 +95,7 @@ public class Rulebook extends SerialErrorHandling {
 
     public URI computeCredentialSpecId() {
         String[] parts = rulebookId.split(":");
-        return URI.create("urn:rulebook:" +
+        return URI.create(Namespace.URN_PREFIX_COLON +
                 this.description.getName().toLowerCase() + ":"
                 +  parts[parts.length-1] + ":c");
     }
@@ -92,10 +120,34 @@ public class Rulebook extends SerialErrorHandling {
     public static boolean isSybil(String rulebookId){
         if (rulebookId==null){
             return false;
+
         } else {
-            return rulebookId.contains(SYBIL_RULEBOOK_HASH);
+            return rulebookId.contains(SYBIL_RULEBOOK_HASH_MAIN) ||
+                    rulebookId.contains(SYBIL_RULEBOOK_HASH_TEST);
+
         }
     }
+
+    public static boolean isSybilMain(String rulebookId){
+        if (rulebookId==null){
+            return false;
+
+        } else {
+            return rulebookId.contains(SYBIL_RULEBOOK_HASH_MAIN);
+
+        }
+    }
+
+    public static boolean isSybilTest(String rulebookId){
+        if (rulebookId==null){
+            return false;
+
+        } else {
+            return rulebookId.contains(SYBIL_RULEBOOK_HASH_TEST);
+
+        }
+    }
+
 
     public RulebookDescription getDescription() {
         return description;

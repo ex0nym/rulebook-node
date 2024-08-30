@@ -23,7 +23,6 @@ import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -418,7 +417,7 @@ public class TestNodeManager {
 
 			rulebookVerifier = new RulebookVerifier(rulebook);
 
-			URI sybilIssuerUID = map.nmiForSybilTestNet().getLastIssuerUID();
+			URI sybilIssuerUID = map.nmiForSybilModTest().getLastIssuerUID();
 			IssuanceMessageAndBoolean imabRulebook  = Parser.parseIssuanceMessageAndBoolean(
 					rulebookVerifier.getRulebook().getChallengeB64());
 

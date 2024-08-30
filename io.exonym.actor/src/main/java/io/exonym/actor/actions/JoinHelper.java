@@ -4,6 +4,7 @@ import eu.abc4trust.smartcard.Base64;
 import eu.abc4trust.xml.*;
 import io.exonym.helpers.BuildPresentationPolicy;
 import io.exonym.helpers.UIDHelper;
+import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.NetworkMapItemLead;
 import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.storage.ExternalResourceContainer;
@@ -39,8 +40,8 @@ public class JoinHelper {
 
     }
 
-    private static void filterSourceList(ArrayList<NetworkMapItemLead> acceptableSources, RulebookVerifier verifier) {
-        String rid = UIDHelper.computeRulebookHashFromRulebookId(verifier.getRulebook().getRulebookId());
+    private static void filterSourceList(ArrayList<NetworkMapItemLead> acceptableSources, RulebookVerifier verifier) throws UxException {
+        String rid = UIDHelper.computeRulebookHashUid(verifier.getRulebook().getRulebookId());
         ArrayList<NetworkMapItemLead> result = new ArrayList<>();
         for (NetworkMapItemLead source : acceptableSources){
             if (source.getLeadUID().toString().contains(rid)){

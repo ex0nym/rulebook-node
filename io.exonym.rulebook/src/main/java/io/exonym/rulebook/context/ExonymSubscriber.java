@@ -1,8 +1,11 @@
 package io.exonym.rulebook.context;
 
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.actor.actions.MyTrustNetworks;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
 import io.exonym.helpers.UIDHelper;
+import io.exonym.lite.exceptions.ErrorMessages;
+import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.NetworkMapItem;
 import io.exonym.lite.standard.CryptoUtils;
@@ -43,6 +46,16 @@ public class ExonymSubscriber {
             subscribeToMosquittoTopics();
             buildListenerFramework();
 
+        } catch (UxException e) {
+            logger.info(">>>>>>>>>>>>>>>>>>>>");
+            logger.info("> NOT SUBSCRIBED");
+            logger.info("> ");
+            logger.info("> No error, but the node needs to be defined to subscribe.");
+            logger.info("> ");
+            logger.info("> Restart after node is a moderator or lead.");
+            logger.info("> ");
+            logger.info(">>>>>>>>>>>>>>>>>>>>");
+
         } catch (Exception e) {
             logger.info(">>>>>>>>>>>>>>>>>>>>");
             logger.info("> FAILED TO SUBSCRIBE");
@@ -82,48 +95,49 @@ public class ExonymSubscriber {
     }
 
     private void subscribeToMosquittoTopics() throws Exception {
-        NetworkMapItem nmi = PkiExternalResourceContainer.getInstance()
-                .getNetworkMap().nmiForSybilTestNet();
-        UIDHelper helper = new UIDHelper(nmi.getNodeUID());
-        topics[0] = helper.getRulebookTopic() + UIDHelper.MQTT_WILDCARD;
-        MyTrustNetworks mine = new MyTrustNetworks();
+        try {
+            PkiExternalResourceContainer ext = PkiExternalResourceContainer.getInstance();
+            NetworkMapItem nmi = ext.getNetworkMap().nmiForSybilLeadTestNet();
 
-        if (mine.isModerator()){
-            NodeInformation info = mine.getModerator()
-                    .getTrustNetwork().getNodeInformation();
-            helper = new UIDHelper(info.getNodeUid());
+            UIDHelper helper = new UIDHelper(nmi.getNodeUID());
+            topics[0] = helper.getRulebookTopic() + UIDHelper.MQTT_WILDCARD;
+            MyTrustNetworks mine = new MyTrustNetworks();
 
-            topics[1] = helper.getRulebookTopic() + UIDHelper.MQTT_WILDCARD;
-            if (topics[1].equals(topics[0])){
-                topics[1] = null;
+            if (mine.isModerator()){
+                NodeInformation info = mine.getModerator()
+                        .getTrustNetwork().getNodeInformation();
+                helper = new UIDHelper(info.getNodeUid());
+
+                topics[1] = helper.getRulebookTopic() + UIDHelper.MQTT_WILDCARD;
+                if (topics[1].equals(topics[0])){
+                    topics[1] = null;
+
+                }
+                RulebookNodeProperties props = RulebookNodeProperties.instance();
+                String id = CryptoUtils.computeSha256HashAsHex(info.getNodeUid().toString());
+                MqttClient client = new MqttClient(props.getMqttBroker(), id);
+                client.setCallback(new SubscriberCallback());
+                client.connect();
+                client.subscribe(topics[0]);
+                if (topics[1]!=null){
+                    client.subscribe(topics[1]);
+                }
+                logger.info(">>>>>>>>>>>>>>>>>>>>");
+                logger.info("> SUBSCRIBER ");
+                logger.info("> ");
+                logger.info("> " + topics[0]);
+                logger.info("> " + topics[1]);
+                logger.info("> ");
+                logger.info(">>>>>>>>>>>>>>>>>>>>");
+
+            } else {
+                throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED);
 
             }
-            RulebookNodeProperties props = RulebookNodeProperties.instance();
-            String id = CryptoUtils.computeSha256HashAsHex(info.getNodeUid().toString());
-            MqttClient client = new MqttClient(props.getMqttBroker(), id);
-            client.setCallback(new SubscriberCallback());
-            client.connect();
-            client.subscribe(topics[0]);
-            if (topics[1]!=null){
-                client.subscribe(topics[1]);
-            }
-            logger.info(">>>>>>>>>>>>>>>>>>>>");
-            logger.info("> SUBSCRIBER ");
-            logger.info("> ");
-            logger.info("> " + topics[0]);
-            logger.info("> " + topics[1]);
-            logger.info("> ");
-            logger.info(">>>>>>>>>>>>>>>>>>>>");
 
-        } else {
-            logger.info(">>>>>>>>>>>>>>>>>>>>");
-            logger.info("> NOT SUBSCRIBED");
-            logger.info("> ");
-            logger.info("> No error, but the node needs to be defined to subscribe.");
-            logger.info("> ");
-            logger.info("> Restart after node is a moderator or lead.");
-            logger.info("> ");
-            logger.info(">>>>>>>>>>>>>>>>>>>>");
+        } catch (NoDocumentException e) {
+            logger.debug("Still setting up node");
+            throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED);
 
         }
     }

@@ -15,6 +15,7 @@ public class Const {
 	public static final String MESSAGE_AUTHENTICATION_CODE_ALGORITHM = "HmacSHA1";
 
 	public static final String BINDING_ALIAS = "urn:io:exonym";
+	public static final String URN_RULEBOOK_COLON = "urn:rulebook:";
 	public static final String LEAD = "lead";
 	public static final String MODERATOR = "moderator";
 

@@ -57,7 +57,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		if (t == null) {
 			if (FileType.isPresentationPolicy(fileName) ||
 					FileType.isCredentialSpecification(fileName)) {
-				return verifySource(fileName);
+				return verifyLead(fileName);
 
 			} else if (FileType.isInspectorPublicKey(fileName) ||
 					FileType.isRevocationInformation(fileName) ||
@@ -78,12 +78,18 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		return t;
 	}
 
-	private <T> T verifySource(String fileName) throws Exception {
+	private <T> T verifyLead(String fileName) throws Exception {
 		if (FileType.isCredentialSpecification(fileName)){
 			if (Rulebook.isSybil(fileName)){
-				RulebookVerifier verifier = new RulebookVerifier(new URL("https://trust.exonym.io/sybil-rulebook.json"));
-				return (T) BuildCredentialSpecification.buildSybilCredentialSpecification(verifier);
+				if (Rulebook.isSybilMain(fileName)){
+					RulebookVerifier verifier = new RulebookVerifier(new URL("https://trust.exonym.io/sybil-rulebook.json"));
+					return (T) BuildCredentialSpecification.buildSybilCredentialSpecification(verifier);
 
+				} else {
+					RulebookVerifier verifier = new RulebookVerifier(new URL("https://trust.exonym.io/sybil-rulebook-test.json"));
+					return (T) BuildCredentialSpecification.buildSybilCredentialSpecification(verifier);
+
+				}
 			} else {
 				return (T) new BuildCredentialSpecification(
 						UIDHelper.fileNameToUid(fileName), true)

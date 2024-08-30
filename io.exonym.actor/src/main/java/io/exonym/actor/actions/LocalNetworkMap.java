@@ -64,7 +64,7 @@ public class LocalNetworkMap extends AbstractNetworkMap {
     }
 
     @Override
-    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, URI staticNodeUrl1, boolean isTargetSource) throws Exception {
-        return NodeVerifier.tryNode(staticNodeUrl0, staticNodeUrl0, true, false);
+    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, boolean isTargetSource) throws Exception {
+        return NodeVerifier.openNode(staticNodeUrl0, true, false);
     }
 }

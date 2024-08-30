@@ -318,7 +318,7 @@ public final class ControlPanelServlet extends HttpServlet {
 									NodeInformation info = n.setupModeratorNode(sourceUrl, name, p, reporter);
 									NodeData d = new NodeData();
 									d.setNetworkName(networkName);
-									d.setName(name);
+									d.setName(info.getNodeName());
 									d.setType(NodeData.TYPE_MODERATOR);
 									d.setNodeUrl(info.getStaticNodeUrl0());
 									d.setNodeUid(info.getNodeUid());
@@ -556,8 +556,9 @@ public final class ControlPanelServlet extends HttpServlet {
 				NodeInformation info = t.getNodeInformation();
 				URI url = info.getStaticLeadUrl0();
 				NodeData nd = new NodeData();
-				nd.setName(orgName);
-				nd.setNetworkName(orgName);
+				String name = UIDHelper.computeLeadNameFromModOrLeadUid(info.getNodeUid());
+				nd.setName(name);
+				nd.setNetworkName(name);
 				nd.setType(NodeData.TYPE_LEAD);
 				nd.setNodeUrl(url);
 				nd.setNodeUid(info.getLeadUid());

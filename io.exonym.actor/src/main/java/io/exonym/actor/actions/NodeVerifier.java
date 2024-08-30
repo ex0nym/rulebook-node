@@ -1,6 +1,5 @@
 package io.exonym.actor.actions;
 
-import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import com.sun.xml.ws.util.ByteArrayBuffer;
 import eu.abc4trust.xml.*;
 import io.exonym.abc.util.JaxbHelper;
@@ -22,9 +21,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.mail.URLName;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBIntrospector;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -721,17 +717,11 @@ public class NodeVerifier {
 	}
 
 	public static void main(String[] args) throws Exception {
-		RulebookNodeProperties props = RulebookNodeProperties.instance();
 
-//		long t0 = Timing.currentTime();
-//		MyTrustNetwork mtn = new MyTrustNetwork(true);
+		String uid = "urn:rulebook:sybil:the-cyber:thirty-test:2c859cff31d5889ab75027713926056323e6aeebe0fbee6bd126aae12713257c:61c3045c:i";
+		new UIDHelper(uid).out();
 
-//		System.out.println(Timing.hasBeenMs(t0) + " " +
-//				mtn.getTrustNetworkWrapper().getNodeInformation().getNodeName());
 
-		NodeVerifier nv = new NodeVerifier(
-				URI.create("http://exonym-x-03:8080/static/network/3f726ea3a3c4fec12ad82f27c3f38f9041c4db4701238e3e53597f54cb626662/lead/"),
-				true, true);
 
 
 	}

@@ -57,13 +57,22 @@ public class WhiteList {
 		return isLeadUid(uid.toString());
 
 	}
-	public static boolean isSourceUrl(String url){
+	public static boolean isLeadUrl(String url){
 		return (url!=null && url.matches(".*/lead\\/?"));
 
 	}
 
 	public static boolean isUnreliableUrl(String url){
 		return (url!=null && url.matches("/^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$/"));
+
+	}
+
+	public static boolean isRulebookUid(String uid){
+		if (uid==null){
+			return false;
+
+		}
+		return uid.toString().matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][0-9a-f]{64}");
 
 	}
 

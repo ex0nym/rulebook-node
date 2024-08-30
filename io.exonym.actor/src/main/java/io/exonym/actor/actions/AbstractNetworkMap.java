@@ -129,8 +129,7 @@ public abstract class AbstractNetworkMap {
     }
 
     private ArrayList<NetworkMapItemModerator> verifySource(ArrayList<URI> advocateListForSource, NetworkParticipant source) throws Exception {
-        NodeVerifier verifier = openNodeVerifier(source.getStaticNodeUrl0(),
-                source.getStaticNodeUrl1(), true);
+        NodeVerifier verifier = openNodeVerifier(source.getStaticNodeUrl0(), true);
 
         Rulebook rulebook = verifier.getRulebook();
         cache.store(rulebook);
@@ -151,7 +150,6 @@ public abstract class AbstractNetworkMap {
     }
 
     protected abstract NodeVerifier openNodeVerifier(URI staticNodeUrl0,
-                                                     URI staticNodeUrl1,
                                                      boolean isTargetSource) throws Exception;
 
     private NetworkMapItemModerator buildAdvocateNMIA(URI sourceUid, NetworkParticipant participant) throws Exception {
@@ -199,7 +197,7 @@ public abstract class AbstractNetworkMap {
         }
         URI sourceUid = UIDHelper.computeLeadUidFromModUid(sourceOrAdvocate);
         String sourceName = UIDHelper.computeLeadNameFromModOrLeadUid(sourceUid);
-        String rulebookId = UIDHelper.computeRulebookHashFromLeadUid(sourceUid);
+        String rulebookId = UIDHelper.computeRulebookHashUid(sourceUid);
         Path path = null;
         if (UIDHelper.isModeratorUid(sourceOrAdvocate)){
             path = pathToSourcePath(rulebookId, sourceName)
@@ -259,7 +257,7 @@ public abstract class AbstractNetworkMap {
         String fileName = toNmiFilename(uid);
 
         if (UIDHelper.isLeadUid(uid)){
-            String rulebookId = UIDHelper.computeRulebookHashFromLeadUid(uid);
+            String rulebookId = UIDHelper.computeRulebookHashUid(uid);
             Path nmiPath = pathToRulebookPath(rulebookId).resolve(fileName);
             return JaxbHelper.jsonFileToClass(nmiPath, NetworkMapItemLead.class);
 
@@ -275,16 +273,16 @@ public abstract class AbstractNetworkMap {
         }
     }
 
-    public NetworkMapItemLead nmiForSybilSource() throws Exception {
-        return (NetworkMapItemLead) nmiForNode(Rulebook.SYBIL_SOURCE_UID);
+    public NetworkMapItemLead nmiForSybilLeadTestNet() throws Exception {
+        return (NetworkMapItemLead) nmiForNode(Rulebook.SYBIL_LEAD_UID_TEST);
     }
 
-    public NetworkMapItemModerator nmiForSybilTestNet() throws Exception {
-        return (NetworkMapItemModerator) nmiForNode(Rulebook.SYBIL_TEST_NET_UID);
+    public NetworkMapItemModerator nmiForSybilModTest() throws Exception {
+        return (NetworkMapItemModerator) nmiForNode(Rulebook.SYBIL_MOD_UID_TEST);
     }
 
     public NetworkMapItemModerator nmiForSybilMainNet() throws Exception {
-        return (NetworkMapItemModerator) nmiForNode(Rulebook.SYBIL_MAIN_NET_UID);
+        return (NetworkMapItemModerator) nmiForNode(Rulebook.SYBIL_MOD_UID_MAIN);
     }
 
     public NetworkMapItemLead nmiForMyNodesLead() throws Exception{

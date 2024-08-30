@@ -18,6 +18,7 @@ import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.node.ProgressReporter;
 import io.exonym.utils.storage.*;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.language.bm.Rule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -38,7 +39,7 @@ import java.util.*;
 public class NodeManager {
 	
 	private static final Logger logger = LogManager.getLogger(NodeManager.class);
-	private final String leadName;
+	private String leadName;
 	private final RulebookNodeProperties props = RulebookNodeProperties.instance();
 	private URI trustNetworkUid = null;
 	private URI nodeUid = null;
@@ -67,13 +68,20 @@ public class NodeManager {
 
 	public TrustNetwork setupLead(URL rulebookURL, PassStore store) throws Exception{
 		try {
+			RulebookVerifier verifier = new RulebookVerifier(rulebookURL);
+			Rulebook rulebook = verifier.getRulebook();
+			boolean isSybil = Rulebook.isSybil(rulebook.getRulebookId());
+			if (isSybil){
+				this.leadName = Rulebook.SYBIL_LEAD;
+
+			}
 			IdContainerJSON x = establishNewContainer(this.leadName, store);
+
 			try {
+
 				AsymStoreKey key = establishKey(store, x, Const.LEAD);
 
 				// create a globally unique uid
-				RulebookVerifier verifier = new RulebookVerifier(rulebookURL);
-				Rulebook rulebook = verifier.getRulebook();
 				URI trustNetworkUid = generateTrustNetworkUid(rulebook);
 
 				// create a credential specification
@@ -114,6 +122,7 @@ public class NodeManager {
 				String p = IdContainerJSON.convertObjectToXml(policy);
 
 				String tn = JaxbHelper.serializeToXml(network, TrustNetwork.class);
+				logger.info(tn);
 
 				byte[] csSign = NodeVerifier.stripStringToSign(cs).getBytes();
 				byte[] pSign = NodeVerifier.stripStringToSign(p).getBytes();
@@ -211,9 +220,18 @@ public class NodeManager {
 			throw new ProgrammingException("Expected 7 Updates");
 
 		}
+		NodeVerifier verifiedLead = NodeVerifier.openNode(leadUrl, true, false);
+		Rulebook rulebook = verifiedLead.getRulebook();
+		if (Rulebook.isSybil(rulebook.getRulebookId())){
+			if (rulebook.getDescription().isProduction()){
+				nodeName = Rulebook.SYBIL_MOD_MAIN;
+			} else {
+				nodeName = Rulebook.SYBIL_MOD_TEST;
+			}
+		}
 		IdContainerJSON modIdContainer = establishNewContainer(nodeName, store);
+
 		try {
-			NodeVerifier verifiedLead = NodeVerifier.openNode(leadUrl, true, false);
 			NodeInformation lead = verifiedLead
 					.getTargetTrustNetwork().getNodeInformation();
 
@@ -361,7 +379,6 @@ public class NodeManager {
 
 			try {
 				Path rulebookPath = Path.of(primaryUrl.getPath()).getParent();
-				Rulebook rulebook = verifiedLead.getRulebook();
 
 				URI rulebookUrl = nodeInfo.getRulebookNodeUrl().resolve(rulebookPath.toUri());
 
@@ -540,22 +557,20 @@ public class NodeManager {
 	}
 	
 	protected PresentationPolicy generatePolicy(URI networkUid, CredentialSpecification cred, IdContainerJSON x) throws Exception {
-		// URI ppaUid = URI.create(networkUid.toString() + ":pp");
 		URI ppUid = URI.create(networkUid.toString() + ":pp");
-		// URI cUid = URI.create(networkUid.toString() + ":c");
-		
+
 		PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
 
 		BuildPresentationPolicy bpp = new BuildPresentationPolicy(ppUid, external);
-		String rootAlias = "urn:io:exonym";
+		String rootAlias = Const.BINDING_ALIAS;
 		bpp.addPseudonym(rootAlias, false, rootAlias);
 
 		return bpp.getPolicy();
 
 	}
 
-	public URI generateTrustNetworkUid(Rulebook rulebook) {
-		String rulebookId = rulebook.getRulebookId().split(":")[2];
+	public URI generateTrustNetworkUid(Rulebook rulebook) throws UxException {
+		String rulebookId = UIDHelper.computeRulebookHashUid(rulebook.getRulebookId());
 
 		String uid = Namespace.URN_PREFIX_COLON
 				+ rulebook.getDescription().getName().toLowerCase() + ":"
@@ -695,13 +710,14 @@ public class NodeManager {
 	}
 
 	private IssuerParametersUID defineIssuerParams(NodeVerifier nodeToAdd, AbstractNetworkMap networkMap, boolean testnet) throws Exception {
-		boolean isSybil = Rulebook.isSybil(nodeToAdd.getRulebook().getRulebookId());
+		Rulebook rulebook = nodeToAdd.getRulebook();
+		boolean isSybil = Rulebook.isSybil(rulebook.getRulebookId());
 		if (!isSybil){
-			if (testnet){
-				return sybilIssuerParameters(networkMap.nmiForSybilTestNet());
+			if (rulebook.getDescription().isProduction()){
+				return sybilIssuerParameters(networkMap.nmiForSybilMainNet());
 
 			} else {
-				return sybilIssuerParameters(networkMap.nmiForSybilMainNet());
+				return sybilIssuerParameters(networkMap.nmiForSybilModTest());
 
 			}
 		} else {
