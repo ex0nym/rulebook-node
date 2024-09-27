@@ -30,7 +30,6 @@ public class MyTrustNetworkAndKeys {
     private final TrustNetwork trustNetwork;
 
     public MyTrustNetworkAndKeys(boolean amILead) throws Exception {
-        long t0 = Timing.currentTime();
         Path root = null;
         if (amILead){
             root = Path.of(Const.PATH_OF_STATIC, Const.LEAD);
@@ -44,8 +43,6 @@ public class MyTrustNetworkAndKeys {
                 IdContainerJSON.uidToXmlFileName(Const.TRUST_NETWORK_UID));
 
         trustNetwork = determineOutcome();
-
-        logger.info("Time to open trust network " + Timing.hasBeenMs(t0));
 
     }
 

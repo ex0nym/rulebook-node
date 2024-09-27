@@ -25,13 +25,11 @@ public class JoinSupportSingleton {
 
     private final NetworkMapWeb networkMap;
     private final PassStore store;
-    private final NetworkMapItemModerator myAdvocate;
-    private final UIDHelper myAdvocateHelper;
+    private final NetworkMapItemModerator myModerator;
+    private final UIDHelper myModeratorHelper;
     private final UIDHelper sybilHelper;
     private final Cache cache;
     private final PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
-
-
 
     private RulebookVerifier rulebookVerifier;
     private final ArrayList<String> myRules;
@@ -39,11 +37,12 @@ public class JoinSupportSingleton {
     private JoinSupportSingleton() throws Exception {
         this.networkMap = new NetworkMapWeb();
         this.cache = new Cache();
+
         this.external.setNetworkMapAndCache(this.networkMap, this.cache);
 
         this.store = new PassStore(props.getNodeRoot(), false);
-        this.myAdvocate = this.networkMap.nmiForMyNodesModerator();
-        this.myAdvocateHelper = new UIDHelper(this.myAdvocate.getLastIssuerUID());
+        this.myModerator = this.networkMap.nmiForMyNodesModerator();
+        this.myModeratorHelper = new UIDHelper(this.myModerator.getLastIssuerUID());
         this.sybilHelper = new UIDHelper(this.networkMap.nmiForSybilModTest().getLastIssuerUID());
 
         this.rulebookVerifier = openRulebookVerifier();
@@ -56,7 +55,7 @@ public class JoinSupportSingleton {
                 external, CryptoUtils.generateNonce(32));
 
         BuildIssuancePolicy bip = new BuildIssuancePolicy(pp,
-                myAdvocateHelper.getCredentialSpec(), myAdvocateHelper.getIssuerParameters());
+                myModeratorHelper.getCredentialSpec(), myModeratorHelper.getIssuerParameters());
 
         return bip.getIssuancePolicy();
     }
@@ -64,22 +63,22 @@ public class JoinSupportSingleton {
 
     protected void loadAdvocateWithSybilCryptoMaterials(ExonymIssuer issuer) throws Exception {
         loadIssuer(issuer, sybilHelper);
-        loadIssuer(issuer, myAdvocateHelper);
+        loadIssuer(issuer, myModeratorHelper);
 
     }
 
-    protected void loadIssuer(ExonymIssuer myAdvocateIssuer, UIDHelper helper) throws Exception {
-        myAdvocateIssuer.openResourceIfNotLoaded(helper.getCredentialSpec());
-        myAdvocateIssuer.openResourceIfNotLoaded(helper.getIssuerParameters());
-        myAdvocateIssuer.openResourceIfNotLoaded(helper.getRevocationInfoParams());
-        myAdvocateIssuer.openResourceIfNotLoaded(helper.getRevocationAuthority());
+    protected void loadIssuer(ExonymIssuer myModIssuer, UIDHelper helper) throws Exception {
+        myModIssuer.openResourceIfNotLoaded(helper.getCredentialSpec());
+        myModIssuer.openResourceIfNotLoaded(helper.getIssuerParameters());
+        myModIssuer.openResourceIfNotLoaded(helper.getRevocationInfoParams());
+        myModIssuer.openResourceIfNotLoaded(helper.getRevocationAuthority());
 
     }
 
     protected RulebookVerifier openRulebookVerifier() throws Exception {
         NodeData node = NodeStore.getInstance().openThisAdvocate();
         String target = node.getNodeUrl().toString()
-                .replaceAll(Const.MODERATOR, "rulebook.json");
+                .replaceAll(Const.MODERATOR + "/", "rulebook.json");
         this.rulebookVerifier = new RulebookVerifier(new URL(target));
         return this.rulebookVerifier;
 
@@ -93,12 +92,12 @@ public class JoinSupportSingleton {
         return store;
     }
 
-    protected NetworkMapItemModerator getMyAdvocate() {
-        return myAdvocate;
+    protected NetworkMapItemModerator getMyModerator() {
+        return myModerator;
     }
 
-    protected UIDHelper getMyAdvocateHelper() {
-        return myAdvocateHelper;
+    protected UIDHelper getMyModeratorHelper() {
+        return myModeratorHelper;
     }
 
     protected UIDHelper getSybilHelper() {

@@ -277,6 +277,9 @@ public final class ControlPanelServlet extends HttpServlet {
 			ns.updateNodeDataItem(node);
 			WebUtils.success(resp);
 
+		} catch (UxException e){
+			throw e;
+
 		} catch (Exception e){
 			throw new UxException("The Token was Invalid", e);
 

@@ -119,7 +119,7 @@ public class UIDHelper {
         this.presentationPolicy = URI.create(lead + ":pp");
         presentationPolicyFileName = IdContainer.uidToXmlFileName(presentationPolicy);
 
-        this.credentialSpec = credentialSpecFromSourceUID(this.leadUid);
+        this.credentialSpec = credentialSpecFromLeadUID(this.leadUid);
         credentialSpecFileName = IdContainer.uidToXmlFileName(credentialSpec);
 
         this.rulebookFileName = IdContainer.uidToFileName(rulebookUID) + ".json";
@@ -199,7 +199,7 @@ public class UIDHelper {
 
 
 
-    public static URI credentialSpecFromSourceUID(URI sourceUid) throws UxException {
+    public static URI credentialSpecFromLeadUID(URI sourceUid) throws UxException {
         String[] parts = sourceUid.toString().split(":");
         return URI.create(Namespace.URN_PREFIX_COLON + parts[2] + ":" +
                 UIDHelper.computeRulebookHashUid(sourceUid) + ":c");

@@ -228,6 +228,8 @@ public class ErrorMessages {
      */
     public static final String INVALID_PASSWORD_SPEC = "INVALID_PASSWORD_SPEC";
 
+    public static final String INCORRECT_MODERATOR = "INCORRECT_MODERATOR";
+
 
     /**
      * The Passport checksums did not validate correctly, occurs either

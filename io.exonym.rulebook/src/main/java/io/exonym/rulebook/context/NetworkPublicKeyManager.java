@@ -1,10 +1,7 @@
 package io.exonym.rulebook.context;
 
-import io.exonym.actor.actions.MyTrustNetworkAndKeys;
 import io.exonym.actor.actions.MyTrustNetworks;
 import io.exonym.lite.couchdb.QueryStandard;
-import io.exonym.lite.parallel.ModelCommandProcessor;
-import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.NetworkMapItem;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.utils.storage.TrustNetwork;
@@ -12,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NetworkPublicKeyManager {

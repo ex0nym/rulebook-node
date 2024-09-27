@@ -82,7 +82,7 @@ var nodeTokenManagement = {
 		const f = {
 			revokeSuccess: (json) => {
 				if (json.success){
-					ui.toast("The member was successfully revoked");
+					ui.toast("The web user is no longer honest under this rulebook.");
 
 				} else {
 					console.log(json);

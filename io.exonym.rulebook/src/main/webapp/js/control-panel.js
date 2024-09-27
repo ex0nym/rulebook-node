@@ -16,7 +16,6 @@
 		hostAdminAccess.bind();
 		access.init();		
 
-
 	});
 
 	var access = {
@@ -590,35 +589,41 @@
 			"hlpTransferSourceUrl":"URL",
 			"hlpNodeSecondaryNetworksIssuerRecipientUrl":"Issuer / Recipient URL",
 			"hlpNodeSourceAttachmentPublicName":"Public Name",
-			"hlpNodeSourceAttachmentSourceUrl":"Source URL",
+			"hlpNodeSourceAttachmentSourceUrl":"Lead URL",
 			"hlpNodeTokenManagementPresentationToken":"Presentation Tokens",
 			"hlpNodeMembershipAllTimeMembership":"All-Time Membership",
 			"hlpNodeMembershipUsername":"Username", 
 			"hlpSourceNewNetworkNetworkName":"Network Name",
 			"hlpSourceNodeInformationDefaultPlatform":"Default Platforms",
-			"hlpSourceNetworkInformationSourceUrl":"Source URL",
+			"hlpSourceNetworkInformationSourceUrl":"Lead URL",
 			"hlpSourceNodeManagementAuthorizedNodes":"Authorized Nodes",
 			"hlpSourceNodeManagementNodeUrl":"Node Url",
 			"hlpSourceSecondaryNetworksSecondaryNetwork":"Secondary Networks"
 
 		}, 
+		
 		helpText: {
-			"hlpSourceNewNetworkRulebookURL":"<p>To add a rulebook URL, follow the steps below:</p><p>1. Ensure that you have a valid rulebook document in JSON format. If you do not have a rulebook, you can create one using the guidelines provided at https://docs.exonym.io.</p><p>2. Check if another node offers the same rulebook. If yes, obtain the URL to their rulebook document.</p><p>3. If you have written the rulebook, publish it on your website or any online platform that allows sharing of files. Note that the rulebook must be available in JSON format, and it must be accessible through a URL.</p><p>4. Once you have the URL to the rulebook document, enter it in the 'Rulebook URL' field.</p><p>Note: If the URL is invalid or the rulebook is not in JSON format, you will not be able to add the rulebook URL. Ensure that the URL is correct and the rulebook is in the required format before adding it to the system.</p><p>If you want to create a new rulebook, you can compose one using the guidelines provided at https://docs.exonym.io. Once you have created the new rulebook, refer to the above steps to add the rulebook URL to the system.</p>",
-			"hlpAdminAccessAdministratorAccounts":"<p>Adding an Administrator Account grants 'Assign' privileges to a trusted administrator of this Trust Network Node. <p>Any user with 'Assign' privileges can grant/revoke membership to this Trust Network.<p>To add an administrator, type a new email address and click ADD<p>When the Administrator has confirmed their email and set a password, they become active.<p>To edit an email address, select the administrator from the list and click EDIT<p>The 'Primary Administrator' (the first added) can only;<ul><li>Add/Remove Secondary Administrators</li><li>Create Recovery Files</li><li>Transfer a Source</li></ul><p>Secondary Administrators* can only perform the remaining actions.<p class='tiny'> *This approach simplifies administrator privilege management.",
-			"hlpTransferSourceUrl":"<p>Transfers the Source to/from another Rulebook Node.<p>To transfer the Source out (donor), enter the URL of the Destination Host and click Begin Transfer. <p>To transfer the Source in (recipient), enter the Donor URL and click BEGIN TRANSFER. <p>It is unimportant which Host requests transfer first; however, both hosts must request transfer to be successful.<ul><li>Transfer must be completed within 24h of the first request to succeed </li><li>The Network Source will succeed or fail  without interruption to the Trust Network</li></ul>",
-			"hlpNodeSecondaryNetworksIssuerRecipientUrl":"<p>Enter the URL of a Network Node that this Node wants to join and click JOIN.<p>OR<p>Enter the URL of a Node in another Trust Network that this Node wants to add to this Trust Network and click Add Member.<p>To Add Member, the recipient Node must have requested to join this node before adding membership will succeed.",
-			"hlpNodeSourceAttachmentPublicName":"<p>Nodes are Publicly Identifiable and the Public Name will be written as part of this Node’s Public Identifier.<p>The Node cannot be renamed.<p>The public name cannot contain spaces or special characters except the hyphen.",
-			"hlpNodeSourceAttachmentSourceUrl":"<p>Enter the current URL of the Source.  If the Source is later transferred, this will be updated automatically.<p>Only one Source can be attached to a Node. <p>To disconnect from a Source this Node must be reinstalled resulting in all keys and membership being wiped.",
-			"hlpNodeTokenManagementPresentationToken":"<p>Drag & drop, or copy & paste the Presentation Token or a link to it. <p>Selecting Revoke will invalidate all the claims that the peer has made since they became a member.<p>To find the contact details belonging to a token use the Search button.<p>To Reissue membership to the same Peer find the user in Node~Member Management and click the green Re-Issue widget.",
-			"hlpNodeMembershipAllTimeMembership":"<p>When a member is added to the network, the membership is stored regardless of membership revocation.<p>When a member is Added they are emailed set-up instructions.<p>To remove a member from the Trust Network, use Node~Revoke.  <p>To Reissue a previously revoked member search by username, email or contact number then click on the Reissue icon.<p>Email Address & Contact Number are editable.  Depending on this node configuration, email and contact number will need to be confirmed.",
-			"hlpNodeMembershipUsername":"<p>The USERNAME is used by the Member when accessing this service.  It must be locally unique and known to the Member. <p>Lower case letters and hyphens without spaces are valid.  All other special characters are invalid.<p>The USERNAME cannot be changed after it has been set.",
-			"hlpSourceNewNetworkNetworkName":"<p>Define a unique name on this domain for this network.  <p>The name does not need to be globally unique, only unique on this hosting and any hosting where it may later be transferred.<p>The name cannot contain spaces or special characters with the exception of the hyphen.<p>When the network is created the supporting files will be located at;<p>[this domain]/[network-name]/lead/<p>Every Node on the Trust Network will have this name in the URL.",
-			"hlpSourceNodeInformationDefaultPlatform":"<p>When a Peer claims membership of this Trust Network, they might do so with many services.<p>Each service verifies their own cryptographic pseudonym, which allows  bulk update of claims without peer authentication.<p>Members can add their own services when needed and these defaults only help members with set up.<p>Verifying services will publish their platform name, however it is usually their website address.",
-			"hlpSourceNetworkInformationSourceUrl":"<p>The SOURCE URL is needed to Add Nodes to the network.<p>To add a node, send them this URL.  They will reply with their Node-URL.<p>Confirm the Node by pasting the Node-URL into the “Source~Node Management” screen.<p>Both the Node and Source URLs can be shared publicly.",
-			"hlpSourceNodeManagementAuthorizedNodes":"<p>Nodes grant and revoke privilege to and from the Trust Network.<p>This Source grants and revokes privilege to and from the Nodes, so that the Trust Network can be formed.<p>If a Node has granted membership to Peers and that Node is removed from the network, these Peers are no longer part of the Trust Network.  It is therefore good practice to migrate Peers before removing Nodes. ",
-			"hlpSourceNodeManagementNodeUrl":"<p>To add a node enter the Node-URL, optionally give it a name and click Add.  To add multiple nodes comma separate the URLs.<p>To remove a node enter the Node-URL and click remove.",
-			"hlpSourceSecondaryNetworksSecondaryNetwork":"<p>If a node in your network is secondarily controlled by a different network, the requirement is defined here.<p>E.g. This network is global, however in a specific region a local government insisted that issuers follow regional laws, nodes operating in that region have a Secondary Network Requirement (SNR).<p>SNR nodes will be valid if and only if they are a member of all required secondary networks.<p><b>WARNING</b><p>If a node has active members, it is good practice to inform them of the requirement before it is imposed. This will give them time to obtain the privilege before it is formally required by the network."
-		}
+			  "hlpSourceNewNetworkRulebookURL": "<p>To add a rulebook URL, follow these steps:</p><p>1. Ensure you have a valid rulebook document in JSON format. If you do not have one, you can create it using the guidelines in the documentation.</p><p>2. Check if another Moderator offers the same rulebook. If so, obtain the URL of their rulebook document.</p><p>3. If you authored the rulebook, publish it on your website or any platform that allows file sharing. Ensure it's in JSON format and accessible via a URL.</p><p>4. Once you have the URL, enter it in the 'Rulebook URL' field.</p><p>Note: If the URL is invalid or the rulebook is not in JSON format, it cannot be added. Verify that the URL is correct and the rulebook is in the required format before proceeding.</p>. Once completed, use the steps above to add the rulebook URL.</p>",
+			  
+		  
+			  "hlpAdminAccessAdministratorAccounts": "<p>Adding an Administrator Account grants 'Assign' privileges to a trusted administrator of this Moderator.</p><p>Any user with 'Assign' privileges can grant/revoke membership in this Trust Network.</p><p>To add an administrator, enter the username and click Add.</p><p>The Super Administrator will then email the new Administrator with instructions.</p><p>Upon first login, the Administrator will be prompted to change their password.</p><p>The 'Primary Administrator' (the first added) can only:<ul><li>Add/Remove Secondary Administrators</li><li>Create Recovery Files</li><li>Transfer a Lead</li></ul></p><p>Secondary Administrators* can perform the remaining actions.</p>",
+			  
+			  "hlpTransferSourceUrl": "<p>Transfers the Lead to/from another Rulebook Node.</p><p>To transfer the Lead out (donor), enter the URL of the Destination Host and click Begin Transfer.</p><p>To transfer the Lead in (recipient), enter the Donor URL and click BEGIN TRANSFER.</p><p>It doesn’t matter which Moderator initiates the transfer first; however, both must request the transfer for it to succeed.</p><ul><li>Transfers must be completed within 24 hours of the first request to succeed.</li><li>The Lead will either succeed or fail without interrupting the Trust Network.</li></ul>",
+				  
+			  "hlpModeratorSourceAttachmentPublicName": "<p>Moderators are publicly identifiable, and the Public Name will be part of this Moderator’s Public Identifier.</p><p>The Moderator cannot be renamed.</p><p>The Public Name cannot contain spaces or special characters except hyphens.</p>",
+			  
+			  "hlpModeratorSourceAttachmentSourceUrl": "<p>Enter the current URL of the Lead. If the Lead is later transferred, this will be updated automatically.</p><p>Only one Lead can be attached to a Moderator.</p><p>To disconnect from a Lead, the Moderator must be reinstalled, which wipes all keys and membership.</p>",
+			  
+			  "hlpModeratorTokenManagementPresentationToken": "<p>Drag & drop or copy & paste the Presentation Token or a link to it.</p><p>Selecting Revoke will invalidate all the claims the peer has made since they joined.</p><p>To find the contact details linked to a token, use the Search button.</p>",
+					  
+			  "hlpSourceNewNetworkNetworkName": "<p>Define a unique name for this Trust Network on this domain.</p><p>The name only needs to be unique on this Node, and any Node where it may later be transferred.</p><p>The name cannot contain spaces or special characters, except for hyphens.</p><p>When the network is created, the supporting files will be located at:</p><p>[this domain]/static/lead/</p><p>Every Moderator on the Trust Network will include this name in the URL.</p>",
+			  
+			  "hlpSourceNetworkInformationSourceUrl": "<p>The Lead URL is required to add Moderators to the network.</p><p>To add a Moderator, send them this URL. They will reply with their Moderator URL.</p><p>Confirm the Moderator by pasting their Moderator-URL into the “Lead~Moderator Management” screen.</p><p>Both the Moderator and Lead URLs can be shared publicly.</p>",
+			  
+			  "hlpSourceModeratorManagementAuthorizedModerators": "<p>Moderators grant and revoke membership within the Trust Network.</p><p>This Lead grants and revokes privileges for Moderators, allowing the formation of the Trust Network.</p><p>If a Moderator has granted membership to Peers and that Moderator is removed from the network, those Peers are no longer part of the Trust Network. It's good practice to migrate Peers before removing Moderators.</p>",
+			  
+			  "hlpSourceModeratorManagementModeratorUrl": "<p>To add a Moderator, enter the Moderator-URL, optionally name it, and click Add. To add multiple Moderators, separate the URLs with commas.</p><p>To remove a Moderator, enter the Moderator-URL and click Remove.</p>",
+			  }	
 	}
 
 }

@@ -18,7 +18,6 @@ import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.node.ProgressReporter;
 import io.exonym.utils.storage.*;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.language.bm.Rule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -952,7 +951,7 @@ public class NodeManager {
 
 		URI networkUid = discoverNetworkUid();
 		URI ppaUid = URI.create(networkUid + ":pp");
-		URI cUid = UIDHelper.credentialSpecFromSourceUID(networkUid);
+		URI cUid = UIDHelper.credentialSpecFromLeadUID(networkUid);
 
 		PresentationPolicy ppa0 = x.openResource(ppaUid);
 		PresentationPolicyManager ppm = new PresentationPolicyManager(ppa0,
@@ -993,7 +992,7 @@ public class NodeManager {
 		
 		URI networkUid = discoverNetworkUid();
 		URI ppaUid = URI.create(networkUid + ":pp");
-		URI cUid = UIDHelper.credentialSpecFromSourceUID(networkUid);
+		URI cUid = UIDHelper.credentialSpecFromLeadUID(networkUid);
 
 		PresentationPolicy ppa0 = x.openResource(ppaUid);
 		PresentationPolicyManager ppm = new PresentationPolicyManager(ppa0,

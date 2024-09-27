@@ -82,11 +82,11 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		if (FileType.isCredentialSpecification(fileName)){
 			if (Rulebook.isSybil(fileName)){
 				if (Rulebook.isSybilMain(fileName)){
-					RulebookVerifier verifier = new RulebookVerifier(new URL("https://trust.exonym.io/sybil-rulebook.json"));
+					RulebookVerifier verifier = new RulebookVerifier(new URL(Rulebook.SYBIL_URL_MAIN));
 					return (T) BuildCredentialSpecification.buildSybilCredentialSpecification(verifier);
 
 				} else {
-					RulebookVerifier verifier = new RulebookVerifier(new URL("https://trust.exonym.io/sybil-rulebook-test.json"));
+					RulebookVerifier verifier = new RulebookVerifier(new URL(Rulebook.SYBIL_URL_TEST));
 					return (T) BuildCredentialSpecification.buildSybilCredentialSpecification(verifier);
 
 				}
@@ -135,8 +135,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		URI searchingFor = UIDHelper.fileNameToUid(fileName);
 		URI modUID = UIDHelper.computeModUidFromMaterialUID(searchingFor);
 		NetworkMapItem nmi = getNetworkMap().nmiForNode(modUID);
-		NodeVerifier modVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
-				nmi.getRulebookNodeURL().resolve("static"), false, false);
+		NodeVerifier modVerifier = NodeVerifier.openNode(nmi.getStaticURL0(), false, false);
 
 		CacheContainer cache = this.getCache();
 		TrustNetworkWrapper tnw = new TrustNetworkWrapper(modVerifier.getTargetTrustNetwork());

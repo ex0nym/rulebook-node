@@ -56,10 +56,11 @@ public class UrlHelper {
 		}
 	}
 
-	public static byte[] read(URL url) throws FileNotFoundException, IOException, UnknownHostException {
+	public static byte[] read(URL url) throws IOException {
 		logger.info("Trying to read:" + url);
 		URLConnection connection = url.openConnection();
 		connection.setConnectTimeout(5000);
+		connection.setReadTimeout(500);
 		try (BufferedInputStream br = new BufferedInputStream(connection.getInputStream())){
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			byte[] buffer = new byte[1024];

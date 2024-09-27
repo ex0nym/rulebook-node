@@ -1,8 +1,27 @@
-version: '3.8'
-
 services:
   sybil:
     container_name: sybil
+    build:
+      context: ../io.exonym.sybil/
+      dockerfile: ../io.exonym.sybil/Dockerfile
+    image: sybil:latest
+    depends_on:
+      - sybil-exonym
+    environment:
+      - HTTPS_METHOD=noredirect
+      - VIRTUAL_HOST=localhost
+      - VIRTUAL_PORT=8080
+    ports:
+      - "8079:8080"
+    volumes:
+      - ~/IdeaProjects/io.exonym.sybil/tessdata:/usr/local/share/tessdata
+    env_file:
+      - ../io.exonym.sybil/sybil.env
+    networks:
+      - rulebook_network
+
+  sybil-exonym:
+    container_name: sybil-exonym
     build:
       context: ./io.exonym.rulebook
       dockerfile: Dockerfile
@@ -11,17 +30,18 @@ services:
      - HTTPS_METHOD=noredirect
      - VIRTUAL_HOST=localhost
      - VIRTUAL_PORT=9084
-    ports: 
-      - 8080:8080
+    ports:
+      - "8080:8080"
     env_file:
         - io.exonym.rulebook/conf/e-vanilla-s.env
     volumes:
-      - ~/github/rulebook-node/io.exonym.rulebook/static:/var/www/html/static
+      - ~/github/rulebook-node/io.exonym.rulebook/static-sybil-exonym:/var/www/html/static
     networks:
       - rulebook_network
-
-  rulebook-node:
-    container_name: rulebook-node
+  rulebook-node0:
+    container_name: rulebook-node0
+    depends_on:
+      - sybil
     build:
       context: ./io.exonym.rulebook
       dockerfile: Dockerfile
@@ -31,14 +51,34 @@ services:
       - VIRTUAL_HOST=localhost
       - VIRTUAL_PORT=9084
     ports:
-      - 8081:8080
+      - "8081:8080"
     env_file:
       - io.exonym.rulebook/conf/e-vanilla-sx.env
     volumes:
-      - ~/github/rulebook-node/io.exonym.rulebook/static1:/var/www/html/static
+      - ~/github/rulebook-node/io.exonym.rulebook/static-rulebook-node0:/var/www/html/static
     networks:
       - rulebook_network
 
+  rulebook-node1:
+    container_name: rulebook-node1
+    depends_on:
+      - rulebook-node0
+    build:
+      context: ./io.exonym.rulebook
+      dockerfile: Dockerfile
+    image: rulebook:latest
+    environment:
+      - HTTPS_METHOD=noredirect
+      - VIRTUAL_HOST=localhost
+      - VIRTUAL_PORT=9084
+    ports:
+      - "8082:8080"
+    env_file:
+      - io.exonym.rulebook/conf/e-vanilla-x.env
+    volumes:
+      - ~/github/rulebook-node/io.exonym.rulebook/static-rulebook-node1:/var/www/html/static
+    networks:
+      - rulebook_network
 
   couchdb:
     container_name: couchdb
@@ -47,7 +87,7 @@ services:
       - COUCHDB_USER=${DB_USERNAME}
       - COUCHDB_PASSWORD=${DB_PASSWORD}
     ports:
-      - 5984:5984
+      - "5984:5984"
     volumes:
       - ~/github/rulebook-node/io.exonym.rulebook/couchdb/data:/opt/couchdb/data
     networks:

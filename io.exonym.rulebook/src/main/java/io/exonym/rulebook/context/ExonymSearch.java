@@ -26,17 +26,12 @@ import java.util.List;
 public class ExonymSearch {
 
     private static final Logger logger = LogManager.getLogger(ExonymSearch.class);
-
     private final HashMap<String, String> riToXi = new HashMap<>();
     private final HashMap<String, String> otherNyms = new HashMap<>();
     private final String r0;
-
     private final UnprotectedCouchRepository<ExoMatrix> repoExonym;
-
     private final String root;
-
     private final NetworkMapItemModerator myAdvocate;
-
     private final AbstractNetworkMap networkMap;
 
     /**
@@ -45,7 +40,7 @@ public class ExonymSearch {
      *
      *  .search() will execute a local database search and return ExonymResult
      *      if it returns null, no results are discovered.
-     *      otherwise; a list of hostUuids is returned.
+     *      otherwise; a list of modUids is returned.
      *
      *  .expand() will discover which rules are broken,
      *      who controls which rule,
@@ -62,7 +57,7 @@ public class ExonymSearch {
                            String root) throws Exception {
         if (expectedRules.isEmpty()){
             throw new UxException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR,
-                    "You haven't populated the rules for this advocate");
+                    "You haven't populated the rules for this mod");
 
         }
         this.repoExonym = repoExonym;
@@ -229,7 +224,7 @@ public class ExonymSearch {
                 unsettled = true;
 
             }
-            hosts.add(detail.getAdvocateUID());
+            hosts.add(detail.getModUID());
             if (detail.getLastViolationTime()!=null){
                 if (mostRecent.isBefore(detail.getLastViolationTime())){
                     mostRecent = detail.getLastViolationTime();

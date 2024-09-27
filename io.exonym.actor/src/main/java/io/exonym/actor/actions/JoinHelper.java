@@ -59,7 +59,7 @@ public class JoinHelper {
                                                                    String challengeB64) throws Exception {
         BuildPresentationPolicy bpp = new BuildPresentationPolicy(
                 URI.create("urn:io:exonym:join"), ex);
-        bpp.addPseudonym(SYBIL_ALIAS.toString(), true, BASE_ALIAS.toString());
+        bpp.addPseudonym(SYBIL_ALIAS.toString(), false, BASE_ALIAS.toString());
         ArrayList<String> rules = verifier.toRulebookUIDs();
         for (String rule : rules){
             bpp.addPseudonym(rule, true, null, BASE_ALIAS);

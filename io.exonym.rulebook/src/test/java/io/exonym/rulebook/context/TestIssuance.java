@@ -13,11 +13,11 @@ import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.lite.time.Timing;
-import io.exonym.rulebook.schema.IdContainer;
 import io.exonym.uri.UriDataType;
 import io.exonym.uri.UriEncoding;
 import io.exonym.utils.ExtractObject;
 import io.exonym.utils.RulebookVerifier;
+import io.exonym.utils.storage.IdContainer;
 import io.exonym.utils.storage.ImabAndHandle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,7 +76,7 @@ public class TestIssuance {
             external.setNetworkMapAndCache(new NetworkMapWeb(), cache);
 
             RulebookVerifier sybilRulebook = new RulebookVerifier(
-                    new URL("https://trust.exonym.io/sybil-rulebook.json"));
+                    new URL("https://trust.exonym.io/sybil-rulebook-test.json"));
 
             Rulebook rulebook = sybilRulebook.getRulebook();
             CredentialSpecification sybilCredSpec = BuildCredentialSpecification
@@ -85,22 +85,20 @@ public class TestIssuance {
             String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(sybilCredSpec);
             logger.debug(xml);
 
-            String rulebookHash = UIDHelper.stripPrefix(rulebook.getRulebookId());
+            String rulebookHash = UIDHelper.computeRulebookHashFromRulebookId(rulebook.getRulebookId());
 
-            URI sybilIssuerUID = URI.create(Namespace.URN_PREFIX_COLON
-                    + rulebook.getDescription().getName().toLowerCase() + ":"
-                    + "sybil:testnet:"
-                    + rulebookHash + ":" +
-                    UUID.randomUUID().toString().split("-")[0]
+            URI sybilIssuerUID = URI.create(Rulebook.SYBIL_MOD_UID_TEST + ":"
+                    + UUID.randomUUID().toString().split("-")[0]
                     + ":i");
 
 
 //            URI sybilIssuerUID = URI.create(Namespace.URN_PREFIX_COLON
-//                    +"sybil:testnet:" +
-//                    rulebookHash + ":" +
-//                    UUID.randomUUID().toString().split("-")[0]
-//                    + ":i"
-//            );
+//                    + "sybil:c30:testnet:"
+//                    + rulebookHash + ":"
+//                    + UUID.randomUUID().toString().split("-")[0]
+//                    + ":i");
+
+
             UIDHelper sybilHelper = new UIDHelper(sybilIssuerUID);
 
             sybilHelper.out();
@@ -134,10 +132,12 @@ public class TestIssuance {
             //
             //  Setup as issuer of rulebook
             //
-            RulebookVerifier rulebookRulebook = new RulebookVerifier(new URL("https://trust.exonym.io/sources-rulebook.json"));
+            RulebookVerifier rulebookRulebook = new RulebookVerifier(new URL("https://trust.exonym.io/leads-rulebook.json"));
 
             String rootIssuerUid = Namespace.URN_PREFIX_COLON + "badass:badass-lead:badass-mod:" +
-                    UIDHelper.computeRulebookHashUid(rulebookRulebook.getRulebook().getRulebookId());
+                    UIDHelper.computeRulebookHashUid(rulebookRulebook.getRulebook().getRulebookId()) + ":abcdef444:i";
+
+            logger.debug("IssuerUID = " + rootIssuerUid);
             UIDHelper rulebookHelper = new UIDHelper(rootIssuerUid);
             rulebookHelper.out();
 
@@ -199,8 +199,11 @@ public class TestIssuance {
                         issuerHelper.getCredentialSpec()));
 
         IssuanceMessageAndBoolean imabRb = issuerSecond.issueInit(vc,issuancePolicy1,store.getEncrypt(),URI.create(UUID.randomUUID().toString()));
+
         IssuanceMessage imRb = owner.issuanceStep(imabRb, store.getEncrypt());
+
         ImabAndHandle fin = issuerSecond.issueStep(imRb, store.getEncrypt());
+
         owner.issuanceStep(fin.getImab(), store.getEncrypt());
 
     }
@@ -258,14 +261,19 @@ public class TestIssuance {
         map.put(labels.get(0), Rulebook.SYBIL_CLASS_PERSON);
 
         BuildIssuancePolicy bip = new BuildIssuancePolicy(null, rulebook.computeCredentialSpecId(), issuerUid);
-        bip.addPseudonym(Namespace.URN_PREFIX_COLON + "sybil", true, "urn:io:exonym", null);
+        String sybil = Namespace.URN_PREFIX_COLON + "sybil";
+        bip.addPseudonym(sybil, true, sybil, "urn:io:exonym");
 
         IssuancePolicy issuancePolicy = bip.getIssuancePolicy();
 
 
         URI context0 = URI.create("urn:" + UUID.randomUUID());
         IssuanceMessageAndBoolean imab0 = issuer.issueInit(claim, issuancePolicy, store.getEncrypt(), context0);
+        logger.debug(IdContainer.convertObjectToXml(imab0));
+
         IssuanceMessage message0 = owner0.issuanceStep(imab0, store.getEncrypt());
+        logger.debug(IdContainer.convertObjectToXml(message0));
+
         ImabAndHandle imabAndHandle0 = issuer.issueStep(message0, store.getEncrypt());
         owner0.issuanceStep(imabAndHandle0.getImab(), store.getEncrypt());
 

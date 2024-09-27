@@ -169,6 +169,12 @@ public class RulebookVerifier {
         }
     }
 
+    public void extendRulebook(RulebookItem item){
+        // verify rule.
+        this.rulebook.getRuleExtensions().add(item);
+
+    }
+
     // TODO - Tech Debt.
     // TODO - we need a decent rulebook that tests all the possible cases, but from creation to display.
     private RulebookItem executeSwap(RulebookItem rule, String origin, String[] fullPhrase) {

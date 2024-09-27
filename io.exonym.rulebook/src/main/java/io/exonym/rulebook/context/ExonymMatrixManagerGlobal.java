@@ -37,40 +37,41 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
 
     // host becomes corrupt
 
-    private final NetworkMapItemModerator targetAdvocate;
+    private final NetworkMapItemModerator targetMod;
     private final String nibble6;
     private final AsymStoreKey signatureKey = AsymStoreKey.blank();
-    private final NetworkMapItemModerator myAdvocate;
+    private final NetworkMapItemModerator myMod;
 
 
     private final String root;
 
-    public ExonymMatrixManagerGlobal(NetworkMapItemModerator targetAdvocate, NetworkMapItemModerator nmiaForMyAdvocate, String nibble6, String root) throws Exception {
-        this.targetAdvocate=targetAdvocate;
+    public ExonymMatrixManagerGlobal(NetworkMapItemModerator targetMod,
+                                     NetworkMapItemModerator nmiaForMyMod, String nibble6, String root) throws Exception {
+        this.targetMod =targetMod;
         this.nibble6=nibble6;
-        this.myAdvocate = nmiaForMyAdvocate;
+        this.myMod = nmiaForMyMod;
         this.root=root;
-        this.signatureKey.assembleKey(targetAdvocate.getPublicKeyB64());
+        this.signatureKey.assembleKey(targetMod.getPublicKeyB64());
 
     }
 
     protected ExonymMatrix openUncontrolledList(String x0) throws Exception {
         try {
             String path = computeN6PathToFile(nibble6.substring(0, 3), nibble6, this.yList);
-            String target = primaryEndPoint(this.myAdvocate.getStaticURL0().toString(), path);
+            String target = primaryEndPoint(this.myMod.getStaticURL0().toString(), path);
             this.matrixByteData = UrlHelper.read(new URL(target));
-            openExonymMatrix(myAdvocate.getStaticURL0().toString(), x0, this.xList, this.root);
+            openExonymMatrix(myMod.getStaticURL0().toString(), x0, this.xList, this.root);
             return matrix;
 
         } catch (IOException e) {
-            throw new HubException("No Y-List Matrix for " + x0 + " on " + this.targetAdvocate.getNodeUID());
+            throw new HubException("No Y-List Matrix for " + x0 + " on " + this.targetMod.getNodeUID());
 
         }
     }
 
     protected ExonymDetailedResult detailedResult(String x0) throws Exception {
         // discover x-list
-        openExonymMatrix(targetAdvocate.getStaticURL0().toString(), x0, this.xList, this.root);
+        openExonymMatrix(targetMod.getStaticURL0().toString(), x0, this.xList, this.root);
         ExonymMatrixRow row = matrix.findExonymRow(x0);
         ArrayList<String> rules = matrix.getRuleUrns();
         matrix = null;
@@ -79,7 +80,7 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
         ArrayList<Violation> violations = row.getViolations();
 
         ExonymDetailedResult result = new ExonymDetailedResult();
-        result.setAdvocateUID(this.targetAdvocate.getNodeUID());
+        result.setModUID(this.targetMod.getNodeUID());
         analyseViolations(violations, result);
         analyseRow(row, rules, result);
         return result;
@@ -112,7 +113,7 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
             result.setQuit(true);
 
         } else {
-            // If they've not quit, and there are no unsettled violations, then they are a member
+            // If they've not quit, and there are no unsettled violations, then they've already joined
             if (!result.isUnsettled()){
                 ArrayList<String> cont = result.getActiveControlledRules();
                 ArrayList<String> uncont = result.getActiveUncontrolledRules();

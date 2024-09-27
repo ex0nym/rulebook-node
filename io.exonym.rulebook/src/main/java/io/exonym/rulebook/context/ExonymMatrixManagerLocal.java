@@ -19,18 +19,20 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
     /*
-
     /moderator/exox/
     /moderator/exoy/
-
 
     <00-2-hex>.xml = signatures on all 00, 01, etc...
     <0000-4-hex>.json = exonyms on all 0000, 0001, etc...
@@ -48,41 +50,31 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
     //*/
 
-
     private static final Logger logger = LogManager.getLogger(ExonymMatrixManagerLocal.class);
     private final NetworkMapItemModerator myNmia;
     private final ArrayList<String> ruleUrns;
     private AsymStoreKey signatureKey = null;
 
-    private SFTPClient sftp0 = null;
-    // private SFTPClient sftp1 = null;
-
     private boolean createdPoke = false;
     private boolean createdSignature = false;
     private boolean createdMatrix = false;
 
-    private SFTPLogonData sftpLogonData;
-
     private final String root;
 
     private final AbstractIdContainer advocateContainer;
-    private final String staticFolder;
 
     public ExonymMatrixManagerLocal(AbstractIdContainer advocateContainer,
                                     ArrayList<String> ruleUrns, NetworkMapItemModerator myNmia,
-                                    SFTPLogonData logonData, String root,
-                                    String staticFolder) throws Exception {
+                                    String root) throws Exception {
         try {
             this.advocateContainer =advocateContainer;
             this.ruleUrns = ruleUrns;
             this.myNmia = myNmia;
-            this.sftpLogonData = logonData;
             this.root = root;
-            this.staticFolder=staticFolder;
 
             logger.debug("Initializing-----------------------");
             logger.debug("static0 \t\t" + myNmia.getStaticURL0());
-            logger.debug("advocateUID \t" + myNmia.getNodeUID());
+            logger.debug("modUID \t" + myNmia.getNodeUID());
             logger.debug("rulebookNodeURL \t\t" + myNmia.getRulebookNodeURL());
             logger.debug("-----------------------------------");
 
@@ -297,30 +289,30 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
     }
 
     private void write(String xOrYList, String pokeString, String n3, String n6) throws Exception {
-        activateSftpOut();
-        String r0 = staticFolder;
-        String name = "/" + myNmia.getLeadName() + "/" + Const.MODERATOR;
+        Path pokePath0 = Path.of(Const.PATH_OF_STATIC, Const.MODERATOR,
+                computePokePathToFile(xOrYList));
 
-        String pokePath0 = r0 + name + computePokePathToFile(xOrYList);
-        String n3Path0 = r0 + name + computeN3PathToFile(matrix.getNibble3(), xOrYList);
-        String n6Path0 = r0 + name + computeN6PathToFile(matrix.getNibble3(), matrix.getNibble6(), xOrYList);
+        Path n3Path0 = Path.of(Const.PATH_OF_STATIC, Const.MODERATOR,
+                computeN3PathToFile(matrix.getNibble3(), xOrYList));
+
+        Path n6Path0 = Path.of(Const.PATH_OF_STATIC, Const.MODERATOR,
+                computeN6PathToFile(matrix.getNibble3(), matrix.getNibble6(), xOrYList));
 
         logger.debug(pokePath0);
         logger.debug(n3Path0);
         logger.debug(n6Path0);
 
-//        String testFile = "<html><body>identity is control</body></html>";
-//        put(sftp0, r0 + name + xOrYList + "/" + matrix.getNibble3() + "/index.html", testFile);
-//        logger.debug("finished test primary");
-//        put(sftp1, r1 + name + xOrYList + "/" + matrix.getNibble3() + "/index.html", testFile);
-//        logger.debug("finished test failover");
+        writeLocal(pokePath0, pokeString);
+        writeLocal(n3Path0, n3);
+        writeLocal(n6Path0, n6);
 
-        put(sftp0, pokePath0, pokeString);
-//        put(sftp1, pokePath1, pokeString);
-        put(sftp0, n3Path0, n3);
-//        put(sftp1, n3Path1, n3);
-        put(sftp0, n6Path0, n6);
-//        put(sftp1, n6Path1, n6);
+    }
+
+    private void writeLocal(Path path, String contents) throws IOException {
+        Files.createDirectories(path.getParent());
+        Files.write(path, contents.getBytes(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
 
     }
 
@@ -337,18 +329,6 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
         }
     }
 
-    private void activateSftpOut() throws Exception {
-        if (sftp0 ==null || !sftp0.isActive()) {
-            sftp0 = new SFTPClient(this.sftpLogonData);
-            sftp0.connect();
-
-        }
-        /* if (sftp1 ==null || !sftp1.isActive()) {
-            sftp1 = new SFTPClient(props.getSecondarySftpCredentials());
-            sftp1.connect();
-
-        } //*/
-    }
 
     private void initKey() throws Exception {
         if (this.signatureKey==null){

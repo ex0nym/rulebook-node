@@ -9,13 +9,11 @@ import java.net.URI;
 
 @XmlType(name="NetworkParticipant", namespace = Namespace.EX)
 public class NetworkParticipant {
-	
 	private String trustNetworkName;
 	private URI staticNodeUrl0;
 	private URI rulebookNodeUrl;
 	private URI broadcastAddress;
 	private URI nodeUid;
-
 	private URI lastIssuerUID;
 	private String lastUpdateTime;
 	private String region;

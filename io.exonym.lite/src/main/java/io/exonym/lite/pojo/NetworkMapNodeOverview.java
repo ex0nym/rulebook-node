@@ -23,7 +23,7 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
     public static final String LOCAL_STATE_LEAD_AND_MODERATOR = "LOCAL_STATE_LEAD_AND_MODERATOR";
     public static final String LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR = "LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR";
 
-    private ConcurrentHashMap<URI, NetworkMapItemLead> sources = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<URI, NetworkMapItemLead> leads = new ConcurrentHashMap<>();
     private String lastRefresh = null;
     private String currentLocalState = "UNKNOWN";
     private String currentGlobalState = "UNKNOWN";
@@ -46,12 +46,12 @@ public class NetworkMapNodeOverview extends AbstractCouchDbObject {
     }
 
     public ConcurrentHashMap<URI, NetworkMapItemLead> getLeads() {
-        return sources;
+        return leads;
 
     }
 
-    public void setLeads(ConcurrentHashMap<URI, NetworkMapItemLead> sources) {
-        this.sources = sources;
+    public void setLeads(ConcurrentHashMap<URI, NetworkMapItemLead> leads) {
+        this.leads = leads;
 
     }
 

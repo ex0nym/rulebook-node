@@ -25,12 +25,12 @@ import java.rmi.UnmarshalException;
 import java.util.HashMap;
 
 @WebServlet("/issue")
-public class IssuanceServlet extends HttpServlet {
+public class IssuanceSybilServlet extends HttpServlet {
 
     public static final String ATT_CONTEXT = "context";
     public static final String ATT_TOKEN = "token";
     
-    private static final Logger logger = LogManager.getLogger(IssuanceServlet.class);
+    private static final Logger logger = LogManager.getLogger(IssuanceSybilServlet.class);
     
 
     // ISSUER - INIT (Step 1)
@@ -47,9 +47,11 @@ public class IssuanceServlet extends HttpServlet {
             RulebookNodeProperties props = RulebookNodeProperties.instance();
             PassStore store = new PassStore(props.getNodeRoot(), false);
             if (in.containsKey(ATT_TOKEN)){
+                // Step 2
                 issuanceStep(in, mmw, resp);
 
             } else if (in.containsKey(ATT_CONTEXT)){
+                // Step 1
                 initIssuance(in, mmw, store, resp);
 
             }
@@ -93,9 +95,9 @@ public class IssuanceServlet extends HttpServlet {
     }
 
     private void respond(IssuanceMessageAndBoolean imab, HttpServletResponse resp) throws Exception {
-        String issue0 = Base64.encodeBase64String(
-                IdContainerJSON.convertObjectToXml(imab).getBytes(StandardCharsets.UTF_8)
-        );
+        String xml = IdContainerJSON.convertObjectToXml(imab);
+        logger.info(xml);
+        String issue0 = Base64.encodeBase64String(xml.getBytes(StandardCharsets.UTF_8));
         JsonObject o = new JsonObject();
         o.addProperty("imab", issue0);
         WebUtils.respond(resp, o);

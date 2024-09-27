@@ -79,7 +79,6 @@ public class PraIn extends ModelCommandProcessor {
                     Object obj = checkSignature(xml, notify);
 
                     if (obj instanceof PresentationPolicy){
-                        // todo update trust network
                         updateLocalLeadData((PresentationPolicy)obj, xml,
                                 pathToLocalFolder, notify.getPpSigB64());
                         cache.store(obj);
@@ -172,6 +171,10 @@ public class PraIn extends ModelCommandProcessor {
                                      Path pathToLocalFolder, String sig) {
 
         try {
+            // todo add new NMI for node
+
+            // todo schedule add new node for an added moderator
+
             URI uid = obj.getPolicyUID();
             Path sigXmlToUpdate = pathToLocalFolder.resolve(
                     Const.SIGNATURES_XML);
@@ -280,8 +283,6 @@ public class PraIn extends ModelCommandProcessor {
         return Path.of(Const.PATH_OF_NETWORK, localFolder, (isLead ? Const.LEAD : Const.MODERATOR));
 
     }
-
-
 
 
     @Override

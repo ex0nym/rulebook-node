@@ -3,11 +3,14 @@ package io.exonym.actor.actions;
 import com.sun.xml.ws.util.ByteArrayBuffer;
 import eu.abc4trust.xml.*;
 import io.exonym.abc.util.JaxbHelper;
+import io.exonym.abc.util.UidType;
 import io.exonym.actor.VerifiedClaim;
+import io.exonym.helpers.BuildIssuancePolicy;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.helpers.BuildCredentialSpecification;
+import io.exonym.lite.pojo.Namespace;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.CryptoUtils;
@@ -19,14 +22,16 @@ import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
 import java.net.URI;
+import java.rmi.server.UID;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+// TODO This needs a rewrite specifically as a Sybil Onboarding process.  It's awful.
 public class MembershipManager {
 	
 	private static final Logger logger = LogManager.getLogger(MembershipManager.class);
 
-	private final ConcurrentHashMap<String, IssuanceData> contextToIssuanceData = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, SybilIssuanceData> contextToIssuanceData = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, RecipientData> contextToRecipientData = new ConcurrentHashMap<>();
 	private final String username;
 	private final NodeManager nodeManager;
@@ -36,6 +41,16 @@ public class MembershipManager {
 	private final URI lastIssuerUid;
 	private final IdContainerJSON xIssuer;
 
+	private ExonymIssuer issuer = null;
+	private SybilIssuanceData issuanceData = null;
+
+	private CredentialSpecification sybilC = null;
+
+	//
+	// This appears to only be used for Sybil onboarding.
+	// I'm somewhat confused and it appears to be an artifact
+	// left over from when the SSI containers were hosted.
+	//
 	public MembershipManager(String networkName) throws Exception {
 		nodeManager = new NodeManager(networkName);
 		trustNetwork = nodeManager.openMyTrustNetwork(false);
@@ -64,13 +79,20 @@ public class MembershipManager {
 
 
 	public IssuanceMessageAndBoolean ssiIssuerInit(String context, String sybilClass, PassStore store) throws Exception {
-		ExonymIssuer issuer = new ExonymIssuer(xIssuer);
-		issuer.openContainer(store.getDecipher());
-		IssuanceData issuanceData = new IssuanceData(context, sybilClass);
-		issuanceData.setExonymIssuer(issuer);
+		logger.debug("Calling ssiIssuerInit");
+
+		if (issuer == null){
+			logger.debug("Calling ssiIssuerInit - it was null");
+			issuer = new ExonymIssuer(xIssuer);
+			issuer.openContainer(store.getDecipher());
+			sybilC = xIssuer.openResource(URI.create(Rulebook.SYBIL_RULEBOOK_UID_TEST + ":c"));
+
+		}
+		issuanceData = new SybilIssuanceData(context, sybilClass, sybilC);
 		issuanceData.setStore(store);
 		this.contextToIssuanceData.put(context, issuanceData);
-		return issuer.issueInit(issuanceData.claim, issuanceData.ip, store.getEncrypt(), URI.create(context.toString()));
+		return issuer.issueInit(issuanceData.claim, issuanceData.ip,
+				store.getEncrypt(), URI.create(context.toString()));
 
 	}
 
@@ -78,9 +100,8 @@ public class MembershipManager {
 		if (context==null){
 			throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "No Context defined");
 		}
-		IssuanceData issuanceData = this.contextToIssuanceData.get(context);
+		SybilIssuanceData issuanceData = this.contextToIssuanceData.get(context);
 		if (issuanceData!=null){
-			ExonymIssuer issuer = issuanceData.getExonymIssuer();
 			return issuer.issueStep(im, issuanceData.getStore().getEncrypt());
 
 		} else {
@@ -153,7 +174,7 @@ public class MembershipManager {
 		
 		VerifiedClaim claim = new VerifiedClaim(credSpec);
 		
-		ExonymIssuer issuer = new ExonymIssuer(xIssuer);
+		issuer = new ExonymIssuer(xIssuer);
 		issuer.openContainer(nodePassStore.getDecipher());
 		
 		// ISSUER - INIT (Step 1)
@@ -221,9 +242,12 @@ public class MembershipManager {
 					ins.openResourceIfNotLoaded(insUid);
 					
 				} catch (Exception e) {
-					throw new UxException("'"
-							+ x.getUsername() + "' does not own the inspector parameters "
-							+ insUid, e);
+					URI modUid = UIDHelper.computeModUidFromMaterialUID(insUid);
+					String modName = UIDHelper.computeModNameFromModUid(modUid);
+					String leadName = UIDHelper.computeLeadNameFromModOrLeadUid(modUid);
+					throw new UxException("Moderated by: "
+							+ leadName.toUpperCase()
+							+ "~" + modName.toUpperCase(), e);
 
 				}
 			}
@@ -241,13 +265,13 @@ public class MembershipManager {
 					String ra = IdContainerJSON.stripUidSuffix(cit.getIssuerParametersUID(), 1);
 					URI raUid = URI.create(NamespaceMngt.URN_PREFIX_COLON + ra + ":ra");
 					BigInteger handle = new BigInteger(discoverRevocationHandle(token, store));
-					ExonymIssuer i = new ExonymIssuer(xIssuer);
-					i.openContainer(store.getDecipher());
+					issuer = new ExonymIssuer(xIssuer);
+					issuer.openContainer(store.getDecipher());
 					logger.info("----------- Revocation Request for RA UID");
 					logger.info("raUid: "   + raUid);
 					logger.info("-----------");
-					RevocationInformation ri = i.revokeCredential(raUid, handle, store.getDecipher());
-					i.clearStale();
+					RevocationInformation ri = issuer.revokeCredential(raUid, handle, store.getDecipher());
+					issuer.clearStale();
 					return publishedRevocationData(ri, store);
 					
 				} else {
@@ -333,33 +357,27 @@ public class MembershipManager {
 		}
 	}
 
-	private class IssuanceData {
+	private class SybilIssuanceData {
 
 		private final URI iUid;
-		private final CredentialSpecification c;
 		private final IssuancePolicy ip;
-		private final IssuerParameters i;
-		private final RevocationAuthorityParameters ra;
-		private final RevocationInformation rai;
 		private final VerifiedClaim claim;
 		private final String contextId;
-		private ExonymIssuer exonymIssuer = null;
-		private ExonymOwner exonymOwner = null;
 		private PassStore store = null;
 
-		public IssuanceData(String contextId, String sybilClass) throws Exception {
+		public SybilIssuanceData(String contextId, String sybilClass, CredentialSpecification sybilC) throws Exception {
 			this.contextId = contextId;
 			iUid = lastIssuerUid;
 			UIDHelper helper = new UIDHelper(iUid);
 
-			c = xIssuer.openResource(helper.getCredentialSpecFileName());
-			ip = xIssuer.openResource(helper.getIssuancePolicyFileName());
-			i = xIssuer.openResource(helper.getIssuerParametersFileName());
-			ra = xIssuer.openResource(helper.getRevocationAuthorityFileName());
-			rai = xIssuer.openResource(helper.getRevocationInformationFileName());
+			BuildIssuancePolicy bip = new BuildIssuancePolicy(null, helper.getCredentialSpec(), iUid);
+			String sybil = Namespace.URN_PREFIX_COLON + "sybil";
+			bip.addPseudonym(sybil, true, sybil, "urn:io:exonym");
+			ip = bip.getIssuancePolicy();
 
-			claim = new VerifiedClaim(c);
+			claim = new VerifiedClaim(sybilC);
 			populateSybilClaim(claim, sybilClass);
+
 		}
 
 		private void populateSybilClaim(VerifiedClaim claim, String sybilClass) {
@@ -370,14 +388,6 @@ public class MembershipManager {
 			}
 		}
 
-		public ExonymIssuer getExonymIssuer() {
-			return exonymIssuer;
-		}
-
-		public void setExonymIssuer(ExonymIssuer exonymIssuer) {
-			this.exonymIssuer = exonymIssuer;
-		}
-
 		public PassStore getStore() {
 			return store;
 		}
@@ -386,12 +396,5 @@ public class MembershipManager {
 			this.store = store;
 		}
 
-		public ExonymOwner getExonymOwner() {
-			return exonymOwner;
-		}
-
-		public void setExonymOwner(ExonymOwner exonymOwner) {
-			this.exonymOwner = exonymOwner;
-		}
 	}
 }

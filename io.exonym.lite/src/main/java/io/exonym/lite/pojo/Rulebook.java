@@ -7,6 +7,9 @@ import java.util.UUID;
 public class Rulebook extends SerialErrorHandling {
 
 
+    public static final String SYBIL_URL_MAIN = "https://trust.exonym.io/sybil-rulebook.json";
+    public static final String SYBIL_URL_TEST = "https://trust.exonym.io/sybil-rulebook-test.json";
+
     public static final String SYBIL_RULEBOOK_NAME = "sybil";
     public static final String SYBIL_LEAD = "the-cyber";
     public static final String SYBIL_MOD_TEST = "thirty-test";

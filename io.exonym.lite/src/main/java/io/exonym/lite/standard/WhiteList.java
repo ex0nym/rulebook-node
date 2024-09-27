@@ -49,21 +49,8 @@ public class WhiteList {
 		return true; 
 	}
 
-	public static boolean isModeratorUid(URI uid){
-		return isModeratorUid(uid.toString());
-
-	}
-	public static boolean isLeadUid(URI uid){
-		return isLeadUid(uid.toString());
-
-	}
-	public static boolean isLeadUrl(String url){
-		return (url!=null && url.matches(".*/lead\\/?"));
-
-	}
-
-	public static boolean isUnreliableUrl(String url){
-		return (url!=null && url.matches("/^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$/"));
+	public static boolean isRulebookUid(URI uid){
+		return isRulebookUid(uid.toString());
 
 	}
 
@@ -76,22 +63,34 @@ public class WhiteList {
 
 	}
 
+	public static boolean isModeratorUid(URI uid){
+		return isModeratorUid(uid.toString());
+	}
+
 	public static boolean isModeratorUid(String uid){
-		if (uid==null){
-			return false;
-
-		}
-		return uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][\\w-]*[:][0-9a-f]{64}");
+		return uid!=null && uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][\\w-]*[:][0-9a-f]{64}");
 
 	}
+
+	public static boolean isLeadUid(URI uid){
+		return isLeadUid(uid.toString());
+	}
+
 	public static boolean isLeadUid(String uid){
-		if (uid==null){
-			return false;
-
-		}
-		return uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][0-9a-f]{64}");
+		return uid!=null && uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][0-9a-f]{64}");
 
 	}
+
+	public static boolean isUnreliableUrl(String url){
+		return (url!=null && url.matches("/^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$/"));
+
+	}
+
+	public static boolean isLeadUrl(String url){
+		return (url!=null && url.matches(".*/lead\\/?"));
+
+	}
+
 
 	public static boolean databaseUrl(String url){
 		return (url==null ? null : url.matches("jdbc:mysql://[a-z_]*:[\\d]{4}/[a-z_]*"));

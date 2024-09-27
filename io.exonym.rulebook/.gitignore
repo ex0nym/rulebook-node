@@ -5,4 +5,6 @@
 /test
 *env
 *.zip
-/static/
+/static-rulebook-node0
+/static-rulebook-node1
+/static-sybil-exonym

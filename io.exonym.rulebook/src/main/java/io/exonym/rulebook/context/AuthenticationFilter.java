@@ -97,7 +97,8 @@ public class AuthenticationFilter implements Filter {
     }
 
     private void testFileWrite() throws IOException {
-        Path writeLocation = Path.of("/var", "www", "html", "static", CryptoUtils.computeSha256HashAsHex(UUID.randomUUID().toString()));
+        Path writeLocation = Path.of("/var", "www", "html", "static",
+                CryptoUtils.computeSha256HashAsHex(UUID.randomUUID().toString()));
         Files.createDirectories(writeLocation);
         Path filePath = writeLocation.resolve("test.json");
         Files.write(filePath,

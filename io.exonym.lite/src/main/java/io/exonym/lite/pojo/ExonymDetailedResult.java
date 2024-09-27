@@ -14,7 +14,7 @@ public class ExonymDetailedResult {
     boolean quit = false;
     private String unsettledRuleId = null;
     private int offences;
-    private URI advocateUID;
+    private URI modUID;
     private DateTime lastViolationTime;
     private final ArrayList<String> activeControlledRules = new ArrayList<>();
     private final ArrayList<String> activeUncontrolledRules = new ArrayList<>();
@@ -64,12 +64,12 @@ public class ExonymDetailedResult {
         this.offences = offences;
     }
 
-    public URI getAdvocateUID() {
-        return advocateUID;
+    public URI getModUID() {
+        return modUID;
     }
 
-    public void setAdvocateUID(URI advocateUID) {
-        this.advocateUID = advocateUID;
+    public void setModUID(URI modUID) {
+        this.modUID = modUID;
     }
 
     public DateTime getLastViolationTime() {

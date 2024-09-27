@@ -28,6 +28,7 @@ import org.joda.time.DateTime;
 
 import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -119,17 +120,19 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     }
 
     private void defineListeners() throws UxException {
-        ArrayList<URI> sources = new ArrayList<>(allLeads.getLeads().keySet());
-        String rh = UIDHelper.computeRulebookHashUid(
-                allLeads.getThisModeratorLeadUID());
+        ArrayList<URI> leads = new ArrayList<>(allLeads.getLeads().keySet());
+        String rh = UIDHelper.computeRulebookHashUid(allLeads.getThisModeratorLeadUID());
 
         if (rh!=null){
             HashSet<URI> listenTo = allLeads.getListeningToLeads();
-            for (URI uri : sources) {
+            for (URI uri : leads) {
+                logger.info("Eval Lead " + uri);
                 if (uri.toString().contains(rh)){
+                    logger.info("Adding Lead " + rh);
                     listenTo.add(uri);
 
                 } else if (Rulebook.isSybil(uri)){
+                    logger.info("Adding Lead " + uri);
                     listenTo.add(uri);
 
                 }
@@ -157,7 +160,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         }
     }
 
-    private void localStateDefinition(NetworkMapNodeOverview allSources) {
+    private void localStateDefinition(NetworkMapNodeOverview allLeads) {
         try {
             CouchRepository<NodeData> repo = CouchDbHelper.repoNodeData();
             ArrayList<String> orGate = new ArrayList<>();
@@ -170,39 +173,39 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                 local.put(n.getType(), n);
 
             }
-            NodeData host = local.get(NodeData.TYPE_MODERATOR);
-            NodeData source = local.get(NodeData.TYPE_LEAD);
-            if (host!=null){
-                allSources.setModeratorUID(host.getNodeUid());
-                URI sourceUuid = UIDHelper.computeLeadUidFromModUid(host.getNodeUid());
-                allSources.setThisModeratorLeadUID(sourceUuid);
-                allSources.setLatestRevocationInformationHash(host.getLastRAIHash());
+            NodeData mod = local.get(NodeData.TYPE_MODERATOR);
+            NodeData lead = local.get(NodeData.TYPE_LEAD);
+            if (mod!=null){
+                allLeads.setModeratorUID(mod.getNodeUid());
+                URI sourceUuid = UIDHelper.computeLeadUidFromModUid(mod.getNodeUid());
+                allLeads.setThisModeratorLeadUID(sourceUuid);
+                allLeads.setLatestRevocationInformationHash(mod.getLastRAIHash());
 
-            } if (source!=null){
-                allSources.setThisNodeLeadUID(source.getNodeUid());
-                allSources.setLatestPresentationPolicyHash(source.getLastPPHash());
+            } if (lead!=null){
+                allLeads.setThisNodeLeadUID(lead.getNodeUid());
+                allLeads.setLatestPresentationPolicyHash(lead.getLastPPHash());
 
             }
-            if (host!=null && source!=null){
+            if (mod!=null && lead!=null){
                 logger.debug(
                         NetworkMapNodeOverview.LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR + " : "
-                                + source.getNodeUid() + " " + host.getSourceUid());
+                                + lead.getNodeUid() + " " + mod.getSourceUid());
 
-                if (source.getNodeUid().equals(host.getSourceUid())){
-                    allSources.setCurrentLocalState(
+                if (lead.getNodeUid().equals(mod.getSourceUid())){
+                    allLeads.setCurrentLocalState(
                             NetworkMapNodeOverview.LOCAL_STATE_LEAD_AND_MODERATOR);
 
                 } else {
-                    allSources.setCurrentLocalState(
+                    allLeads.setCurrentLocalState(
                             NetworkMapNodeOverview.LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR);
 
                 }
-            } else if (host!=null){
-                allSources.setCurrentLocalState(
+            } else if (mod!=null){
+                allLeads.setCurrentLocalState(
                         NetworkMapNodeOverview.LOCAL_STATE_MODERATOR);
 
-            } else if (source!=null){
-                allSources.setCurrentLocalState(
+            } else if (lead!=null){
+                allLeads.setCurrentLocalState(
                         NetworkMapNodeOverview.LOCAL_STATE_LEAD);
 
             } else {
@@ -210,7 +213,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
             }
         } catch (NoDocumentException e) {
-            allSources.setCurrentLocalState(NetworkMapNodeOverview.LOCAL_STATE_UNDEFINED);
+            allLeads.setCurrentLocalState(NetworkMapNodeOverview.LOCAL_STATE_UNDEFINED);
 
         } catch (Exception e) {
             logger.error("Unexpected Error - Failed to Define Local State", e);
@@ -270,8 +273,10 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
     }
 
+    // Defines the nodes status on the large network.
     protected void globalStateDefinition(NetworkMapNodeOverview allLeads) {
         logger.info("Refreshing NetworkMap");
+
         try {
             TrustNetwork t = openLeadSet(allLeads);
             TrustNetworkWrapper tnw = new TrustNetworkWrapper(t);
@@ -432,13 +437,13 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
         for (NetworkParticipant participant : tnw.getAllParticipants()) {
             try {
-                NetworkMapItemLead nmis = (NetworkMapItemLead) updateItem(participant, true);
-                leads.put(nmis.getLeadUID(), nmis);
+                NetworkMapItemLead nmil = (NetworkMapItemLead) updateItem(participant, true);
+                leads.put(nmil.getLeadUID(), nmil);
                 if (participant.getNodeUid().toString().equals(thisModeratorUID)){
                     isModeratorAddedToLead = true;
                 }
-                logger.debug(nmis.getNodeUID() + " " + thisNodesLead);
-                if (nmis.getNodeUID().equals(thisNodesLead)){
+                logger.debug(nmil.getNodeUID() + " " + thisNodesLead);
+                if (nmil.getNodeUID().equals(thisNodesLead)){
                     isLeadAdded = true;
 
                 }
@@ -481,8 +486,8 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                 .getTrustNetwork().getNodeInformation().getStaticLeadUrl0() : null;
 
 
-        for (URI sourceUID : leads.keySet()){
-            NetworkMapItem lead = leads.get(sourceUID);
+        for (URI leadUID : leads.keySet()){
+            NetworkMapItem lead = leads.get(leadUID);
             logger.info("Working Source: " + lead.getNodeUID() + " " + lead);
             TrustNetwork tn = null;
             byte[] pkBytes = null;
@@ -546,16 +551,20 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
                     }
                 } catch (NoDocumentException e) {
-                    logger.warn("CREATING NEW NetworkMapItemSource() " + sourceUID);
+                    logger.warn("CREATING NEW NetworkMapItemSource() " + leadUID);
                     NetworkMapItemLead n = new NetworkMapItemLead();
-                    n.setNodeUID(sourceUID);
+                    n.setNodeUID(leadUID);
+                    n.setPublicKeyB64(pkBytes);
                     repo.create(n);
                     refreshNodes(tn, pkBytes, allLeads, q, repo);
 
                 }
 
+            } catch (SocketTimeoutException e) {
+                logger.info("Lead temporarily unavailable " + lead.getNodeUID());
+
             } catch (Exception e) {
-                logger.info("Failed to Find Source " + lead.getNodeUID());
+                logger.info("Lead Unavailable: " + lead.getNodeUID());
                 logger.error("Error", e);
 
             }
@@ -569,20 +578,20 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
 
         URI sourceUid = tnSource.getNodeInformation().getNodeUid();
-        NetworkMapItemLead nmis = repoSource.read(queryForSource).get(0);
+        NetworkMapItemLead nmil = repoSource.read(queryForSource).get(0);
 
         logger.debug("Refreshing Node " + sourceUid);
         TrustNetworkWrapper tnw = new TrustNetworkWrapper(tnSource);
         Collection<NetworkParticipant> moderators = tnw.getAllParticipants();
 
-        HashSet<URI> modsForLead = nmis.getModeratorsForLead();
+        HashSet<URI> modsForLead = nmil.getModeratorsForLead();
         for (NetworkParticipant p : moderators){
             modsForLead.add(p.getNodeUid());
             logger.debug("Mod for Lead = " + p.getNodeUid());
         }
 
 
-        for (URI uri : nmis.getModeratorsForLead()){
+        for (URI uri : nmil.getModeratorsForLead()){
             logger.debug("Check After Update  = " + uri);
 
         }
@@ -646,12 +655,12 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         try {
             NetworkMapItemLead i = repoSource.read(q).get(0);
             i.setModeratorsForLead(modsForLead);
-            updateSourceItem(i, tnSource, sourcePk, allLeads);
+            updateLeadItem(i, tnSource, sourcePk, allLeads);
             repoSource.update(i);
 
         } catch (Exception e) {
             NetworkMapItemLead i = new NetworkMapItemLead();
-            updateSourceItem(i, tnSource, sourcePk, allLeads);
+            updateLeadItem(i, tnSource, sourcePk, allLeads);
             logger.warn("CREATING NEW NETWORK_MAP_ITEM_SOURCE() " + i.getNodeUID());
             repoSource.create(i);
 
@@ -659,20 +668,21 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     }
 
 
-    private void updateSourceItem(NetworkMapItem i, TrustNetwork tn, byte[] sourcePk,
-                                  NetworkMapNodeOverview allSources) {
+    private void updateLeadItem(NetworkMapItem i, TrustNetwork tn, byte[] sourcePk,
+                                NetworkMapNodeOverview allLeads) {
         NodeInformation ni = tn.getNodeInformation();
         i.setLastUpdated(tn.getLastUpdated());
         i.setNodeUID(ni.getNodeUid());
         i.setBroadcastAddress(ni.getBroadcastAddress());
         i.setStaticURL0(ni.getStaticNodeUrl0());
+        i.setPublicKeyB64(sourcePk);
         i.setRulebookNodeURL(ni.getRulebookNodeUrl());
 
         String[] n = ni.getNodeUid().toString().split(":");
         boolean isHost = n.length==5;
-        logger.debug(ni.getLeadUid() + " isHost=" + isHost + " " + allSources.getThisNodeLeadUID());
+        logger.debug(ni.getLeadUid() + " isHost=" + isHost + " " + allLeads.getThisNodeLeadUID());
 
-        if (ni.getLeadUid().equals(allSources.getThisModeratorLeadUID())){
+        if (ni.getLeadUid().equals(allLeads.getThisModeratorLeadUID())){
             if (isHost){
                 i.setType(NetworkMapItem.TYPE);
 
@@ -680,9 +690,9 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         }
     }
 
-    private NetworkMapItem updateItem(NetworkParticipant participant, boolean source) throws Exception {
+    private NetworkMapItem updateItem(NetworkParticipant participant, boolean lead) throws Exception {
         NetworkMapItem nmi = new NetworkMapItemModerator();
-        if (source){
+        if (lead){
             nmi = new NetworkMapItemLead();
         }
         URI sourceUuid = UIDHelper.computeLeadUidFromModUid(participant.getNodeUid());

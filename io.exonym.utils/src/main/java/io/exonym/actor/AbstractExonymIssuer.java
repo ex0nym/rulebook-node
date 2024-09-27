@@ -454,8 +454,8 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 		}
 	}
 
-	private void validateIssuerParams(URI credential, URI issuerParamsUid) throws HubException {
-		String px = credential.toString().split(":")[2];
+	private void validateIssuerParams(URI credential, URI issuerParamsUid) throws Exception {
+		String px = UIDHelper.computeRulebookHashUid(credential);
 
 		HubException h = new HubException("The issuer parameters (" + issuerParamsUid + ") must contain the rulebookID "
 				+ "parameters URN without the :c and suffixed instead with a public Issuer ID and :i"

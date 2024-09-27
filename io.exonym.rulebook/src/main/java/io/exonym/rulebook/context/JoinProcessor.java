@@ -33,11 +33,10 @@ import java.util.UUID;
 
 public class JoinProcessor {
 
-
     private static final Logger logger = LogManager.getLogger(JoinProcessor.class);
     private final VerifiedClaim claim;
-    private ExonymIssuer myAdvocateIssuer;
-    private IdContainer myAdvocateContainer;
+    private ExonymIssuer myModIssuer;
+    private IdContainer myModContainer;
     private JoinSupportSingleton support = JoinSupportSingleton.getInstance();
 
     private RulebookNodeProperties props = RulebookNodeProperties.instance();
@@ -49,12 +48,12 @@ public class JoinProcessor {
 
     public JoinProcessor() throws Exception {
         if (support!=null){
-            myAdvocateContainer = new IdContainer(support.getMyAdvocate().getModeratorName());
-            myAdvocateIssuer = new ExonymIssuer(myAdvocateContainer);
-            myAdvocateIssuer.openContainer(support.getStore().getDecipher());
-            support.loadAdvocateWithSybilCryptoMaterials(myAdvocateIssuer);
-            CredentialSpecification cs = myAdvocateContainer.openResource(
-                    support.getMyAdvocateHelper().getCredentialSpecFileName());
+            myModContainer = new IdContainer(support.getMyModerator().getModeratorName());
+            myModIssuer = new ExonymIssuer(myModContainer);
+            myModIssuer.openContainer(support.getStore().getDecipher());
+            support.loadAdvocateWithSybilCryptoMaterials(myModIssuer);
+            CredentialSpecification cs = myModContainer.openResource(
+                    support.getMyModeratorHelper().getCredentialSpecFileName());
 
             claim = new VerifiedClaim(cs);
 
@@ -103,7 +102,7 @@ public class JoinProcessor {
         String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(policy);
         logger.debug(xml);
 
-        return myAdvocateIssuer.issueInit(claim, policy, support.getStore().getEncrypt(),
+        return myModIssuer.issueInit(claim, policy, support.getStore().getEncrypt(),
                 URI.create("urn:" + UUID.randomUUID()));
 
     }
@@ -112,7 +111,7 @@ public class JoinProcessor {
         PresentationTokenDescription ptd = issuanceToken
                 .getIssuanceTokenDescription()
                 .getPresentationTokenDescription();
-        ImabAndHandle imab = myAdvocateIssuer.issueStep(im, support.getStore().getDecipher());
+        ImabAndHandle imab = myModIssuer.issueStep(im, support.getStore().getDecipher());
         buildExonymMap(ptd);
         finaliseMembership(new ArrayList<>()); // see register potential honesty claims.
         return imab.getImab();
@@ -122,10 +121,12 @@ public class JoinProcessor {
     protected IssuanceMessageAndBoolean join(IssuanceMessage im, IssuanceToken issuanceToken) throws Exception {
         PresentationTokenDescription ptd = issuanceToken.getIssuanceTokenDescription()
                 .getPresentationTokenDescription();
-        verifyConditionsToJoin(ptd);
-        ImabAndHandle imab = myAdvocateIssuer.issueStep(im, support.getStore().getDecipher());
+
+        ArrayList<String> uncontrolled = verifyConditionsToJoin(ptd);
+
+        ImabAndHandle imab = myModIssuer.issueStep(im, support.getStore().getDecipher());
         buildExonymMap(ptd);
-        finaliseMembership(new ArrayList<>()); // see register potential honesty claims.
+        finaliseMembership(uncontrolled); // see register potential honesty claims.
         return imab.getImab();
 
     }
@@ -144,7 +145,7 @@ public class JoinProcessor {
                                                             PresentationToken token) throws Exception {
         PresentationTokenDescription ptd = token.getPresentationTokenDescription();
         List<CredentialInToken> credentials = ptd.getCredential();
-        URI sourceUuid = support.getMyAdvocate().getLeadUID();
+        URI sourceUuid = support.getMyModerator().getLeadUID();
 
         for (CredentialInToken cit : credentials){
             URI ip = cit.getIssuerParametersUID();
@@ -171,7 +172,7 @@ public class JoinProcessor {
         UIDHelper uids = new UIDHelper(issuerUid);
 
 
-        NodeVerifier n0 = NodeVerifier.openNode(support.getMyAdvocate().getStaticURL0(), false, false);
+        NodeVerifier n0 = NodeVerifier.openNode(support.getMyModerator().getStaticURL0(), false, false);
         n0.loadTokenVerifierFromNodeVerifier(verifier, uids);
 
         /**
@@ -198,7 +199,7 @@ public class JoinProcessor {
         String n6 = unverifiedX0.substring(0, 6);
         ExonymMatrixManagerGlobal global = new ExonymMatrixManagerGlobal(
                 (NetworkMapItemModerator) support.getNetworkMap().nmiForNode(host),
-                support.getMyAdvocate(), n6, this.props.getNodeRoot());
+                support.getMyModerator(), n6, this.props.getNodeRoot());
 
         try {
             ExonymMatrix matrix = global.openUncontrolledList(unverifiedX0);
@@ -220,8 +221,10 @@ public class JoinProcessor {
         return uncontrolledRules;
     }
 
-    private void verifyConditionsToJoin(PresentationTokenDescription token) throws Exception {
+    private ArrayList<String> verifyConditionsToJoin(PresentationTokenDescription token) throws Exception {
+        ArrayList<String> result = new ArrayList<>();
         ApplicantReport report = performSearch(token, support.getMyRules());
+
         if (report!=null){
             if (!report.getExceptions().isEmpty()){
                 throw report.getExceptions();
@@ -244,11 +247,15 @@ public class JoinProcessor {
 
             }
         }
+        return result; // TODO note that the report needs to return a list of the rules that are uncontrolled
+
     }
 
     private ApplicantReport performSearch(PresentationTokenDescription token, ArrayList<String> rules) throws Exception {
-        ExonymSearch network = new ExonymSearch(token, rules, CouchDbHelper.repoExoMatrix(),
-                support.getNetworkMap(), this.props.getNodeRoot());
+        ExonymSearch network = new ExonymSearch(token, rules,
+                CouchDbHelper.repoExoMatrix(), support.getNetworkMap(),
+                this.props.getNodeRoot());
+
         ExonymResult result = network.search();
 
         if (result!=null){
@@ -263,9 +270,10 @@ public class JoinProcessor {
     private void finaliseMembership(ArrayList<String> uncontrolled) throws Exception {
         ExonymMatrixRowAndX0 xyLists = buildXYLists(uncontrolled);
         ExonymMatrixManagerLocal local = new ExonymMatrixManagerLocal(
-                myAdvocateContainer,
-                support.getMyRules(), support.getMyAdvocate(), props.getPrimarySftpCredentials(),
-                props.getNodeRoot(), props.getPrimaryStaticDataFolder());
+                myModContainer,
+                support.getMyRules(), support.getMyModerator(),
+                props.getNodeRoot());
+
         local.addExonymRow(xyLists.getExox(), xyLists.getExoy());
         broadcastJoin(xyLists.getN6(), xyLists.getX0());
 
@@ -316,7 +324,7 @@ public class JoinProcessor {
         notify.setType(ExoNotify.TYPE_JOIN);
         notify.setNibble6(n6);
         notify.setHashOfX0(x0Hash);
-        notify.setNodeUID(support.getMyAdvocate().getNodeUID());
+        notify.setNodeUID(support.getMyModerator().getNodeUID());
         notify.setT(DateHelper.currentIsoUtcDateTime());
         signAndSend(notify);
 
@@ -329,7 +337,7 @@ public class JoinProcessor {
             PassStore store = new PassStore(props.getNodeRoot(), false);
             ModeratorNotificationSigner signer = ModeratorNotificationSigner.getInstance();
             byte[] sigBytes = signer.sign(toSign,
-                    support.getMyAdvocate().getNodeUID().toString(), store);
+                    support.getMyModerator().getNodeUID().toString(), store);
 
             String sig = Base64.encodeBase64String(sigBytes);
             notify.setSigB64(sig);

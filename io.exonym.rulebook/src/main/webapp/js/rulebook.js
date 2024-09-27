@@ -5,7 +5,7 @@
 		$("#qrImg").attr("src", "images/green-brown-3.7s-48px.svg");			
 
 		$.get({
-			url:"subscribe/qr",
+			url:"join/qr",
 			mimeType: "application/json",				
 			success: rulebook.display
 			
