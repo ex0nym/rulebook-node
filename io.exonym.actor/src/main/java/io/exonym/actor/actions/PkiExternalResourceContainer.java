@@ -1,12 +1,15 @@
 package io.exonym.actor.actions;
 
+import eu.abc4trust.xml.CredentialSpecification;
 import io.exonym.abc.util.FileType;
+import io.exonym.abc.util.UidType;
 import io.exonym.helpers.BuildCredentialSpecification;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.NetworkMapItem;
 import io.exonym.lite.pojo.Rulebook;
+import io.exonym.lite.standard.WhiteList;
 import io.exonym.utils.storage.CacheContainer;
 import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.storage.ExternalResourceContainer;
@@ -22,6 +25,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 	private static PkiExternalResourceContainer instance = null;
 	private CacheContainer cache = null;
 	private AbstractNetworkMap networkMap;
+
 
 	static {
 		if (instance==null){
@@ -49,15 +53,23 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 			throw new NullPointerException("File Name");
 
 		}
+		logger.info("Opening External Resource: Overriding Cache ("+overrideCache+")" + fileName);
+
 		T t = null;
 		if (!overrideCache) {
 			t = this.getCache().open(fileName);
+			logger.debug("Tried cache and it returned=" +t);
 
 		}
 		if (t == null) {
-			if (FileType.isPresentationPolicy(fileName) ||
-					FileType.isCredentialSpecification(fileName)) {
-				return verifyLead(fileName);
+			boolean isCredSpec = FileType.isCredentialSpecification(fileName);
+			if (FileType.isPresentationPolicy(fileName) || isCredSpec) {
+				t = verifyLead(fileName);
+				if (isCredSpec){
+					this.cache.store(t);
+
+				}
+				return t;
 
 			} else if (FileType.isInspectorPublicKey(fileName) ||
 					FileType.isRevocationInformation(fileName) ||
@@ -96,18 +108,18 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 						.getCredentialSpecification();
 			}
 		} else {
-			URI sourceUID = UIDHelper.computeLeadUidFromModUid(UIDHelper.fileNameToUid(fileName));
-			NetworkMapItem nmi = getNetworkMap().nmiForNode(sourceUID);
-			NodeVerifier sourceVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
+			URI leadUID = UIDHelper.computeLeadUidFromModUid(UIDHelper.fileNameToUid(fileName));
+			NetworkMapItem nmi = getNetworkMap().nmiForNode(leadUID);
+			NodeVerifier leadVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
 					nmi.getRulebookNodeURL().resolve("static"), true, false);
 			CacheContainer cache = this.getCache();
-			cache.store(sourceVerifier.getPresentationPolicy());
-			cache.store(sourceVerifier.getCredentialSpecification());
-			cache.store(sourceVerifier.getRulebook());
+			cache.store(leadVerifier.getPresentationPolicy());
+			cache.store(leadVerifier.getCredentialSpecification());
+			cache.store(leadVerifier.getRulebook());
 			if (FileType.isPresentationPolicy(fileName)) {
-				return (T) sourceVerifier.getPresentationPolicy();
+				return (T) leadVerifier.getPresentationPolicy();
 			} else if (FileType.isRulebook(fileName)){
-				return (T) sourceVerifier.getRulebook();
+				return (T) leadVerifier.getRulebook();
 			} else {
 				throw new UxException(ErrorMessages.FILE_NOT_FOUND, fileName);
 

@@ -1,9 +1,10 @@
 package io.exonym.rulebook.context;
 
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import io.exonym.actor.actions.MyTrustNetworks;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.couchdb.QueryStandard;
-import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoMatrix;
@@ -13,6 +14,8 @@ import io.exonym.lite.standard.AsymStoreKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class ViolationIn extends ModelCommandProcessor {
@@ -20,21 +23,31 @@ public class ViolationIn extends ModelCommandProcessor {
     private static final Logger logger = LogManager.getLogger(ViolationIn.class);
 
 
-    private final UnprotectedCouchRepository<ExoMatrix> exonymMap;
+    private final CouchRepository<ExoMatrix> exonymMap;
     private final CouchRepository<Vio> vioMap;
 
     private final QueryStandard queryNetwork = new QueryStandard();
     private final QueryBasic queryVio = new QueryBasic();
     private final NetworkPublicKeyManager keyManager;
 
+    private final URI myModUid;
+
     /**
      */
-    protected ViolationIn(NetworkPublicKeyManager keyManager) throws Exception {
+    protected ViolationIn(NetworkPublicKeyManager keyManager, MyTrustNetworks myTrustNetworks) throws Exception {
         super(10, "ViolationIn", 60000);
         this.keyManager=keyManager;
         this.exonymMap = CouchDbHelper.repoExoMatrix();
         this.vioMap = CouchDbHelper.repoVio();
+        if (myTrustNetworks.isModerator()){
+            myModUid = myTrustNetworks.getModerator()
+                    .getTrustNetwork()
+                    .getNodeInformation()
+                    .getNodeUid();
 
+        } else {
+            myModUid = URI.create("urn:not:a:mod");
+        }
     }
 
     @Override
@@ -54,11 +67,11 @@ public class ViolationIn extends ModelCommandProcessor {
 
     private void authenticate(ExoNotify notify) throws Exception {
         try {
-            AsymStoreKey key = keyManager.getKey(notify.getNodeUID());
+            AsymStoreKey key = keyManager.getKey(notify.getNodeUid());
             Authenticator.authenticateNotify(notify, key);
 
         } catch (NoDocumentException e) {
-            logger.error("Failed to Find Host on NetworkMap" + notify.getNodeUID());
+            logger.error("Failed to Find Host on NetworkMap" + notify.getNodeUid());
 
         } catch (Exception e) {
             throw e;
@@ -67,13 +80,21 @@ public class ViolationIn extends ModelCommandProcessor {
     }
 
     private void updateVioMap(ExoNotify notify) throws Exception {
-        Vio vio = new Vio();
-        vio.setT(notify.getT());
-        vio.setAdvocateUID(notify.getNodeUID());
-        vio.setNibble6(notify.getNibble6());
-        vio.setX0Hash(notify.getHashOfX0());
-        vioMap.create(vio);
+        if (!notify.getNodeUid().equals(myModUid)){
+            ArrayList<Vio> vios = notify.getVios();
+            for (Vio vio : vios){
+                vio.set_id(Vio.index(vio));
+                try {
+                    vioMap.create(vio);
 
+                } catch (DocumentConflictException e) {
+                    Vio dbVio = vioMap.read(vio.get_id());
+                    vio.set_rev(dbVio.get_rev());
+                    vioMap.update(vio);
+
+                }
+            }
+        }
     }
 
     @Override

@@ -16,8 +16,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 
-@WebServlet("/registerSource")
-public class RegisterSourceServlet extends HttpServlet {
+@WebServlet("/registerLead")
+public class RegisterLeadServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -30,7 +30,7 @@ public class RegisterSourceServlet extends HttpServlet {
             if (RulebookNodeProperties.instance().isOpenSourcePublication()){
                 HashMap<String, String> in = WebUtils.buildParams(req, resp);
                 if (in.containsKey("test")){
-                    addToSourcesList(in, resp);
+                    addToLeadList(in, resp);
 
                 } else {
                     verifyProof(in, resp);
@@ -50,7 +50,7 @@ public class RegisterSourceServlet extends HttpServlet {
         }
     }
 
-    private void addToSourcesList(HashMap<String, String> in, HttpServletResponse resp) throws Exception {
+    private void addToLeadList(HashMap<String, String> in, HttpServletResponse resp) throws Exception {
         try {
             String target = in.get("sourceUrl");
             if (WhiteList.isLeadUrl(target)){
@@ -72,8 +72,8 @@ public class RegisterSourceServlet extends HttpServlet {
 
     private void verifyProof(HashMap<String, String> in, HttpServletResponse resp) throws UxException {
         throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE);
-        // // verify proof of honesty under sources rulebook
-        // // if corrently honest, add them.
+     // TODO verify proof of honesty under trustworthy-leads rulebook
+     // if currently honest, add them.
 
     }
 }

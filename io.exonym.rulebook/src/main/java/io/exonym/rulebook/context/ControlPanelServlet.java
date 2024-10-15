@@ -168,7 +168,7 @@ public final class ControlPanelServlet extends HttpServlet {
 
 				// Pretty sure this doesn't get called and it's a duplicate of sourceNodeManagementRemove
 				} else if (cmd.equals("sourceNodeManagementAuthorizedNodesDelete")) {
-					sourceNodeManagementAuthorizedNodesDelete(dataReq, req, resp);
+					leadManagementAuthorizedNodesDelete(dataReq, req, resp);
 					refreshNetworkMap();
 
 				} else {
@@ -272,7 +272,7 @@ public final class ControlPanelServlet extends HttpServlet {
 			PassStore store = new PassStore(RulebookNodeProperties.instance().getNodeRoot(), false);
 			String raiHash = mm.revokeMember(token, store);
 			NodeStore ns = NodeStore.getInstance();
-			NodeData node = ns.openThisAdvocate();
+			NodeData node = ns.openThisModerator();
 			node.setLastRAIHash(raiHash);
 			ns.updateNodeDataItem(node);
 			WebUtils.success(resp);
@@ -614,7 +614,7 @@ public final class ControlPanelServlet extends HttpServlet {
 				NetworkMapWeb networkMap = new NetworkMapWeb();
 				URI nurl = URI.create(nodeUrl);
 				URI nodeUid = n.addModeratorToLead(nurl, passStore, networkMap, testNet);
-				broadcast(n.getPpB64(), n.getPpSigB64());
+				broadcastLeadUpdate(n.getPpB64(), n.getPpSigB64());
 				NodeData d = new NodeData();
 				d.setNodeUrl(nurl);
 				d.setNodeUrl(nurl);
@@ -643,28 +643,17 @@ public final class ControlPanelServlet extends HttpServlet {
 		}
 	}
 
-	private void broadcast(String ppB64, String ppSigB64) throws Exception {
+	private void broadcastLeadUpdate(String ppB64, String ppSigB64) throws Exception {
 		ExoNotify notify = new ExoNotify();
 		notify.setT(DateHelper.currentIsoUtcDateTime());
 		URI nodeUuid = IAuthenticator.getInstance().getNodeUid();
 		URI leadUid = UIDHelper.computeLeadUidFromModUid(nodeUuid);
-		notify.setNodeUID(leadUid);
+		notify.setNodeUid(leadUid);
 		notify.setType(ExoNotify.TYPE_LEAD);
 		notify.setPpB64(ppB64);
 		notify.setPpSigB64(ppSigB64);
-		ExonymPublisher.getInstance()
+		NotificationPublisher.getInstance()
 				.getPipe().put(notify);
-
-//		byte[] toSign = ExoNotify.signatureOnAckAndOrigin(notify);
-//		Signer signer = Signer.getInstance();
-//		String pwd = RulebookNodeProperties.instance().getNodeRoot();
-//		PassStore store = new PassStore(pwd, false);
-//		byte[] sig = signer.sign(toSign, leadUid.toString(), store);
-//		notify.setSigB64(Base64.encodeBase64String(sig));
-//		Broadcaster broadcaster = new Broadcaster(notify,
-//				CouchDbHelper.repoNetworkMapItem());
-//		broadcaster.execute();
-//		broadcaster.close();
 
 	}
 
@@ -680,7 +669,7 @@ public final class ControlPanelServlet extends HttpServlet {
 			if (WhiteList.url(nodeUrl)) {
 				NodeManagerWeb n = new NodeManagerWeb(networkName);
 				URI nodeUid = n.removeModeratorFromLead(URI.create(nodeUrl), p);
-				broadcast(n.getPpB64(), n.getPpSigB64());
+				broadcastLeadUpdate(n.getPpB64(), n.getPpSigB64());
 
 				NodeStore store = NodeStore.getInstance();
 				NodeData d = store.findNetworkNodeDataItem(nodeUid.toString());
@@ -701,8 +690,8 @@ public final class ControlPanelServlet extends HttpServlet {
 		}
 	}
 
-	private void sourceNodeManagementAuthorizedNodesDelete(HashMap<String, String> dataReq,
-														   HttpServletRequest req, HttpServletResponse resp) throws Exception {
+	private void leadManagementAuthorizedNodesDelete(HashMap<String, String> dataReq,
+													 HttpServletRequest req, HttpServletResponse resp) throws Exception {
 		try {
 			String nodeUid = dataReq.get("selectedId");
 			String networkName = dataReq.get("selectedNetwork");
@@ -710,7 +699,7 @@ public final class ControlPanelServlet extends HttpServlet {
 			PassStore p = new PassStore(props.getNodeRoot(), false);
 			NodeManagerWeb n = new NodeManagerWeb(networkName);
 			n.removeModeratorFromLead(nodeUid, p);
-			broadcast(n.getPpB64(), n.getPpSigB64());
+			broadcastLeadUpdate(n.getPpB64(), n.getPpSigB64());
 			NodeStore store = NodeStore.getInstance();
 			NodeData d = store.findNetworkNodeDataItem(nodeUid);
 			store.delete(d);

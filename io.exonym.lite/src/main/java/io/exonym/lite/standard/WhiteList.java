@@ -72,6 +72,26 @@ public class WhiteList {
 
 	}
 
+	public static boolean isIssuerUid(URI uid){
+		return isIssuerUid(uid.toString());
+	}
+
+	public static boolean isIssuerUid(String uid){
+		return uid!=null && uid.matches(Namespace.URN_PREFIX_COLON + "[\\w-]*[:][\\w-]*[:][\\w-]*[:][0-9a-f]{64}[:][0-9a-f]{8}:i");
+
+	}
+
+	public static boolean isContainsIssuerUid(URI uid){
+		return isContainsIssuerUid(uid.toString());
+	}
+
+	public static boolean isContainsIssuerUid(String uid){
+		return uid!=null && uid.matches(Namespace.URN_PREFIX_COLON +
+				"[\\w-]*[:][\\w-]*[:][\\w-]*[:][0-9a-f]{64}[:][0-9a-f]{8}(?::[\\w-]+)*");
+
+	}
+
+
 	public static boolean isLeadUid(URI uid){
 		return isLeadUid(uid.toString());
 	}

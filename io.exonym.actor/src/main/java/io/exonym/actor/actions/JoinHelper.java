@@ -19,10 +19,9 @@ public class JoinHelper {
     public static PresentationPolicy baseJoinPolicy(RulebookVerifier verifier,
                                                                 URI sybilIssuer,
                                                                 ExternalResourceContainer ex,
-//                                                                AbstractNetworkMap networkMap,
-//                                                                ArrayList<NetworkMapItemSource> acceptableSources,
+                                                                ArrayList<CredentialSpecification> cSpecs,
                                                                 String challengeB64) throws Exception {
-        BuildPresentationPolicy bppPlain = generateBaseAlternative(verifier, sybilIssuer, ex, challengeB64);
+        BuildPresentationPolicy bppPlain = generateBaseAlternative(verifier, cSpecs, sybilIssuer, ex, challengeB64);
         return bppPlain.getPolicy();
         // todo the user can upgrade or downgrade their rulebook credential - the exonym x and y lists are done, but the challenges aren't
 
@@ -54,24 +53,26 @@ public class JoinHelper {
     }
 
     private static BuildPresentationPolicy generateBaseAlternative(RulebookVerifier verifier,
+                                                                   ArrayList<CredentialSpecification> specs,
                                                                    URI sybilIssuer,
                                                                    ExternalResourceContainer ex,
                                                                    String challengeB64) throws Exception {
         BuildPresentationPolicy bpp = new BuildPresentationPolicy(
                 URI.create("urn:io:exonym:join"), ex);
         bpp.addPseudonym(SYBIL_ALIAS.toString(), false, BASE_ALIAS.toString());
-        ArrayList<String> rules = verifier.toRulebookUIDs();
-        for (String rule : rules){
-            bpp.addPseudonym(rule, true, null, BASE_ALIAS);
+
+        ArrayList<URI> rules = verifier.toRulebookUIDs();
+        for (URI rule : rules){
+            bpp.addPseudonym(rule.toString(), true, null, BASE_ALIAS);
 
         }
         bpp.makeInteractive(challengeB64);
+
         UIDHelper helper = new UIDHelper(sybilIssuer);
-        List<URI> credSpecs = new ArrayList<>();
-        credSpecs.add(helper.getCredentialSpec());
+
         List<CredentialInPolicy.IssuerAlternatives.IssuerParametersUID> issuerParametersUIDS = new ArrayList<>();
         issuerParametersUIDS.add(helper.computeIssuerParametersUID());
-        bpp.addCredentialInPolicy(credSpecs, issuerParametersUIDS, SYBIL_ALIAS.toString(), BASE_ALIAS);
+        bpp.addCredentialInPolicy(specs, issuerParametersUIDS, SYBIL_ALIAS.toString(), BASE_ALIAS);
         return bpp;
 
     }
@@ -79,8 +80,10 @@ public class JoinHelper {
     public static PresentationPolicy baseJoinPolicy(RulebookVerifier verifier,
                                                                 URI sybilIssuer,
                                                                 ExternalResourceContainer ex,
+                                                                ArrayList<CredentialSpecification> cSpecs,
                                                                 byte[] nonceFromMessage) throws Exception {
-        return baseJoinPolicy(verifier, sybilIssuer, ex, Base64.encodeBytes(nonceFromMessage));
+        return baseJoinPolicy(verifier, sybilIssuer, ex, cSpecs, Base64.encodeBytes(nonceFromMessage));
     }
+
 
 }

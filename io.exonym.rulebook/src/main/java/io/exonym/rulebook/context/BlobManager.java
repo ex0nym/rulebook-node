@@ -29,6 +29,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+@Deprecated
 public class BlobManager extends ModelCommandProcessor {
 
     private static final Logger logger = LogManager.getLogger(BlobManager.class);
@@ -107,7 +108,7 @@ public class BlobManager extends ModelCommandProcessor {
         }
         try (FileWriter writer = new FileWriter(violations, true)){
             writer.write(DateTime.now(DateTimeZone.UTC).getMillis() + "," +
-                    notify.getNibble6() + "," + notify.getHashOfX0() + "," + notify.getT() + "\n");
+                    notify.getNibble6() + "," + notify.getHashOfX0() + "," + notify.getTimeOfViolation() + "\n");
 
         }
     }

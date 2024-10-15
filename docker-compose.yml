@@ -1,6 +1,8 @@
 services:
   sybil:
     container_name: sybil
+    extra_hosts:
+      - "${HOST_NAME}:${HOST_IP}"
     build:
       context: ../io.exonym.sybil/
       dockerfile: ../io.exonym.sybil/Dockerfile
@@ -22,6 +24,8 @@ services:
 
   sybil-exonym:
     container_name: sybil-exonym
+    extra_hosts:
+      - "${HOST_NAME}:${HOST_IP}"
     build:
       context: ./io.exonym.rulebook
       dockerfile: Dockerfile
@@ -35,11 +39,14 @@ services:
     env_file:
         - io.exonym.rulebook/conf/e-vanilla-s.env
     volumes:
-      - ~/github/rulebook-node/io.exonym.rulebook/static-sybil-exonym:/var/www/html/static
+      - ~/github/rulebook-node/io.exonym.rulebook/static/sybil-exonym:/var/www/html/static
     networks:
       - rulebook_network
+
   rulebook-node0:
     container_name: rulebook-node0
+    extra_hosts:
+      - "${HOST_NAME}:${HOST_IP}"
     depends_on:
       - sybil
     build:
@@ -55,12 +62,14 @@ services:
     env_file:
       - io.exonym.rulebook/conf/e-vanilla-sx.env
     volumes:
-      - ~/github/rulebook-node/io.exonym.rulebook/static-rulebook-node0:/var/www/html/static
+      - ~/github/rulebook-node/io.exonym.rulebook/static/rulebook-node0:/var/www/html/static
     networks:
       - rulebook_network
 
   rulebook-node1:
     container_name: rulebook-node1
+    extra_hosts:
+      - "${HOST_NAME}:${HOST_IP}"
     depends_on:
       - rulebook-node0
     build:
@@ -76,12 +85,14 @@ services:
     env_file:
       - io.exonym.rulebook/conf/e-vanilla-x.env
     volumes:
-      - ~/github/rulebook-node/io.exonym.rulebook/static-rulebook-node1:/var/www/html/static
+      - ~/github/rulebook-node/io.exonym.rulebook/static/rulebook-node1:/var/www/html/static
     networks:
       - rulebook_network
 
   couchdb:
     container_name: couchdb
+    extra_hosts:
+      - "${HOST_NAME}:${HOST_IP}"
     image: couchdb:3
     environment:
       - COUCHDB_USER=${DB_USERNAME}

@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public abstract class Broadcaster extends ResultPager<NetworkMapItem> implements AutoCloseable{
 
     private static final Logger logger = LogManager.getLogger(Broadcaster.class);
@@ -77,7 +78,7 @@ public abstract class Broadcaster extends ResultPager<NetworkMapItem> implements
                 String[] parts = hostUdp.toString().split(":");
                 int port = (parts.length==2 ? Integer.parseInt(parts[1]) : 9090);
                 BroadcastInProgress bip = new BroadcastInProgress();
-                bip.setContext(notify.getT());
+                bip.setContext(notify.getTimeOfViolation());
                 bip.setAddress(parts[0]);
                 bip.setPort(port);
                 bip.setAdvocateUID(target.getNodeUID());

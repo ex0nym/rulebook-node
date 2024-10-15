@@ -257,10 +257,14 @@ public abstract class StandardAuthenticator {
     protected abstract IUser openUser(String username) throws Exception;
 
     protected synchronized void authenticateApiKey(HashMap<String, String> in) throws Exception {
-        try {
-            String kid = in.get("kid");
-            String key = in.get("key");
+        String kid = in.get("kid");
+        String key = in.get("key");
+        authenticateApiKey(kid, key);
 
+    }
+
+    protected synchronized void authenticateApiKey(String kid, String key) throws Exception {
+        try {
             if (kid != null && key != null) {
                 try {
                     if (!kidToKey.containsKey(kid)) {

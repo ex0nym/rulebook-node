@@ -114,20 +114,21 @@ public class TestIssuance {
 
             sybilIssuer.setupAsCredentialIssuer(sybilHelper.getCredentialSpec(), sybilHelper.getIssuerParameters(),
                     sybilHelper.getRevocationAuthority(), store.getEncrypt());
-
+            ArrayList<CredentialSpecification> credSpecs = new ArrayList<>();
+            credSpecs.add(sybilCredSpec);
             //
             // Owner (Sybil)
             //
             ExonymOwnerTest owner = setupExistingOwner(owner0Username, store);
             issueSybil(sybilIssuer, owner, store, sybilCredSpec, sybilHelper.getIssuerParameters(), rulebook);
-            showSybilCredential(owner, rulebook, sybilHelper, cache, external);
+            showSybilCredential(owner, rulebook, sybilHelper, cache, external, credSpecs);
 
             //
             // Owner0 (Sybil)
             //
             ExonymOwnerTest owner0 = setupExistingOwner(owner1Username, store);
             issueSybil(sybilIssuer, owner0, store, sybilCredSpec, sybilHelper.getIssuerParameters(), rulebook);
-            showSybilCredential(owner0, rulebook, sybilHelper, cache, external);
+            showSybilCredential(owner0, rulebook, sybilHelper, cache, external, credSpecs);
 
             //
             //  Setup as issuer of rulebook
@@ -160,10 +161,10 @@ public class TestIssuance {
                     store.getEncrypt());
 
             joinRulebook(owner, issuerRulebook, sybilIssuerUID,
-                    store, rulebookHelper, rulebookRulebook, external);
+                    store, rulebookHelper, rulebookRulebook, credSpecs, external);
 
             joinRulebook(owner0, issuerRulebook, sybilIssuerUID,
-                    store, rulebookHelper, rulebookRulebook, external);
+                    store, rulebookHelper, rulebookRulebook, credSpecs, external);
 
             // Build presention policy
             // prove returning Presentation Token
@@ -184,10 +185,10 @@ public class TestIssuance {
     }
 
     private void joinRulebook(ExonymOwnerTest owner, ExonymIssuerTest issuerSecond, URI sybilIssuerUID, PassStore store,
-                              UIDHelper issuerHelper, RulebookVerifier vSource, PkiExternalResourceContainer external) throws Exception {
+                              UIDHelper issuerHelper, RulebookVerifier vLead, ArrayList<CredentialSpecification> specs, PkiExternalResourceContainer external) throws Exception {
 
         PresentationPolicy pp = JoinHelper.baseJoinPolicy(
-                vSource, sybilIssuerUID, external, CryptoUtils.generateNonce(32));
+                vLead, sybilIssuerUID, external, specs, CryptoUtils.generateNonce(32));
 
         BuildIssuancePolicy bip1  = new  BuildIssuancePolicy(
                 pp, issuerHelper.getCredentialSpec(), issuerHelper.getIssuerParameters());
@@ -209,7 +210,7 @@ public class TestIssuance {
     }
 
     private void showSybilCredential(ExonymOwnerTest owner, Rulebook rulebook, UIDHelper helper,
-                                     Cache cache, PkiExternalResourceContainer external) throws Exception {
+                                     Cache cache, PkiExternalResourceContainer external, ArrayList<CredentialSpecification> sybilCs) throws Exception {
         BuildPresentationPolicy bpp = new BuildPresentationPolicy(URI.create("urn:sybil:pp"), external);
         bpp.makeInteractive();
         ArrayList<URI> cspecs = new ArrayList<>();
@@ -225,7 +226,7 @@ public class TestIssuance {
                         URI.create(Namespace.URN_PREFIX_COLON + "sybil-class"));
 
         bpp.addPseudonym("urn:rulebook:anon", false, "urn:io:exonym");
-        bpp.addCredentialInPolicy(cspecs, issuers, "urn:io:exonym:sybil", URI.create("urn:io:exonym"));
+        bpp.addCredentialInPolicy(sybilCs, issuers, "urn:io:exonym:sybil", URI.create("urn:io:exonym"));
         bpp.addDisclosableAttributeForCredential(rulebook.computeCredentialSpecId(), ad);
         PresentationPolicyAlternatives ppa = bpp.getPolicyAlternatives();
         String policyXml = io.exonym.utils.storage.IdContainer.convertObjectToXml(ppa);

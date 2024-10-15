@@ -2,8 +2,7 @@ package io.exonym.rulebook.schema;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.standard.AsymStoreKey;
-import io.exonym.utils.storage.XContainerSchema;
-import io.exonym.rulebook.context.XNodeContainerStore;
+import io.exonym.rulebook.context.NodeContainerStore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,7 +10,7 @@ public class IdContainer extends IdContainerJSON {
 	
 	private static final Logger logger = LogManager.getLogger(IdContainer.class);
 	
-	private XNodeContainerStore store = XNodeContainerStore.getInstance();
+	private NodeContainerStore store = NodeContainerStore.getInstance();
 
 	public IdContainer(String username, boolean create) throws Exception {
 		super(username, create);
@@ -47,9 +46,9 @@ public class IdContainer extends IdContainerJSON {
 	}
 
 	@Override
-	protected XContainerSchema init(boolean create) throws Exception {
+	protected io.exonym.utils.storage.IdContainerSchema init(boolean create) throws Exception {
 		if (this.store==null) {
-			store = XNodeContainerStore.getInstance();
+			store = NodeContainerStore.getInstance();
 			
 		}
 		if (create) {
@@ -62,7 +61,7 @@ public class IdContainer extends IdContainerJSON {
 				throw new Exception("The container already exists");
 				
 			} catch (NoDocumentException e) {
-				XNodeContainerSchema schema0 = new XNodeContainerSchema();
+				IdContainerSchema schema0 = new IdContainerSchema();
 				schema0.setUsername(this.getUsername());
 				logger.debug("Store is " + store);
 				logger.debug("Username is " + getUsername());
@@ -76,7 +75,7 @@ public class IdContainer extends IdContainerJSON {
 				logger.debug("Store is " + store);
 				logger.debug("Username is " + getUsername());
 				
-				XNodeContainerSchema schema0 = store.getContainer(this.getUsername());
+				IdContainerSchema schema0 = store.getContainer(this.getUsername());
 				return schema0;
 				
 			} catch (NoDocumentException e) {
@@ -90,7 +89,7 @@ public class IdContainer extends IdContainerJSON {
 	protected void commitSchema() throws Exception {
 		logger.debug("Store is " + store);
 		logger.debug("Schema is " + getSchema());
-		store.update((XNodeContainerSchema) getSchema());
+		store.update((IdContainerSchema) getSchema());
 		updateLists();
 		
 	}
@@ -98,7 +97,7 @@ public class IdContainer extends IdContainerJSON {
 	@Override
 	public void delete() {
 		try {
-			store.delete((XNodeContainerSchema)getSchema());
+			store.delete((IdContainerSchema)getSchema());
 
 		} catch (Exception e) {
 			logger.error("Error", e);

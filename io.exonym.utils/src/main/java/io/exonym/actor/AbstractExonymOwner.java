@@ -31,6 +31,7 @@ import io.exonym.exceptions.PseudonymException;
 import io.exonym.helpers.BuildPresentationTokenDescription;
 import io.exonym.helpers.CredentialWrapper;
 import io.exonym.helpers.UIDHelper;
+import io.exonym.idmx.managers.KeyManagerExonym;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
@@ -122,8 +123,20 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 			throw new RuntimeException(e);
 
 		}
+	}
 
 
+	public void clearStale() throws Exception {
+		if (this.keyManager instanceof KeyManagerExonym){
+			this.open=false;
+			KeyManagerExonym k = (KeyManagerExonym)this.keyManager;
+			k.clearStale();
+			logger.info("Cleared Revocation Information");
+
+		} else {
+			throw new Exception("The key manager was not an acceptable class " + this.keyManager);
+
+		}
 	}
 
 	protected boolean openResourceIfNotLoaded(URI uid) throws Exception {
@@ -512,7 +525,7 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 			container.saveLocalResource(cred, enc);
 
 		} catch (UxException e) {
-			throw new UxException(ErrorMessages.ALREADY_SUBSCRIBED,
+			throw new UxException(ErrorMessages.ALREADY_JOINED,
 					"You are already a member at this Moderator", "");
 
 		}

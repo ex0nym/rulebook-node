@@ -196,6 +196,7 @@ public class ProtectedCouchRepository<T> {
         }
         logger.debug("Attempting to remove " + item.get_id());
         db.remove(item.get_id(), item.get_rev());
+
         item.set_id(null);
         item.set_rev(null);
 

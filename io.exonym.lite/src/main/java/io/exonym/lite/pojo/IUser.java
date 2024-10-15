@@ -23,6 +23,10 @@ public class IUser extends AbstractCouchDbObject  implements Comparable<IUser> {
     private boolean inactive = false;
     private String privileges = null;
 
+    private String x0;
+    private String nibble6;
+
+
     private ArrayList<String> accessFkIds = null;
 
     public String getUsername() {
@@ -97,5 +101,21 @@ public class IUser extends AbstractCouchDbObject  implements Comparable<IUser> {
 
     public void setSalt(String salt) {
         this.salt = salt;
+    }
+
+    public String getX0() {
+        return x0;
+    }
+
+    public void setX0(String x0) {
+        this.x0 = x0;
+    }
+
+    public String getNibble6() {
+        return nibble6;
+    }
+
+    public void setNibble6(String nibble6) {
+        this.nibble6 = nibble6;
     }
 }

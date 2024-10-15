@@ -2,7 +2,6 @@ package io.exonym.utils.storage;
 
 import java.util.HashMap;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -11,7 +10,7 @@ import io.exonym.lite.pojo.Namespace;
 
 @XmlRootElement(name="XContainerSchema")
 @XmlType(name = "XContainerSchema", namespace = Namespace.EX)
-public class XContainerSchema extends AbstractCouchDbObject {
+public class IdContainerSchema extends AbstractCouchDbObject {
 	
 //	@XmlElement(name = "Username", namespace = Namespace.EX)
 	private String username;
@@ -23,7 +22,7 @@ public class XContainerSchema extends AbstractCouchDbObject {
 //	@XmlElement(name = "AppPublicKey", namespace = Namespace.EX)
 	private byte[] appPublicKey;
 
-	public XContainerSchema() {
+	public IdContainerSchema() {
 		this.setType("container");
 
 	}

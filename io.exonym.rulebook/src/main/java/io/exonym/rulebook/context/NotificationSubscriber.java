@@ -9,6 +9,7 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.NetworkMapItem;
 import io.exonym.lite.standard.CryptoUtils;
+import io.exonym.rulebook.schema.BroadcastStringIn;
 import io.exonym.utils.storage.NodeInformation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,34 +18,35 @@ import org.eclipse.paho.client.mqttv3.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
-public class ExonymSubscriber {
+public class NotificationSubscriber {
     
-    private static final Logger logger = LogManager.getLogger(ExonymSubscriber.class);
-    private static ExonymSubscriber instance;
+    private static final Logger logger = LogManager.getLogger(NotificationSubscriber.class);
+    private static NotificationSubscriber instance;
     private NetworkPublicKeyManager publicKeyManager;
-    private ConflictResolver conflictResolver;
+    private OverrideResolver overrideResolver;
     private ExoMatrixWriter writer;
     private JoinIn joinIn0;
     private JoinIn joinIn1;
     private ViolationIn violationIn;
     private PraIn praIn;
     private BlobManager blobManager;
-    private UpdateQueue updateQueue;
+    private NotificationQueue updateQueue;
 
     private ArrayBlockingQueue<Msg> pipeOut;
 
     private String[] topics = new String[2];
 
     static {
-        instance = new ExonymSubscriber();
+        instance = new NotificationSubscriber();
 
     }
 
-    private ExonymSubscriber(){
+    private NotificationSubscriber(){
         try {
-            subscribeToMosquittoTopics();
             buildListenerFramework();
+            subscribeToMosquittoTopics();
 
         } catch (UxException e) {
             logger.info(">>>>>>>>>>>>>>>>>>>>");
@@ -70,10 +72,11 @@ public class ExonymSubscriber {
 
     private void buildListenerFramework() throws Exception {
         publicKeyManager = NetworkPublicKeyManager.getInstance();
-        conflictResolver = new ConflictResolver();
+        MyTrustNetworks mtn = publicKeyManager.getMyTrustNetworks();
 
-        writer = new ExoMatrixWriter(conflictResolver.getPipe());
+        overrideResolver = new OverrideResolver(mtn);
 
+        writer = new ExoMatrixWriter(mtn);
 
         joinIn0 = new JoinIn(0, writer.getPipe(), publicKeyManager);
         joinIn1 = new JoinIn(1, writer.getPipe(), publicKeyManager);
@@ -83,9 +86,10 @@ public class ExonymSubscriber {
         pipesToJoin.add(joinIn1.getPipe());
 
         praIn = new PraIn();
-        violationIn = new ViolationIn(publicKeyManager);
+        violationIn = new ViolationIn(publicKeyManager, mtn);
         blobManager = new BlobManager();
-        updateQueue = new UpdateQueue(pipesToJoin,
+        updateQueue = new NotificationQueue(pipesToJoin,
+                overrideResolver.getPipe(),
                 violationIn.getPipe(),
                 blobManager.getPipe(),
                 praIn.getPipe());
@@ -115,21 +119,30 @@ public class ExonymSubscriber {
                 }
                 RulebookNodeProperties props = RulebookNodeProperties.instance();
                 String id = CryptoUtils.computeSha256HashAsHex(info.getNodeUid().toString());
-                MqttClient client = new MqttClient(props.getMqttBroker(), id);
-                client.setCallback(new SubscriberCallback());
-                client.connect();
-                client.subscribe(topics[0]);
-                if (topics[1]!=null){
-                    client.subscribe(topics[1]);
-                }
-                logger.info(">>>>>>>>>>>>>>>>>>>>");
-                logger.info("> SUBSCRIBER ");
-                logger.info("> ");
-                logger.info("> " + topics[0]);
-                logger.info("> " + topics[1]);
-                logger.info("> ");
-                logger.info(">>>>>>>>>>>>>>>>>>>>");
 
+                MqttClient client = new MqttClient(props.getMqttBroker(), id);
+
+                MqttConnectOptions options = new MqttConnectOptions();
+                options.setCleanSession(false);
+
+                client.setCallback(new SubscriberCallback());
+                client.connect(options);
+
+                if (client.isConnected()){
+                    client.subscribe(topics[0]);
+
+                    if (topics[1]!=null){
+                        client.subscribe(topics[1]);
+                    }
+                    logger.info(">>>>>>>>>>>>>>>>>>>>");
+                    logger.info("> SUBSCRIBER ");
+                    logger.info("> ");
+                    logger.info("> " + topics[0]);
+                    logger.info("> " + topics[1]);
+                    logger.info("> ");
+                    logger.info(">>>>>>>>>>>>>>>>>>>>");
+
+                }
             } else {
                 throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED);
 
@@ -142,7 +155,7 @@ public class ExonymSubscriber {
         }
     }
 
-    protected static ExonymSubscriber getInstance(){
+    public static NotificationSubscriber getInstance(){
         return instance;
     }
 
@@ -152,19 +165,29 @@ public class ExonymSubscriber {
 
     private class SubscriberCallback implements MqttCallback {
 
+        LinkedBlockingDeque<String> dedup = new LinkedBlockingDeque<>(15);
+
         @Override
         public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
             byte[] received = mqttMessage.getPayload();
-            String json = new String(received, StandardCharsets.UTF_8);
-            BroadcastStringIn msg = new BroadcastStringIn(json);
-            logger.info(json);
-            pipeOut.put(msg);
+            String hash = CryptoUtils.computeMd5HashAsHex(received);
 
+            if (!dedup.contains(hash)){
+                String json = new String(received, StandardCharsets.UTF_8);
+                BroadcastStringIn msg = new BroadcastStringIn(json);
+                logger.info(json);
+                pipeOut.put(msg);
+                dedup.put(hash);
+
+            } else {
+                logger.debug("Filtered duplicate " + hash);
+
+            }
         }
 
         @Override
         public void connectionLost(Throwable cause) {
-            logger.info("Connection Lost: " + cause.getMessage());
+            logger.error("Connection Lost: ", cause);
 
         }
 

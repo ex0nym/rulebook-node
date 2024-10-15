@@ -95,7 +95,7 @@ public class PraIn extends ModelCommandProcessor {
 
                     }
                 } else {
-                    scheduleAddNewStaticData(notify.getNodeUID(), pathToLocalFolder);
+                    scheduleAddNewStaticData(notify.getNodeUid(), pathToLocalFolder);
 
                 }
             } catch (Exception e) {
@@ -130,7 +130,7 @@ public class PraIn extends ModelCommandProcessor {
 
     private Object checkSignature(String xml, ExoNotify notify) {
         try {
-            AsymStoreKey key = this.publicKeyManager.getKey(notify.getNodeUID());
+            AsymStoreKey key = this.publicKeyManager.getKey(notify.getNodeUid());
             boolean isRai = notify.getRaiB64()!=null;
             String sig = notify.getPpSigB64()!=null ? notify.getPpSigB64() : notify.getRaiSigB64();
             boolean verified = checkSignature(key, xml, sig);
@@ -205,7 +205,10 @@ public class PraIn extends ModelCommandProcessor {
     private void updateModLeadData(RevocationInformation rai, String xml,
                                    Path pathToLocalFolder, String sig) {
         try {
-            URI uid = rai.getRevocationInformationUID();
+            logger.info("Attempting to write to path=" + pathToLocalFolder);
+            UIDHelper helper = new UIDHelper(rai.getRevocationInformationUID());
+            URI uid = helper.getRevocationAuthorityInfo();
+            logger.info("After Transform:" + uid);
 
             Path raiXmlToUpdate = pathToLocalFolder.resolve(
                     IdContainer.uidToXmlFileName(uid));
@@ -221,7 +224,7 @@ public class PraIn extends ModelCommandProcessor {
             k.setSignature(Base64.decodeBase64(sig));
             kcw.updateKey(k);
 
-            String sigsToWrite = JaxbHelper.serializeToXml(sigs, KeyContainer.class);
+            String sigsToWrite = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
 
             writeLocalFile(raiXmlToUpdate, xml);
             writeLocalFile(sigXmlToUpdate, sigsToWrite);
@@ -242,19 +245,16 @@ public class PraIn extends ModelCommandProcessor {
     private void updateKeyManager(RevocationInformation rai) throws KeyManagerException {
         URI raiUid = rai.getRevocationInformationUID();
         URI rapUid = rai.getRevocationInformationUID();
-        if (keyManagerSingleton.getRevocationInformation(rapUid, raiUid)!=null){
-            keyManagerSingleton.storeRevocationInformation(
-                    rai.getRevocationInformationUID(), rai);
+        logger.info("RAI=" + raiUid);
+        logger.info("RAP=" + rapUid);
+        keyManagerSingleton.storeRevocationInformation(raiUid, rai);
 
-        }
     }
 
     private void scheduleAddNewStaticData(URI nodeUID, Path pathToLocalFolder) {
         double rnd = Math.random() * 1000;
         int seconds = ((int)rnd) % maxScheduledEventTimeSeconds;
         long ms = seconds * 1000l;
-
-
 
         logger.debug("Pausing for " + seconds + " " + ms + " SEARCHING FOR "
                 + nodeUID + " in path " + pathToLocalFolder.toString());
@@ -276,9 +276,9 @@ public class PraIn extends ModelCommandProcessor {
 
     private Path computeLocalFolderPath(ExoNotify notify) {
         String localFolder = CryptoUtils.computeSha256HashAsHex(
-                notify.getNodeUID().toString());
+                notify.getNodeUid().toString());
 
-        URI nodeUID = notify.getNodeUID();
+        URI nodeUID = notify.getNodeUid();
         boolean isLead = WhiteList.isLeadUid(nodeUID);
         return Path.of(Const.PATH_OF_NETWORK, localFolder, (isLead ? Const.LEAD : Const.MODERATOR));
 
@@ -321,7 +321,10 @@ public class PraIn extends ModelCommandProcessor {
         }
 
         private void writeFilesToLocalStore(ConcurrentHashMap<String, ByteArrayBuffer> byteContent) throws IOException {
+            // both are verifier artifacts
             byteContent.remove("rulebook.json");
+            byteContent.remove("description");
+
             Files.createDirectories(folder);
             for (String file : byteContent.keySet()){
                 ByteArrayBuffer bytes = byteContent.get(file);

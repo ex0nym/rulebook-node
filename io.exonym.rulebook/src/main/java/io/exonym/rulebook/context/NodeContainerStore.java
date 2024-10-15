@@ -5,20 +5,20 @@ import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.ProgrammingException;
 import io.exonym.rulebook.exceptions.ItemNotFoundException;
 import io.exonym.lite.pojo.TypeNames;
-import io.exonym.rulebook.schema.XNodeContainerSchema;
+import io.exonym.rulebook.schema.IdContainerSchema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
-public class XNodeContainerStore {
+public class NodeContainerStore {
 
-	private static XNodeContainerStore instance;
-	private final CouchRepository<XNodeContainerSchema> store;
+	private static NodeContainerStore instance;
+	private final CouchRepository<IdContainerSchema> store;
 
 
-	private static final Logger logger = LogManager.getLogger(XNodeContainerStore.class);
-	protected XNodeContainerStore() throws Exception {
+	private static final Logger logger = LogManager.getLogger(NodeContainerStore.class);
+	protected NodeContainerStore() throws Exception {
 		logger.debug("Init Container Store");
 		this.store = CouchDbHelper.repoContainerStore();
 
@@ -29,13 +29,13 @@ public class XNodeContainerStore {
 	 * @param record
 	 * @return _id of newly added object 
 	 */
-	public synchronized String[] add(XNodeContainerSchema record) throws Exception {
+	public synchronized String[] add(IdContainerSchema record) throws Exception {
 		this.store.create(record);
 		return new String[] {record.get_id(), record.get_rev()};
 		
 	}
 	
-	public synchronized void update(XNodeContainerSchema schema) throws Exception {
+	public synchronized void update(IdContainerSchema schema) throws Exception {
 		if (schema!=null) {
 			this.store.update(schema);
 
@@ -47,11 +47,11 @@ public class XNodeContainerStore {
 
 
 
-	public synchronized XNodeContainerSchema getContainer(String username) throws Exception{
+	public synchronized IdContainerSchema getContainer(String username) throws Exception{
 		try {
 			QueryBasic q = new QueryBasic();
 			q.getSelector().put(TypeNames.CONTAINERS_USERNAME, username);
-			List<XNodeContainerSchema> containers = store.read(q);
+			List<IdContainerSchema> containers = store.read(q);
 			if (containers.isEmpty()){
 				throw new ItemNotFoundException("Container(" + username + ")");
 				
@@ -68,7 +68,7 @@ public class XNodeContainerStore {
 		}
 	}
 
-	public synchronized void delete(XNodeContainerSchema schema) throws Exception{
+	public synchronized void delete(IdContainerSchema schema) throws Exception{
 		this.store.delete(schema);
 
 
@@ -100,7 +100,7 @@ public class XNodeContainerStore {
 
 	static {
 		try {
-			instance = new XNodeContainerStore();
+			instance = new NodeContainerStore();
 
 		} catch (Exception e) {
 			logger.error(">>>>>>> >>>>>>>>>>> Catastrophic Error", e);
@@ -108,7 +108,7 @@ public class XNodeContainerStore {
 		}
 	}
 	
-	public static XNodeContainerStore getInstance() {
+	public static NodeContainerStore getInstance() {
 		return instance;
 		
 	}

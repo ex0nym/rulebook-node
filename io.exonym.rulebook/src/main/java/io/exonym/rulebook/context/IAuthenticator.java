@@ -209,11 +209,13 @@ public class IAuthenticator extends StandardAuthenticator {
         }
     }
 
+    @Override
+    protected synchronized void authenticateApiKey(String kid, String key) throws Exception {
+        super.authenticateApiKey(kid, key);
+    }
+
     public HashSet<String> getIssuanceAuthenticated() {
         return issuanceAuthenticated;
     }
 
-    public static void main(String[] args) {
-
-    }
 }

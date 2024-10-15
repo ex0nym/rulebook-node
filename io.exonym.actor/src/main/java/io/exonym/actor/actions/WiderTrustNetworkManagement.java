@@ -113,7 +113,7 @@ public class WiderTrustNetworkManagement {
 
     }
 
-    protected TrustNetwork setupWiderTrustNetwork() throws Exception {
+    public TrustNetwork setupWiderTrustNetwork() throws Exception {
         TrustNetwork tn = new TrustNetwork();
         NodeInformation ni = new NodeInformation();
         URI url = URI.create(props.getPrimaryDomain())
@@ -157,11 +157,5 @@ public class WiderTrustNetworkManagement {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
-        wtn.setupWiderTrustNetwork();
-        wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), false);
-        wtn.publish();
-    }
 
 }

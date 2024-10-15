@@ -1,9 +1,11 @@
 package io.exonym.lite.standard;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Formatter;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -19,6 +21,33 @@ public class CryptoUtils {
 	
 	private static final Logger logger = LogManager.getLogger(CryptoUtils.class);
 
+	public static String computeMd5HashAsHex(String string){
+		return computeMd5HashAsHex(string.getBytes(StandardCharsets.UTF_8));
+
+	}
+
+	public static String computeMd5HashAsHex(byte[] bytes){
+			try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			byte[] digest = md.digest(bytes);
+			return byteArrayToHex(digest);
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+
+		}
+	}
+
+	public static String byteArrayToHex(final byte[] hash) {
+		Formatter formatter = new Formatter();
+		for (byte b : hash) {
+			formatter.format("%02x", b);
+		}
+		String result = formatter.toString();
+		formatter.close();
+		return result;
+	}
+
 	public static String computeSha256HashAsHex(String string)  {
 		try {
 			return computeSha256HashAsHex(string.getBytes("UTF-8"));
@@ -29,7 +58,7 @@ public class CryptoUtils {
 			
 		} 
 	}
-	
+
 	public static String computeSha256HashAsHex(byte[] bytes) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -37,7 +66,21 @@ public class CryptoUtils {
 			byte[] digest = md.digest();
 			BigInteger bigI = new BigInteger(1, digest);
 			return String.format("%064x", bigI);
-			
+
+		} catch (NoSuchAlgorithmException e) {
+			return null;
+
+		}
+	}
+
+	public static byte[] computeSha256HashAsBytes(byte[] bytes) {
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			md.update(bytes);
+			byte[] digest = md.digest();
+			BigInteger bigI = new BigInteger(1, digest);
+			return bigI.toByteArray();
+
 		} catch (NoSuchAlgorithmException e) {
 			return null;
 

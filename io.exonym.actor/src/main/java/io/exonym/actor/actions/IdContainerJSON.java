@@ -14,7 +14,7 @@ import io.exonym.lite.pojo.Rulebook;
 import io.exonym.utils.adapters.PresentationPolicyAlternativesAdapter;
 import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.KeyContainer;
-import io.exonym.utils.storage.XContainerSchema;
+import io.exonym.utils.storage.IdContainerSchema;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +35,7 @@ public class IdContainerJSON extends AbstractIdContainer {
 	
 	private static final Logger logger = LogManager.getLogger(IdContainerJSON.class);
 	
-	private final XContainerSchema schema;
+	private final IdContainerSchema schema;
 	private File testFolder;
 	private File file;
 	private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -88,13 +88,13 @@ public class IdContainerJSON extends AbstractIdContainer {
 	}
 	
 	
-	protected XContainerSchema init(boolean create) throws Exception {
+	protected IdContainerSchema init(boolean create) throws Exception {
 		
 		// Is creating a new container.
 		if (create){
 			if (!testFolder.exists()){
 				testFolder.mkdirs();
-				XContainerSchema t = new XContainerSchema();
+				IdContainerSchema t = new IdContainerSchema();
 				t.setUsername(getUsername());
 				
 				try (FileOutputStream fos = new FileOutputStream(file)){
@@ -113,7 +113,7 @@ public class IdContainerJSON extends AbstractIdContainer {
 		} else {
 			if (testFolder.exists()){
 				Path path = Path.of(file.toURI());
-				return JaxbHelper.jsonFileToClass(path, XContainerSchema.class);
+				return JaxbHelper.jsonFileToClass(path, IdContainerSchema.class);
 				
 			} else {
 				throw new UxException("The Container does not exist (For Web Run XNodeContainer)" + this.getUsername());
@@ -124,7 +124,7 @@ public class IdContainerJSON extends AbstractIdContainer {
 	
 	protected void commitSchema() throws Exception {
 		try (FileOutputStream fos = new FileOutputStream(file)){
-			fos.write(JaxbHelper.serializeToJson(schema, XContainerSchema.class).getBytes());
+			fos.write(JaxbHelper.serializeToJson(schema, IdContainerSchema.class).getBytes());
 			updateLists();
 			
 		} catch (Exception e) {
@@ -395,7 +395,7 @@ public class IdContainerJSON extends AbstractIdContainer {
 		
 	}
 
-	public XContainerSchema getSchema() {
+	public IdContainerSchema getSchema() {
 		return schema;
 		
 	}

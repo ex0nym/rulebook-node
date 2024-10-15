@@ -2,26 +2,30 @@ package io.exonym.lite.pojo;
 
 
 import io.exonym.lite.parallel.Msg;
+import io.exonym.lite.standard.CryptoUtils;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
-public class ExoNotify implements Msg {
+public class ExoNotify implements Msg, VioIndexable {
 
     public static final String TYPE_JOIN = "JOIN";
 
     public static final String TYPE_LEAD = "LEAD";
     public static final String TYPE_VIOLATION = "VIOLATION";
 
-    public static final String TYPE_ACK = "ACK";
+    public static final String TYPE_MOD = "MOD";
+
+    public static final String TYPE_OVERRIDE = "OVERRIDE";
 
     private String type;
-    private URI nodeUID;
+    private URI nodeUid;
     private String t;
     private String nibble6;
     private String hashOfX0;
+    private String timeOfViolation;
     private String sigB64;
-
     private String ppB64;
 
     private String raiB64;
@@ -29,6 +33,19 @@ public class ExoNotify implements Msg {
     private String ppSigB64;
 
     private String raiSigB64;
+
+    private ArrayList<Vio> vios;
+
+    public ArrayList<Vio> getVios() {
+        if (vios ==null){
+            vios = new ArrayList<>();
+        }
+        return vios;
+    }
+
+    public void setVios(ArrayList<Vio> vios) {
+        this.vios = vios;
+    }
 
     public String getType() {
         return type;
@@ -38,16 +55,13 @@ public class ExoNotify implements Msg {
         this.type = type;
     }
 
-    public URI getNodeUID() {
-        return nodeUID;
+
+    public URI getNodeUid() {
+        return nodeUid;
     }
 
-    public void setNodeUID(URI nodeUID) {
-        this.nodeUID = nodeUID;
-    }
-
-    public String getT() {
-        return t;
+    public void setNodeUid(URI nodeUid) {
+        this.nodeUid = nodeUid;
     }
 
     public void setT(String t) {
@@ -110,26 +124,52 @@ public class ExoNotify implements Msg {
         this.raiSigB64 = raiSigB64;
     }
 
+    public String getTimeOfViolation() {
+        return timeOfViolation;
+    }
+
+    @Override
+    public URI getModOfVioUid() {
+        if (!vios.isEmpty()){
+            return vios.get(0).getModOfVioUid();
+        }
+        return null;
+    }
+
+
+    public void setTimeOfViolation(String timeOfViolation) {
+        this.timeOfViolation = timeOfViolation;
+    }
+
     public static byte[] signatureOn(ExoNotify notify){
-        return (notify.getT()
-                + notify.getNibble6()
-                + notify.getType()
-                + notify.getHashOfX0()
-                + notify.getNodeUID())
-                .getBytes(StandardCharsets.UTF_8);
+        StringBuilder builder = new StringBuilder();
+        ArrayList<Vio> vios = notify.getVios();
+        for (Vio vio : vios){
+            if (!vio.getRuleUids().isEmpty()){
+                builder.append(vio.getRuleUids().get(0));
+                builder.append(vio.getTimeOfViolation());
+            }
+        }
+        builder.append(notify.getTimeOfViolation());
+        builder.append(notify.getTimeOfViolation());
+        builder.append(notify.getNibble6());
+        builder.append(notify.getType());
+        builder.append(notify.getHashOfX0());
+        builder.append(notify.getNodeUid());
+        return CryptoUtils.computeSha256HashAsBytes(
+                builder.toString().getBytes(StandardCharsets.UTF_8));
 
     }
 
-    public static byte[] signatureOnAckAndOrigin(ExoNotify notify){
-        return (notify.getType()
-                + notify.getT()
-                + notify.getNodeUID())
-                .getBytes(StandardCharsets.UTF_8);
-
+    public String getT() {
+        return t;
     }
 
     @Override
     public String toString() {
-        return this.type + " " + (this.hashOfX0==null ? this.getNodeUID() : this.hashOfX0);
+        return this.type + " n6=" + nibble6 +
+                " x0' || mod=" +
+                (this.hashOfX0==null ? this.getNodeUid() : this.hashOfX0);
     }
+
 }

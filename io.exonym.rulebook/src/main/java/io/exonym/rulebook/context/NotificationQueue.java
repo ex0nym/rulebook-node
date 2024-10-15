@@ -6,6 +6,7 @@ import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoNotify;
 import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.WhiteList;
+import io.exonym.rulebook.schema.BroadcastStringIn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,13 +14,12 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class UpdateQueue extends ModelCommandProcessor {
+public class NotificationQueue extends ModelCommandProcessor {
 
-    // ack processing
     // own broadcast processing
     // network processing
 
-    private static final Logger logger = LogManager.getLogger(UpdateQueue.class);
+    private static final Logger logger = LogManager.getLogger(NotificationQueue.class);
     private final Gson gson = new Gson();
     private int joinIndex;
     private final int joinSize;
@@ -28,20 +28,24 @@ public class UpdateQueue extends ModelCommandProcessor {
     private final ArrayBlockingQueue<Msg> pipeToViolation;
     private final ArrayBlockingQueue<Msg> pipeToLocalBlob;
     private final ArrayBlockingQueue<Msg> pipeToPraIn;
-    private final URI hostUuid;
+    private final ArrayBlockingQueue<Msg> pipeToOverride;
+    private final URI ModUid;
 
-    protected UpdateQueue(ArrayList<ArrayBlockingQueue<Msg>> pipesToJoin,
-                          ArrayBlockingQueue<Msg> pipeToViolation,
-                          ArrayBlockingQueue<Msg> pipeToLocalBlob,
-                          ArrayBlockingQueue<Msg> pipeToPraIn) throws Exception {
+    protected NotificationQueue(ArrayList<ArrayBlockingQueue<Msg>> pipesToJoin,
+                                ArrayBlockingQueue<Msg> pipeToOverride,
+                                ArrayBlockingQueue<Msg> pipeToViolation,
+                                ArrayBlockingQueue<Msg> pipeToLocalBlob,
+                                ArrayBlockingQueue<Msg> pipeToPraIn) throws Exception {
         super(Const.FLUX_CAPACITY, "UpdateQueue", 60000l);
         this.pipesToJoin=pipesToJoin;
         this.pipeToViolation=pipeToViolation;
         this.pipeToLocalBlob=pipeToLocalBlob;
         this.pipeToPraIn = pipeToPraIn;
+        this.pipeToOverride = pipeToOverride;
         this.joinSize=this.pipesToJoin.size();
         // Todo, this needs to be established via the trust networks object.
-        this.hostUuid = null;
+        // see below (updateBlob())
+        this.ModUid = null;
 
     }
 
@@ -79,30 +83,35 @@ public class UpdateQueue extends ModelCommandProcessor {
 
     private void distributeNotification(ExoNotify notify) throws Exception {
         String type = notify.getType();
-        if (type.equals(ExoNotify.TYPE_JOIN)){
-            join(notify);
+        if (type!=null) {
+            if (type.equals(ExoNotify.TYPE_JOIN)){
+                join(notify);
 
-        } else if (type.equals(ExoNotify.TYPE_VIOLATION)){
-            violation(notify);
+            } else if (type.equals(ExoNotify.TYPE_VIOLATION)){
+                violation(notify);
 
-        } else if (type.equals(ExoNotify.TYPE_LEAD)){
-            prain(notify);
+            } else if (type.equals(ExoNotify.TYPE_LEAD)){
+                prain(notify);
 
-        } else if (type.equals(ExoNotify.TYPE_ACK)){
-            logger.info("5took something out!");
-            logger.info("6took something out!");
-            logger.info("7took something out!");
-            logger.info("8took something out!");
+            } else if (type.equals(ExoNotify.TYPE_MOD)){
+                prain(notify);
 
+            } else if (type.equals(ExoNotify.TYPE_OVERRIDE)){
+                overrideVio(notify);
 
-        }
-        // If message originates from own Node, update blob.
-        if (notify.getNodeUID().equals(this.hostUuid)){
-            if (type.equals(ExoNotify.TYPE_JOIN) || type.equals(ExoNotify.TYPE_VIOLATION)) {
-                blob(notify);
+            } else {
+                logger.warn("Received a bad type " + type);
 
             }
+        } else {
+            logger.warn("Type was not set at the sender - failed to process.");
+
         }
+    }
+
+    private void overrideVio(ExoNotify notify) throws Exception {
+        this.pipeToOverride.put(notify);
+
     }
 
     private void prain(ExoNotify notify) throws Exception {

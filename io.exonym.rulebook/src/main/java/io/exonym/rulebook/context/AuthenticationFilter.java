@@ -4,21 +4,27 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import com.ibm.zurich.idmix.abc4trust.facades.RevocationInformationFacade;
+import eu.abc4trust.xml.RevocationHistory;
+import eu.abc4trust.xml.RevocationInformation;
 import io.exonym.actor.IdContainerExternal;
+import io.exonym.actor.actions.ExonymIssuer;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
 import io.exonym.actor.actions.IdContainerJSON;
+import io.exonym.helpers.UIDHelper;
+import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.IUser;
+import io.exonym.lite.pojo.NetworkMapItemModerator;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.rulebook.schema.CacheNodeContainer;
+import io.exonym.rulebook.schema.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
@@ -26,11 +32,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.UUID;
 
@@ -50,6 +58,7 @@ public class AuthenticationFilter implements Filter {
             // time if there aren't enough resources
             testSecureRandom();
 
+
             setupCoreDbTables();
 
             NetworkMapWeb map = new NetworkMapWeb();
@@ -62,6 +71,20 @@ public class AuthenticationFilter implements Filter {
             IdContainerJSON.openSystemParameters();
             IdContainerExternal.openSystemParameters();
 
+            NetworkMapItemModerator nmim = map.nmiForMyNodesModerator();
+            UIDHelper helper = new UIDHelper(nmim.getLastIssuerUID());
+            helper.out();
+            IdContainer id = new IdContainer(helper.getModeratorName());
+            RevocationInformation ri = id.openResource(helper.getRevocationInfoFileName());
+//            RevocationInformationFacade rif = new RevocationInformationFacade(ri);
+//            RevocationHistory rh = rif.getRevocationHistory();
+//            rh.getRevocationLogEntry().clear();
+
+            ExonymIssuer.removeRevocationHistory(ri);
+            String xml = IdContainer.convertObjectToXml(ri);
+            logger.info(xml);
+
+
 //            MqttClient client = new MqttClient("tcp://host.docker.internal:1883", "hello");
 //            client.connect();
 //            MqttMessage message = new MqttMessage("hell".getBytes());
@@ -69,8 +92,11 @@ public class AuthenticationFilter implements Filter {
 //            client.publish("test/topic", message);
 
 
-            ExonymPublisher.getInstance();
-            ExonymSubscriber.getInstance();
+            NotificationSubscriber.getInstance();
+
+
+            NotificationPublisher.getInstance();
+
 
             logger.info("NetworkMap, Publisher, Subscriber, and System Parameters initialized successfully.");
 
@@ -283,7 +309,7 @@ public class AuthenticationFilter implements Filter {
     public void destroy() {
         logger.info("Cleaning up API Context");
         try {
-            ExonymPublisher.getInstance().close();
+            NotificationPublisher.getInstance().close();
 
         } catch (Exception e) {
             logger.error("Error", e);

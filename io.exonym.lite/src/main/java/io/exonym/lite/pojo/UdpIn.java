@@ -1,5 +1,6 @@
 package io.exonym.lite.pojo;
 
+@Deprecated
 public class UdpIn {
 
     private String hostUuid;

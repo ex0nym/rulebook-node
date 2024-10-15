@@ -81,5 +81,10 @@ public final class NodeManagerWeb extends NodeManager {
 		}
 	}
 
+	public static void main(String[] args) {
+		JoinSupportSingleton.getInstance();
+
+
+	}
 
 }

@@ -41,6 +41,21 @@
       <groupId>com.ibm.zurich.idmx</groupId>
       <artifactId>com.ibm.zurich.idmx.3_x_x</artifactId>
       <version>3.1.0</version>
+        <exclusions>
+            <exclusion>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>jakarta.xml.ws</groupId>
+                <artifactId>jakarta.xml.ws-api</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+            </exclusion>
+        </exclusions>
+
     </dependency>
 
     <dependency>
@@ -78,12 +93,12 @@
           <version>1.0</version>
       </dependency>
 
-      <!-- We need this dependency for the namespace prefix mapper -->
-      <dependency>
-          <groupId>com.sun.xml.ws</groupId>
-          <artifactId>webservices-rt</artifactId>
-          <version>2.0.1</version>
-      </dependency>
+<!--      &lt;!&ndash; We need this dependency for the namespace prefix mapper &ndash;&gt;-->
+<!--      <dependency>-->
+<!--          <groupId>com.sun.xml.ws</groupId>-->
+<!--          <artifactId>webservices-rt</artifactId>-->
+<!--          <version>2.0.1</version>-->
+<!--      </dependency>-->
 
 	<dependency>
 	    <groupId>com.jcraft</groupId>

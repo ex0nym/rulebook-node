@@ -1,6 +1,8 @@
 package io.exonym.rulebook.context;
 
 
+import com.google.gson.Gson;
+import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.actions.ExonymMatrix;
 import io.exonym.actor.storage.Poke;
 import io.exonym.lite.connect.UrlHelper;
@@ -9,13 +11,16 @@ import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.*;
 import io.exonym.lite.standard.AsymStoreKey;
+import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.KeyContainerWrapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,11 +77,13 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
     protected ExonymDetailedResult detailedResult(String x0) throws Exception {
         // discover x-list
         openExonymMatrix(targetMod.getStaticURL0().toString(), x0, this.xList, this.root);
+
+        // TODO Recover from node unavailable, with accurate data from `Vio`
         ExonymMatrixRow row = matrix.findExonymRow(x0);
-        ArrayList<String> rules = matrix.getRuleUrns();
+        ArrayList<URI> rules = matrix.getRuleUrns();
         matrix = null;
-        logger.debug("Should not be null: " + row);
-        logger.debug("Should not be null: " + rules);
+        logger.debug("detailedResult() row (not null): " + row);
+        logger.debug("detailedResult() rules (not null): " + rules);
         ArrayList<Violation> violations = row.getViolations();
 
         ExonymDetailedResult result = new ExonymDetailedResult();
@@ -91,9 +98,16 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
         ArrayList<DateTime> violationTime = new ArrayList<>();
         if (violations!=null && !violations.isEmpty()){
             for (Violation v : violations){
-                if (!v.isSettled() && !result.isUnsettled()){
+                logger.info("Found Violation=" + JaxbHelper.gson.toJson(v));
+
+                if (!(v.isSettled() && result.isUnsettled())){
                     result.setUnsettled(true);
-                    result.setUnsettledRuleId(v.getRuleUrn());
+                    result.getUnsettledRuleId().addAll(v.getRuleUids());
+
+                }
+                if (v.isOverride()){ // It might be unsettled, but can be overridden by lead
+                    result.setUnsettled(false);
+                    result.setOverridden(true);
 
                 }
                 violationTime.add(new DateTime(v.getTimestamp()));
@@ -107,35 +121,30 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
         }
     }
 
-    private void analyseRow(ExonymMatrixRow row, ArrayList<String> rules, ExonymDetailedResult result) {
-        // The user may have quit after a violation and before it was reported.
-        if (row.isQuit()){
-            result.setQuit(true);
+    private void analyseRow(ExonymMatrixRow row, ArrayList<URI> rules, ExonymDetailedResult result) {
+        // If they've not quit, and there are no unsettled violations, then they've already joined
+        if (!result.isUnsettled()){
+            ArrayList<URI> cont = result.getActiveControlledRules();
+            ArrayList<URI> uncont = result.getActiveUncontrolledRules();
+            HashMap<String, URI> xiToRj = mapXiToRj(rules, row.getExonyms());
 
-        } else {
-            // If they've not quit, and there are no unsettled violations, then they've already joined
-            if (!result.isUnsettled()){
-                ArrayList<String> cont = result.getActiveControlledRules();
-                ArrayList<String> uncont = result.getActiveUncontrolledRules();
-                HashMap<String, String> xiToRj = mapXiToRj(rules, row.getExonyms());
+            for (String xn : row.getExonyms()){
+                if (xn.equals("null")){
+                    uncont.add(xiToRj.get(xn));
 
-                for (String xn : row.getExonyms()){
-                    if (xn.equals("null")){
-                        uncont.add(xiToRj.get(xn));
+                } else {
+                    cont.add(xiToRj.get(xn));
 
-                    } else {
-                        cont.add(xiToRj.get(xn));
-
-                    }
                 }
             }
         }
+
     }
 
-    private HashMap<String, String> mapXiToRj(ArrayList<String> rules, ArrayList<String> exonyms) {
-        HashMap<String, String> xiToRj = new HashMap<>();
+    private HashMap<String, URI> mapXiToRj(ArrayList<URI> rules, ArrayList<String> exonyms) {
+        HashMap<String, URI> xiToRj = new HashMap<>();
         int i = 0;
-        for (String rj : rules){
+        for (URI rj : rules){
             String xi = exonyms.get(i);
             xiToRj.put(xi, rj);
             i++;
@@ -171,6 +180,67 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
     }
 
     @Override
+    protected Poke openPoke(String primaryUrl, String xOrYList) throws Exception {
+        String path = computePokePathToFile(xOrYList);
+        String pokeUrl = primaryEndPoint(primaryUrl, path);
+        try {
+            String poke = new String(
+                    UrlHelper.read(new URL(pokeUrl)),
+                    StandardCharsets.UTF_8);
+            logger.debug(poke);
+
+            Gson gson = new Gson();
+            return gson.fromJson(poke, Poke.class);
+
+        } catch (IOException e) {
+            return handlePokeNotFound(e);
+
+        }
+    }
+
+    @Override
+    protected KeyContainerWrapper openSignatures(String primaryUrl, String nibble3, String xOrYList) throws Exception  {
+        String n3Path = computeN3PathToFile(nibble3, xOrYList);
+        String sigUrl = primaryEndPoint(primaryUrl, n3Path);
+        try {
+            this.signatureByteData = UrlHelper.read(new URL(sigUrl));
+            String xml = new String(signatureByteData, StandardCharsets.UTF_8);
+            logger.debug(xml);
+            return new KeyContainerWrapper(
+                    JaxbHelper.xmlToClass(xml, KeyContainer.class)
+
+            );
+        } catch (Exception e) {
+            return handleKeyContainerNotFound(e);
+
+        }
+    }
+
+    @Override
+    protected ExonymMatrix openTargetMatrix(String primaryUrl, String nibble3, String nibble6, String xOrYList) throws Exception {
+        if (this.matrixByteData==null){
+            String path = computeN6PathToFile(nibble3, nibble6, xOrYList);
+            String target = primaryEndPoint(primaryUrl, path);
+            logger.debug(target);
+            try {
+                this.matrixByteData = UrlHelper.read(new URL(target));
+                String json = new String(matrixByteData, StandardCharsets.UTF_8);
+                Gson g = new Gson();
+                return g.fromJson(json, ExonymMatrix.class);
+
+            } catch (Exception e) {
+                return handleMatrixNotFound(e, nibble6);
+
+            }
+        } else {
+            String json = new String(matrixByteData, StandardCharsets.UTF_8);
+            Gson g = new Gson();
+            return g.fromJson(json, ExonymMatrix.class);
+
+        }
+    }
+
+    @Override
     protected ExonymMatrix handleMatrixNotFound(Exception e, String n6) throws Exception {
         throw new UxException(ErrorMessages.NIBBLE6_NOT_FOUND);
     }
@@ -178,4 +248,6 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
     public static void main(String[] args) throws Exception {
 
     }
+
+
 }

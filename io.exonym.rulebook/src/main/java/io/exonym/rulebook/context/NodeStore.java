@@ -172,7 +172,7 @@ public class NodeStore {
 
 	// TODO This can likely be changed to read from MyTrustNetworks
 	// check what extra information is contained in NodeData over TrustNetwork
-	public synchronized NodeData openThisAdvocate() throws Exception {
+	public synchronized NodeData openThisModerator() throws Exception {
 		ArrayList<NodeData> nodes = findType(NodeData.TYPE_MODERATOR);
 		if (nodes.isEmpty()){
 			return null;

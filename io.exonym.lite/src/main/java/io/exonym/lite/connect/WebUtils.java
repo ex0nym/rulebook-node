@@ -73,7 +73,7 @@ public class WebUtils {
         return outputStream.toString();
     }
 
-    private static HashMap<String, String> parseKeyValuePairsToMap(String s) {
+    public static HashMap<String, String> parseKeyValuePairsToMap(String s) {
         HashMap<String, String> result = new HashMap<>();
         if (s!=null && s.length()>0){
             String[] kvp = s.split("&");

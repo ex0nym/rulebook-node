@@ -21,7 +21,6 @@ import io.exonym.rulebook.schema.CacheNodeContainer;
 import io.exonym.utils.storage.*;
 import io.exonym.lite.pojo.NodeData;
 import io.exonym.rulebook.schema.IdContainer;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -95,7 +94,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     @Override
     public void spawn() {
         try {
-            CouchRepository<NetworkMapNodeOverview> repo = CouchDbHelper.repoNetworkMapSourceOverview();
+            CouchRepository<NetworkMapNodeOverview> repo = CouchDbHelper.repoNetworkMapLeadOverview();
             try {
                 QueryBasic q = QueryBasic.selectType(NetworkMapNodeOverview.TYPE_NETWORK_MAP_NODE_OVERVIEW);
                 allLeads = repo.read(q).get(0);
@@ -146,7 +145,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
     @Override
     public boolean networkMapExists() throws Exception {
-        CouchRepository<NetworkMapNodeOverview> repo = CouchDbHelper.repoNetworkMapSourceOverview();
+        CouchRepository<NetworkMapNodeOverview> repo = CouchDbHelper.repoNetworkMapLeadOverview();
         try {
             QueryBasic q = QueryBasic.selectType(
                     NetworkMapNodeOverview.TYPE_NETWORK_MAP_NODE_OVERVIEW);
@@ -358,7 +357,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     private NetworkMapNodeOverview openState() throws Exception {
         try {
             QueryBasic q = QueryBasic.selectType(NetworkMapNodeOverview.TYPE_NETWORK_MAP_NODE_OVERVIEW);
-            return CouchDbHelper.repoNetworkMapSourceOverview().read(q).get(0);
+            return CouchDbHelper.repoNetworkMapLeadOverview().read(q).get(0);
 
         } catch (NoDocumentException e) {
             throw new HubException("Network Map Not Available");
@@ -719,15 +718,17 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
     private void populateNodeFields() throws Exception {
         try {
-            CouchRepository<NetworkMapNodeOverview> repo = CouchDbHelper.repoNetworkMapSourceOverview();
+            CouchRepository<NetworkMapNodeOverview> repo = CouchDbHelper.repoNetworkMapLeadOverview();
             NetworkMapNodeOverview overview = repo.read(QueryBasic.selectType(NetworkMapNodeOverview.TYPE_NETWORK_MAP_NODE_OVERVIEW)).get(0);
             this.myModeratorUID = overview.getModeratorUID();
             this.myModeratorsLeadUID = overview.getThisModeratorLeadUID();
             this.myNodesLeadUID = overview.getThisNodeLeadUID();
 
         } catch (NoDocumentException e) {
-            throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED,
-                    "It is likely that this node is not yet part of the Source it claims to be.");
+            String name = RulebookNodeProperties.instance().getDbPrefix() + "_network";
+            UxException e0 = new UxException(ErrorMessages.MOD_NOT_FOUND_ON_NETWORK_MAP, name);
+            throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED, e0,
+                    "It is could be that this node is not yet part of the Trust Network it wants to join.");
 
         }
     }
@@ -745,7 +746,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
     }
 
-    public NetworkMapItemLead nmiForMyModeratorsSource() throws Exception {
+    public NetworkMapItemLead nmiForMyModeratorsLead() throws Exception {
         if (myModeratorsLeadUID ==null){
             populateNodeFields();
 
@@ -770,18 +771,9 @@ public class NetworkMapWeb extends AbstractNetworkMap {
 
     }
 
-    public static void main(String[] args) throws Exception{
-        String jso = "{\"type\":\"ACK\",\"advocateUID\":\"urn:rulebook:exosources:baseline:69bb840695e4fd79a00577de5f0071b311bbd8600430f6d0da8f865c5c459d44\",\"t\":\"2023-03-21T09:46:54Z\",\"sigB64\":\"owi6c3JdrhH6PfWMVKSnD3Tu+NojKhhrWb3MXom1hu6SJEOMGGemIPr2nhkek1diK3flBpudvgZUVOD9iWq/KKNnwZgaT9Ujo4VXXgfZMXKRm2lqiPPMh07FYhyLc0Y8mlx+JPQQB63i8Fs8iFV5vszFqbtMZ6ZhxiCUw4QGA2M9MyO8Dzx8eYVQIUkDqhIWpyR0XzSWUuG3XnzQUv/NgyBLM+lYEDAqwKjJbOa+HO60D4HyMoqDDNiYVi5LP0F7plemq391BD2ln/6FXHmh7JEp52EhFUOQgFLzPcXMlVbK4vKyuhXRYFY0eP9gMO7mC8LARmjkYUZNpSo0ObChlg\\u003d\\u003d\"}";
-        ExoNotify notify = JaxbHelper.jsonToClass(jso, ExoNotify.class);
-        byte[] sig = ExoNotify.signatureOnAckAndOrigin(notify);
-        byte[] sigIn = Base64.decodeBase64(notify.getSigB64().getBytes(StandardCharsets.UTF_8));
-        AsymStoreKey key = AsymStoreKey.blank();
-        key.assembleKey("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjdFeH4v9lcyQCDgMDrk8AFyn9HUlriX6ucOlC3JrY1khkuSG2PspendK86+uEYFh0ApA0oeAZwJTCuqyrbRq8WAvGY0dBq0nHff65wXwCCd1LDiZb51A0gs7JfdnZUa2qddmBcXalTG5DvvzO+G003YhIQtANRfArSObIzstTDi6fB9Hcqic0xsm7EUUB1qnmRwNBWRRSaP+oTv0nBZaE0q7lo5WGz6VitMaKCn37Kn0OQi4YP0os51RoI+DkHnZu7PNaG4WCZrNxWafnHeUVrCPwOw4sWsAIwNi9NGbxo5eYTZw9m8A/sDfDY5WWgVc/7e5lrmVpr38g4Qw4abqIwIDAQAB");
-        key.verifySignature(sig, sigIn);
-
-//        NetworkMapWeb map = new NetworkMapWeb();
-//        map.spawn();
-
+    public static void main(String[] args) {
+        logger.info(UIDHelper.transformMaterialUid(URI.create("urn:rulebook:asdasds:asdasd:asda:asda:i"), "rai"));
 
     }
+
 }

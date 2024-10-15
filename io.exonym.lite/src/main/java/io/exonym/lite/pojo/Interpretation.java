@@ -2,8 +2,9 @@ package io.exonym.lite.pojo;
 
 public class Interpretation {
 
-    String modifier;
-    String definition;
+    private String modifier;
+    private String definition;
+
 
     public String getModifier() {
         return modifier;

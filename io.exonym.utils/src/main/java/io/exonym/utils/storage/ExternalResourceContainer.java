@@ -14,6 +14,7 @@ import eu.abc4trust.xml.RevocationInformation;
 import eu.abc4trust.xml.SystemParameters;
 import io.exonym.abc.util.FileType;
 import io.exonym.abc.util.IoMngt;
+import io.exonym.lite.standard.WhiteList;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.utils.IsoCountryCode;
 import org.apache.logging.log4j.LogManager;
@@ -29,8 +30,12 @@ public abstract class ExternalResourceContainer {
 	
 	protected ExternalResourceContainer(){}
 
-	public synchronized <T> T openResource(URI uid) throws Exception{
-		return openResource(IdContainer.uidToXmlFileName(uid));
+	public synchronized <T> T openResource(URI uri) throws Exception{
+		if (WhiteList.isRulebookUid(uri)){
+			return (T)openResource(IdContainer.uidToFileName(uri) + ".json");
+		} else {
+			return (T)openResource(IdContainer.uidToXmlFileName(uri));
+		}
 	}
 
 	@SuppressWarnings("unchecked")

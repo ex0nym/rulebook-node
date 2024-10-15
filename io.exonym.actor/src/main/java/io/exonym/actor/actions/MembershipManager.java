@@ -13,6 +13,7 @@ import io.exonym.helpers.BuildCredentialSpecification;
 import io.exonym.lite.pojo.Namespace;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.AsymStoreKey;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.uri.NamespaceMngt;
@@ -207,11 +208,11 @@ public class MembershipManager {
 		logger.info("There were " + atts.size() + " attribute(s) produced as a result of the inspection");
 		for (Attribute a : atts) {
 			map.put(a.getAttributeDescription().getType(), a);
-			
+
 		}
 		Attribute a = map.get(BuildCredentialSpecification.REVOCATION_HANDLE_UID);
 		return "" + a.getAttributeValue();
-		
+
 	}
 
 	private void loadAvailableInspectorParameters(PresentationToken token, IdContainerJSON x, ExonymInspector ins, PassStore store) throws Exception {
@@ -288,7 +289,7 @@ public class MembershipManager {
 		}
 	}
 	
-	private String publishedRevocationData(RevocationInformation ri, PassStore store) throws Exception {
+	protected String publishedRevocationData(RevocationInformation ri, PassStore store) throws Exception {
 		URI raUid = ri.getRevocationAuthorityParametersUID();
 		String root = NamespaceMngt.URN_PREFIX_COLON + IdContainerJSON.stripUidSuffix(raUid, 2);
 		URI raiUid = URI.create(root + ":rai");
@@ -307,7 +308,7 @@ public class MembershipManager {
 
 		KeyContainerWrapper kcPublic = nodeManager.openSignaturesContainer(nodeUrl);
 		KeyContainerWrapper kcPrivate = new KeyContainerWrapper(
-				(KeyContainer) xIssuer.openResource("keys.xml"));
+				(KeyContainer) xIssuer.openResource(Const.KEYS));
 		AsymStoreKey key = nodeManager.openKey(
 				kcPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
 		
@@ -319,7 +320,7 @@ public class MembershipManager {
 		
 		String xml = JaxbHelper.serializeToXml(kcPublic.getKeyContainer(), KeyContainer.class);
 
-		nodeManager.publish(nodeUrl, xml.getBytes(), "signatures.xml");
+		nodeManager.publish(nodeUrl, xml.getBytes(), Const.SIGNATURES_XML);
 		nodeManager.publish(nodeUrl, rai, IdContainerJSON.uidToXmlFileName(raiUid));
 		nodeManager.publish(nodeUrl, ni, IdContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
 		return raiHash;
@@ -331,9 +332,6 @@ public class MembershipManager {
 		throw new Exception();
 		
 	}
-
-
-
 
 	private class RecipientData {
 

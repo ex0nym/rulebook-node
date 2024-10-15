@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class ExonymResult {
 
-    private ArrayList<URI> hostUuids = new ArrayList<>();
+    private ArrayList<URI> modUids = new ArrayList<>();
 
     private String nibble6;
     private String x0;
@@ -35,11 +35,11 @@ public class ExonymResult {
         this.x0 = x0;
     }
 
-    public ArrayList<URI> getHostUuids() {
-        return hostUuids;
+    public ArrayList<URI> getModUids() {
+        return modUids;
     }
 
-    public void setHostUuids(ArrayList<URI> hostUuids) {
-        this.hostUuids = hostUuids;
+    public void setModUids(ArrayList<URI> modUids) {
+        this.modUids = modUids;
     }
 }

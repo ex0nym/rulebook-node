@@ -37,83 +37,46 @@ public abstract class ExonymMatrixManagerAbstract {
 
     protected Poke poke = null;
     protected KeyContainerWrapper kcw = null;
+
     protected ExonymMatrix matrix = null;
 
     protected void openExonymMatrix(String primaryUrl, String x0, String xOrYList, String root) throws Exception {
         this.matrix = null; this.poke = null; this.kcw = null;
-        String[] nibbles = extractNibbles(x0);
+        String[] nibbles = ExonymMatrix.extractNibbles(x0);
         Poke poke = openPoke(primaryUrl, xOrYList);
+        logger.info("t of poke=" + poke.getT());
         KeyContainerWrapper kcw = openSignatures(primaryUrl, nibbles[0], xOrYList);
         ExonymMatrix matrix = openTargetMatrix(primaryUrl, nibbles[0], nibbles[1], xOrYList);
         authenticate(root, poke, kcw, matrix, nibbles[0], nibbles[1]);
 
     }
 
+    protected void openExonymMatrix(String primaryUrl, String x0Hash, String n6, String xOrYList, String root) throws Exception {
+        logger.info("Using x0PrimePath");
+        this.matrix = null; this.poke = null; this.kcw = null;
+        String[] nibbles = ExonymMatrix.extractNibbles(n6);
+        Poke poke = openPoke(primaryUrl, xOrYList);
+        logger.info("t of poke=" + poke.getT());
+        KeyContainerWrapper kcw = openSignatures(primaryUrl, nibbles[0], xOrYList);
+        ExonymMatrix matrix = openTargetMatrix(primaryUrl, nibbles[0], nibbles[1], xOrYList);
+        authenticate(root, poke, kcw, matrix, nibbles[0], nibbles[1]);
+
+    }
+
+
     protected abstract void authenticate(String root, Poke poke, KeyContainerWrapper kcw,
                                          ExonymMatrix matrix, String nibble3,
                                          String nibble6) throws Exception;
 
-    private Poke openPoke(String primaryUrl, String xOrYList) throws Exception {
-        String path = computePokePathToFile(xOrYList);
-        String pokeUrl = primaryEndPoint(primaryUrl, path);
-        try {
-            String poke = new String(
-                    UrlHelper.read(new URL(pokeUrl)),
-                    StandardCharsets.UTF_8);
-            logger.debug(poke);
-
-            Gson gson = new Gson();
-            return gson.fromJson(poke, Poke.class);
-
-        } catch (IOException e) {
-            return handlePokeNotFound(e);
-
-        }
-    }
+    protected abstract Poke openPoke(String primaryUrl, String xOrYList) throws Exception;
 
     protected abstract Poke handlePokeNotFound(Exception e) throws Exception;
 
-    private KeyContainerWrapper openSignatures(String primaryUrl, String nibble3, String xOrYList) throws Exception {
-        String n3Path = computeN3PathToFile(nibble3, xOrYList);
-        String sigUrl = primaryEndPoint(primaryUrl, n3Path);
-        try {
-            this.signatureByteData = UrlHelper.read(new URL(sigUrl));
-            String xml = new String(signatureByteData, StandardCharsets.UTF_8);
-            logger.debug(xml);
-            return new KeyContainerWrapper(
-                    JaxbHelper.xmlToClass(xml, KeyContainer.class)
-
-            );
-        } catch (Exception e) {
-            return handleKeyContainerNotFound(e);
-
-        }
-    }
+    protected abstract KeyContainerWrapper openSignatures(String primaryUrl, String nibble3, String xOrYList) throws Exception;
 
     protected abstract KeyContainerWrapper handleKeyContainerNotFound(Exception e) throws Exception ;
 
-    private ExonymMatrix openTargetMatrix(String primaryUrl, String nibble3, String nibble6, String xOrYList) throws Exception {
-        if (this.matrixByteData==null){
-            String path = computeN6PathToFile(nibble3, nibble6, xOrYList);
-            String target = primaryEndPoint(primaryUrl, path);
-            logger.debug(target);
-            try {
-                this.matrixByteData = UrlHelper.read(new URL(target));
-                String json = new String(matrixByteData, StandardCharsets.UTF_8);
-                Gson g = new Gson();
-                return g.fromJson(json, ExonymMatrix.class);
-
-            } catch (Exception e) {
-                return handleMatrixNotFound(e, nibble6);
-
-            }
-        } else {
-            String json = new String(matrixByteData, StandardCharsets.UTF_8);
-            Gson g = new Gson();
-            return g.fromJson(json, ExonymMatrix.class);
-
-        }
-    }
+    protected abstract ExonymMatrix openTargetMatrix(String primaryUrl, String nibble3, String nibble6, String xOrYList) throws Exception;
 
     protected abstract ExonymMatrix handleMatrixNotFound(Exception e, String n6) throws Exception;
 
@@ -139,17 +102,6 @@ public abstract class ExonymMatrixManagerAbstract {
     protected void authMatrix(KeyContainerWrapper kcw, String nibble6, AsymStoreKey signatureKey) throws Exception {
         XKey sig = kcw.getKey(URI.create(nibble6));
         signatureKey.verifySignature(matrixByteData, sig.getSignature());
-
-    }
-
-    public static String[] extractNibbles(String exonymHex) {
-        if (exonymHex==null){
-            throw new NullPointerException();
-
-        }
-        String nibble2 = exonymHex.substring(0, 3);
-        String nibble4 = exonymHex.substring(0, 6);
-        return new String[] {nibble2, nibble4};
 
     }
 

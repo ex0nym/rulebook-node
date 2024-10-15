@@ -10,6 +10,7 @@ import io.exonym.lite.pojo.Violation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -17,8 +18,8 @@ public class ExonymMatrix {
 
 
     private static final Logger logger = LogManager.getLogger(ExonymMatrix.class);
-    private String rootRule;
-    private ArrayList<String> ruleUrns = null;
+    private URI rootRule;
+    private ArrayList<URI> ruleUrns = null;
     private HashMap<String, ExonymMatrixRow> matrix = new HashMap<>();
     private String nibble3, nibble6;
 
@@ -42,17 +43,15 @@ public class ExonymMatrix {
         }
     }
 
-    public ExonymMatrixRow findExonymRow(String exonym){
-        int len = exonym.getBytes(StandardCharsets.UTF_8).length;
-        logger.debug(len);
-        if (exonym!=null){
+    public ExonymMatrixRow findExonymRow(String x0Orx0Hash){
+        if (x0Orx0Hash!=null){
 
-            if (exonym.length()!=64){
-                exonym = CryptoUtils.computeSha256HashAsHex(exonym);
+            if (x0Orx0Hash.length()!=64){
+                x0Orx0Hash = CryptoUtils.computeSha256HashAsHex(x0Orx0Hash);
 
             }
-            logger.debug(exonym);
-            return this.matrix.get(exonym);
+            logger.debug("x0Hash at findExonymRow()=" + x0Orx0Hash);
+            return this.matrix.get(x0Orx0Hash);
 
         } else {
             throw new NullPointerException();
@@ -71,20 +70,19 @@ public class ExonymMatrix {
         }
     }
 
-    public void removeExonymRow(ExonymMatrixRow remove){
-        if (remove!=null && remove.getExonyms()!=null && !remove.getExonyms().isEmpty()){
-            String x0 = remove.getExonyms().get(0);
-            String root = CryptoUtils.computeSha256HashAsHex(x0);
-            ExonymMatrixRow row = this.matrix.get(root);
-            row.setQuit(true);
+//    public void removeExonymRow(ExonymMatrixRow remove){
+//        if (remove!=null && remove.getExonyms()!=null && !remove.getExonyms().isEmpty()){
+//            String x0 = remove.getExonyms().get(0);
+//            String root = CryptoUtils.computeSha256HashAsHex(x0);
+//            ExonymMatrixRow row = this.matrix.get(root);
+//
+//        } else {
+//            throw new NullPointerException();
+//
+//        }
+//    }
 
-        } else {
-            throw new NullPointerException();
-
-        }
-    }
-
-    public String getRuleDidForIndex(int i){
+    public URI getRuleDidForIndex(int i){
         return ruleUrns.get(i);
 
     }
@@ -95,10 +93,10 @@ public class ExonymMatrix {
 
     }
 
-    public static ExonymMatrix init(ArrayList<String> ruleDids, String nibble6) throws Exception {
+    public static ExonymMatrix init(ArrayList<URI> ruleDids, String nibble6) throws Exception {
         if (ruleDids!=null && !ruleDids.isEmpty()){
             ExonymMatrix result = new ExonymMatrix(nibble6);
-            result.rootRule=ruleDids.get(0);
+            result.rootRule = ruleDids.get(0);
             result.ruleUrns =ruleDids;
             return result;
 
@@ -122,7 +120,7 @@ public class ExonymMatrix {
         }
     }
 
-    public String getRootRule() {
+    public URI getRootRule() {
         return rootRule;
     }
 
@@ -143,6 +141,18 @@ public class ExonymMatrix {
         return nibble6;
     }
 
+    public static String[] extractNibbles(String exonymHex) {
+        if (exonymHex==null){
+            throw new NullPointerException();
+
+        }
+        String nibble3 = exonymHex.substring(0, 3);
+        String nibble6 = exonymHex.substring(0, 6);
+        return new String[] {nibble3, nibble6};
+
+    }
+
+
     //    {
     //        rules:["r0", "r1", "r2"],
     //        aaaa1..x0:
@@ -153,44 +163,7 @@ public class ExonymMatrix {
     //    }
 
 
-    public static void main(String[] args) throws Exception {
-        String base = "urn:exonym:" + UUID.randomUUID();
-        String r0 = base + ":r0";
-        String r1 = base + ":r1";
-        String r2 = base + ":r2";
-
-        ArrayList<String> nymSet0 = TestUtils.fakePseudonyms(3, null);
-        String nibble6 = nymSet0.get(0).substring(0,6);
-        logger.debug(nibble6);
-        ArrayList<String> ruleSet = new ArrayList<>();
-        ruleSet.add(r0);
-        ruleSet.add(r1);
-        ruleSet.add(r2);
-
-        ExonymMatrix m0 = ExonymMatrix.init(ruleSet, nibble6);
-
-        ExonymMatrixRow row = new ExonymMatrixRow();
-        row.setExonyms(nymSet0);
-        m0.addExonymRow(nymSet0.get(0), row);
-
-        logger.debug(m0.toJson());
-
-        Violation v0 = new Violation();
-        v0.setTimestamp(DateHelper.currentIsoUtcDateTime());
-        v0.setRuleUrn(r2);
-
-        ExonymMatrixRow r = m0.findExonymRow(nymSet0.get(0));
-        r.getViolations().add(v0);
-
-        logger.debug(m0.toJson());
-
-        m0.removeExonymRow(row);
-
-        logger.debug(m0.toJson());
-
-    }
-
-    public ArrayList<String> getRuleUrns() {
+    public ArrayList<URI> getRuleUrns() {
         return ruleUrns;
     }
 }

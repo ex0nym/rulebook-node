@@ -34,4 +34,9 @@ public abstract class AbstractCouchDbObject {
         return this._id + " " + this._rev + " " + this.getType();
 
     }
+
+    public void blankIdAndRev(){
+        this._id=null;
+        this._rev=null;
+    }
 }

@@ -12,8 +12,8 @@ public class ApplicantReport {
     private int totalOffences = 0;
     private boolean unresolvedOffences = false;
     private ArrayList<URI> previousHosts = new ArrayList<>();
-    private String lastHost;
-    private ArrayList<String> activeHostsWrtRn = new ArrayList<>();
+    private String lastModerator;
+    private ArrayList<String> activeModsWrtRn = new ArrayList<>();
     private ExceptionCollection exceptions;
     private DateTime mostRecentOffenceTimeStamp;
     private boolean isMember = false;
@@ -42,20 +42,20 @@ public class ApplicantReport {
         this.previousHosts = previousHosts;
     }
 
-    public String getLastHost() {
-        return lastHost;
+    public String getLastModerator() {
+        return lastModerator;
     }
 
-    public void setLastHost(String lastHost) {
-        this.lastHost = lastHost;
+    public void setLastModerator(String lastModerator) {
+        this.lastModerator = lastModerator;
     }
 
-    public ArrayList<String> getActiveHostsWrtRn() {
-        return activeHostsWrtRn;
+    public ArrayList<String> getActiveModsWrtRn() {
+        return activeModsWrtRn;
     }
 
-    public void setActiveHostsWrtRn(ArrayList<String> activeHostsWrtRn) {
-        this.activeHostsWrtRn = activeHostsWrtRn;
+    public void setActiveModsWrtRn(ArrayList<String> activeModsWrtRn) {
+        this.activeModsWrtRn = activeModsWrtRn;
     }
 
     public ExceptionCollection getExceptions() {

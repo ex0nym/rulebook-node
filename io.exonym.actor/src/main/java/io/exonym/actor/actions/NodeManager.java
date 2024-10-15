@@ -1238,7 +1238,7 @@ public class NodeManager {
 		
 	}
 
-	public AsymStoreKey openKey(XKey x, PassStore store) throws Exception {
+	public static AsymStoreKey openKey(XKey x, PassStore store) throws Exception {
 		if (x.getPrivateKey()==null){ 
 			throw new HubException("You must open the key from an XContainer, not from signatures.xml");
 			
@@ -1267,7 +1267,7 @@ public class NodeManager {
 			
 		}
 		String check = nodeUrl.toString();
-		ArrayList<URI> tmp = new ArrayList<URI>(kcw.getKeyRingUids());
+		ArrayList<URI> tmp = new ArrayList<>(kcw.getKeyRingUids());
 		tmp.remove(KeyContainerWrapper.TN_ROOT_KEY);
 		tmp.remove(KeyContainerWrapper.SIG_CHECKSUM);
 		Collections.sort(tmp);
@@ -1295,7 +1295,7 @@ public class NodeManager {
 		
 	}
 
-	protected void publish(URI url0, byte[] xml, String xmlFileName) throws Exception{
+	public void publish(URI url0, byte[] xml, String xmlFileName) throws Exception{
 		if (UrlHelper.isXml(xml)){
 			if (FileType.isXmlDocument(xmlFileName)){
 				primaryPut(url0, xml, xmlFileName);

@@ -78,18 +78,6 @@ public abstract class AbstractBaseActor {
 
 	}
 
-	public void clearStale() throws Exception {
-		if (this.keyManager instanceof KeyManagerExonym){
-			KeyManagerExonym k = (KeyManagerExonym)this.keyManager;
-			k.clearStale();
-			logger.info("Cleared Revocation Information");
-
-		} else {
-			throw new Exception("The key manager was not an acceptable class " + this.keyManager);
-
-		}
-	}
-	
 	protected boolean openResourceIfNotLoaded(URI uid) throws Exception {
 		if (uid!=null){
 			if (UidType.isCredentialSpecification(uid)) {
@@ -131,11 +119,13 @@ public abstract class AbstractBaseActor {
 			return this.container.openResource(uid);
 			
 		} catch (Exception e) {
-			logger.info("Failed to find parameters in local container " + uid);
+			logger.info("Public Parameter Opener: Failed to find parameters in local container " + uid);
+
 			
 		}
 		String fn = IdContainer.uidToXmlFileName(uid);
 		try {
+			logger.info("Looking in external resources " + fn);
 			return this.externalResource.openResource(fn);
 			
 		} catch (Exception e) {

@@ -15,13 +15,13 @@ import java.util.List;
 
 public final class ExonymInspector extends AbstractExonymInspector {
 
-	protected ExonymInspector(IdContainerJSON container) throws Exception {
+	public ExonymInspector(IdContainerJSON container) throws Exception {
 		super(container);
 		
 	}
 
 	@Override
-	protected boolean openResourceIfNotLoaded(URI uid) throws Exception {
+	public boolean openResourceIfNotLoaded(URI uid) throws Exception {
 		return super.openResourceIfNotLoaded(uid);
 	}
 
@@ -98,13 +98,13 @@ public final class ExonymInspector extends AbstractExonymInspector {
 	}
 
 	@Override
-	protected List<Attribute> inspect(PresentationToken presentationToken) throws CryptoEngineException {
+	public List<Attribute> inspect(PresentationToken presentationToken) throws CryptoEngineException {
 		return super.inspect(presentationToken);
 	}
 	
 
 	@Override
-	protected void addInspectorSecretKey(URI inssUid, SecretKey key) throws CredentialManagerException {
+	public void addInspectorSecretKey(URI inssUid, SecretKey key) throws CredentialManagerException {
 		super.addInspectorSecretKey(inssUid, key);
 		
 	}

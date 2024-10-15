@@ -11,21 +11,14 @@ public class ExonymDetailedResult {
     // time ban effective until
     //
     boolean unsettled = false;
-    boolean quit = false;
-    private String unsettledRuleId = null;
+    boolean overridden = false;
+    private final ArrayList<URI> unsettledRuleId = new ArrayList<>();
     private int offences;
     private URI modUID;
     private DateTime lastViolationTime;
-    private final ArrayList<String> activeControlledRules = new ArrayList<>();
-    private final ArrayList<String> activeUncontrolledRules = new ArrayList<>();
+    private final ArrayList<URI> activeControlledRules = new ArrayList<>();
+    private final ArrayList<URI> activeUncontrolledRules = new ArrayList<>();
 
-    public String getUnsettledRuleId() {
-        return unsettledRuleId;
-    }
-
-    public void setUnsettledRuleId(String unsettledRuleId) {
-        this.unsettledRuleId = unsettledRuleId;
-    }
 
     public boolean isUnsettled() {
         return unsettled;
@@ -44,19 +37,19 @@ public class ExonymDetailedResult {
 
     }
 
-    public boolean isQuit() {
-        return quit;
+    public boolean isOverridden() {
+        return overridden;
     }
 
-    public void setQuit(boolean quit) {
-        this.quit = quit;
+    public void setOverridden(boolean overridden) {
+        this.overridden = overridden;
     }
 
-    public ArrayList<String> getActiveControlledRules() {
+    public ArrayList<URI> getActiveControlledRules() {
         return activeControlledRules;
     }
 
-    public ArrayList<String> getActiveUncontrolledRules() {
+    public ArrayList<URI> getActiveUncontrolledRules() {
         return activeUncontrolledRules;
     }
 
@@ -78,5 +71,9 @@ public class ExonymDetailedResult {
 
     public void setLastViolationTime(DateTime lastViolationTime) {
         this.lastViolationTime = lastViolationTime;
+    }
+
+    public ArrayList<URI> getUnsettledRuleId() {
+        return unsettledRuleId;
     }
 }

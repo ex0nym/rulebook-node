@@ -40,6 +40,8 @@ public class JoinIn extends ModelCommandProcessor {
 
             }
         } catch (Exception e) {
+            logger.info("Error", e);
+
             StackTraceElement ele = e.getStackTrace()[0];
             logger.debug("Error from - (" + ele.getFileName() + ") line:"
                     + ele.getLineNumber());
@@ -49,11 +51,11 @@ public class JoinIn extends ModelCommandProcessor {
 
     private void authenticate(ExoNotify notify) throws Exception {
         try {
-            AsymStoreKey key = keyManager.getKey(notify.getNodeUID());
+            AsymStoreKey key = keyManager.getKey(notify.getNodeUid());
             Authenticator.authenticateNotify(notify, key);
 
         } catch (NoDocumentException e) {
-            logger.error("Failed to Find Host on NetworkMap" + notify.getNodeUID());
+            logger.error("Failed to Find Host on NetworkMap" + notify.getNodeUid());
 
         } catch (Exception e) {
             throw e;

@@ -5,6 +5,7 @@
 package io.exonym.actor;
 
 import com.ibm.zurich.idmix.abc4trust.facades.RevocationAuthorityParametersFacade;
+import com.ibm.zurich.idmix.abc4trust.facades.RevocationInformationFacade;
 import com.ibm.zurich.idmix.abc4trust.facades.SecretKeyFacade;
 import com.ibm.zurich.idmx.interfaces.cryptoEngine.CryptoEngineRevocationAuthority;
 import com.ibm.zurich.idmx.interfaces.util.BigInt;
@@ -12,6 +13,7 @@ import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import com.ibm.zurich.idmx.keypair.ra.RevocationAuthorityKeyPairWrapper;
 import com.ibm.zurich.idmx.parameters.ra.RevocationAuthorityPublicKeyTemplateWrapper;
 import com.ibm.zurich.idmx.util.bigInt.BigIntFactoryImpl;
+import com.sun.xml.bind.JAXBObject;
 import eu.abc4trust.abce.internal.user.credentialManager.CredentialManagerException;
 import eu.abc4trust.cryptoEngine.issuer.CryptoEngineIssuer;
 import eu.abc4trust.returnTypes.IssuerParametersAndSecretKey;
@@ -21,6 +23,7 @@ import io.exonym.abc.util.UidType;
 import io.exonym.exceptions.ClaimNotCompleteException;
 import io.exonym.helpers.BuildIssuancePolicy;
 import io.exonym.helpers.UIDHelper;
+import io.exonym.idmx.managers.KeyManagerExonym;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
@@ -34,6 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.Cipher;
+import javax.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.ZoneId;
@@ -94,6 +98,13 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 			addRevocationHistory(rh);
 			
 		}
+	}
+
+	public static void removeRevocationHistory(RevocationInformation ri){
+		RevocationInformationFacade rif = new RevocationInformationFacade(ri);
+		RevocationHistory rh = rif.getRevocationHistory();
+		rh.getRevocationLogEntry().clear();
+
 	}
 
 	/**
@@ -266,11 +277,10 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 			IssuanceTokenAndIssuancePolicy itap = cryptoEngineIssuer.extractIssuanceTokenAndPolicy(im);
 			checkTokenMatchesPolicy(im.getContext(), itap);
 			IssuanceMessageAndBoolean imab = cryptoEngineIssuer.issuanceProtocolStep(im);
-			AttributeList attList = ExtractObject.extract(imab.getIssuanceMessage().getContent(), AttributeList.class);
-			List<Attribute> atts = attList.getAttributes();
-			BigInteger revocationHandle = (BigInteger) atts.get(0).getAttributeValue();
-			this.revocationHandle = revocationHandle;
-			logger.debug("Extracted Handle " + this.revocationHandle);
+			AttributeList al = ExtractObject.extract(imab.getIssuanceMessage().getContent(), AttributeList.class);
+			List<Attribute> atts = al.getAttributes();
+			this.revocationHandle = extractHandle(atts);
+
 			logger.debug("Extracted UID " + atts.get(0).getAttributeDescription().getType());
 			for (Attribute att : atts){
 				logger.debug(att.getAttributeDescription().getType());
@@ -278,7 +288,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 				logger.debug(att.getAttributeUID());
 
 			}
-			organizeLocalData(im.getContext(), itap, attList, enc);
+			organizeLocalData(im.getContext(), itap, al, enc);
 			ImabAndHandle result = new ImabAndHandle();
 			result.setHandle(revocationHandle);
 			result.setImab(imab);
@@ -289,6 +299,21 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 			throw new Exception("Issuance Message was null");
 			
 		}
+	}
+
+	public List<Attribute> extractAttributes(IssuanceMessageAndBoolean imab){
+		AttributeList al = ExtractObject.extract(imab.getIssuanceMessage().getContent(), AttributeList.class);
+		return al.getAttributes();
+
+	}
+
+	public BigInteger extractHandle(IssuanceMessageAndBoolean imab){
+		return extractHandle(extractAttributes(imab));
+	}
+
+	public BigInteger extractHandle(List<Attribute> attList){
+		return (BigInteger) attList.get(0).getAttributeValue();
+
 	}
 
 	private void checkTokenMatchesPolicy(URI context, IssuanceTokenAndIssuancePolicy itap) throws Exception {
@@ -524,6 +549,22 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 	    	
 	    }
 	}
+
+	protected RevocationInformation revocationBulkValidHandles(URI raUid, ArrayList<BigInteger> handles, Cipher dec) throws Exception{
+		URI revocationInfo = null;
+
+		for (BigInteger handle: handles){
+			BigInt handle0 = bigIntFactory.valueOf(handle);
+			revocationInfo = this.cryptoEngineRaIdmx.revoke(raUid, handle0);
+
+		}
+		logger.info(revocationInfo);
+		RevocationInformation ri = this.keyManager.getRevocationInformation(raUid, revocationInfo);
+
+		logger.info("Revoked to new " + revocationInfo);
+		return ri;
+
+	}
 	
 	/**
 	 * Revoke an issued credential.
@@ -536,8 +577,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 		// Note: the cipher is not passed to anywhere.  It is assumed that the ras was open
 		// with the container
 		
-		BigIntFactoryImpl bif = new BigIntFactoryImpl();
-		BigInt handle0 = bif.valueOf(handle);
+		BigInt handle0 = bigIntFactory.valueOf(handle);
 		URI revocationInfo = this.cryptoEngineRaIdmx.revoke(raUid, handle0);
 
 		RevocationInformation ri = this.keyManager.getRevocationInformation(raUid, revocationInfo);
@@ -545,6 +585,20 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 		logger.info(revocationInfo);
 		return ri;
 		
+	}
+
+
+	public void clearStale() throws Exception {
+		if (this.keyManager instanceof KeyManagerExonym){
+			KeyManagerExonym k = (KeyManagerExonym)this.keyManager;
+			k.clearStale();
+			this.open=false;
+			logger.info("Cleared Revocation Information");
+
+		} else {
+			throw new Exception("The key manager was not an acceptable class " + this.keyManager);
+
+		}
 	}
 	
 	/**

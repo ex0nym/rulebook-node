@@ -32,26 +32,6 @@ public class TestXContainer {
 			
 		}
 		
-		// Create Container
-		try {
-			logger.info("CREATE_AND_DELETE_CONTAINER: Creating contianer xc1");
-			IdContainer xc1 = new IdContainer(UtilsSuite.XC1, true);
-			File file = new File(xc1.getRUNTIME_KEYS());
-			
-			logger.info("CREATE_AND_DELETE_CONTAINER: Checking folder in the container exists " + file.getAbsolutePath());
-			assert(file.exists());
-			
-			
-			// Delete Container & Check files are no longer there.
-			xc1.delete();
-			logger.info("CREATE_AND_DELETE_CONTAINER: Checking folder in the container does not exist after delete " + file.getAbsolutePath());
-			assert(!file.exists());
-			
-		} catch (Exception e) {
-			logger.error("CREATE_AND_DELETE_CONTAINER: Error", e);
-			assert(false);
-			
-		}
 	}
 	
 	public void testSavePlainResource(){

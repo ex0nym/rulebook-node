@@ -8,6 +8,7 @@ import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.Namespace;
 import io.exonym.lite.pojo.Rulebook;
+import io.exonym.lite.standard.WhiteList;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.utils.adapters.PresentationPolicyAlternativesAdapter;
 import org.apache.logging.log4j.LogManager;
@@ -70,10 +71,14 @@ public abstract class AbstractIdContainer {
 	
 	@SuppressWarnings("unchecked")
 	public synchronized <T> T openResource(URI uri) throws Exception{
-		return (T)openResource(IdContainer.uidToXmlFileName(uri), null);
-		
+		if (WhiteList.isRulebookUid(uri)){
+			return (T)openResource(uidToFileName(uri) + ".json", null);
+		} else {
+			return (T)openResource(uidToXmlFileName(uri), null);
+		}
 	}
-	
+
+
 	@SuppressWarnings("unchecked")
 	public synchronized <T> T openResource(String fileName) throws Exception{
 		return (T)openResource(fileName, null);
@@ -393,6 +398,8 @@ public abstract class AbstractIdContainer {
 	public abstract <T> T openResource(String fileName, Cipher dec) throws Exception;
 
 	public abstract void delete() throws Exception;
+
+	
 	
 	// public abstract void publishResource(String fullFileName) throws Exception;
 	

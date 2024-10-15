@@ -1,4 +1,4 @@
-package io.exonym.rulebook.context;
+package io.exonym.rulebook.schema;
 
 import io.exonym.lite.parallel.Msg;
 

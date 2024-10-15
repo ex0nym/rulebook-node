@@ -28,7 +28,7 @@ public class WhoIsServlet extends HttpServlet {
         CouchRepository<NetworkMapNodeOverview> tmp;
         gson = new GsonBuilder().setPrettyPrinting().create();
         try {
-            tmp = CouchDbHelper.repoNetworkMapSourceOverview();
+            tmp = CouchDbHelper.repoNetworkMapLeadOverview();
 
         } catch (Exception e) {
             logger.error("WhoIsServlet Failure", e);

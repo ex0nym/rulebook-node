@@ -6,7 +6,6 @@ import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.actions.ExonymMatrix;
 import io.exonym.actor.storage.Poke;
 import io.exonym.actor.storage.SFTPClient;
-import io.exonym.actor.storage.SFTPLogonData;
 import io.exonym.actor.storage.SignatureOn;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.*;
@@ -51,8 +50,10 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
     //*/
 
     private static final Logger logger = LogManager.getLogger(ExonymMatrixManagerLocal.class);
-    private final NetworkMapItemModerator myNmia;
-    private final ArrayList<String> ruleUrns;
+
+    private String fileSystemPath = Const.PATH_OF_STATIC;
+    private final NetworkMapItemModerator myNmim;
+    private final ArrayList<URI> allRules;
     private AsymStoreKey signatureKey = null;
 
     private boolean createdPoke = false;
@@ -61,21 +62,22 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
     private final String root;
 
-    private final AbstractIdContainer advocateContainer;
+    private final AbstractIdContainer modContainer;
 
-    public ExonymMatrixManagerLocal(AbstractIdContainer advocateContainer,
-                                    ArrayList<String> ruleUrns, NetworkMapItemModerator myNmia,
+
+    public ExonymMatrixManagerLocal(AbstractIdContainer modContainer,
+                                    ArrayList<URI> ruleUrns, NetworkMapItemModerator myNmim,
                                     String root) throws Exception {
         try {
-            this.advocateContainer =advocateContainer;
-            this.ruleUrns = ruleUrns;
-            this.myNmia = myNmia;
+            this.modContainer =modContainer;
+            this.allRules = ruleUrns;
+            this.myNmim = myNmim;
             this.root = root;
 
             logger.debug("Initializing-----------------------");
-            logger.debug("static0 \t\t" + myNmia.getStaticURL0());
-            logger.debug("modUID \t" + myNmia.getNodeUID());
-            logger.debug("rulebookNodeURL \t\t" + myNmia.getRulebookNodeURL());
+            logger.debug("static0 \t\t" + myNmim.getStaticURL0());
+            logger.debug("modUID \t" + myNmim.getNodeUID());
+            logger.debug("rulebookNodeURL \t\t" + myNmim.getRulebookNodeURL());
             logger.debug("-----------------------------------");
 
         } catch (NoDocumentException e) {
@@ -87,18 +89,33 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
         }
     }
 
+
     /**
      * A user has joined the node and exonyms need to be published
      */
-    protected void addExonymRow(ExonymMatrixRow controlled) throws Exception {
-        addExonymRow(controlled, null);
+    protected void addExonymRow(Vio vio, ExonymMatrixRow controlled) throws Exception {
+        addExonymRow(vio, controlled, null);
 
     }
     /**
      * A user has joined the node and exonyms need to be published
      */
-    protected void addExonymRow(ExonymMatrixRow controlled, ExonymMatrixRow uncontrolled) throws Exception {
-        String nodeUrl = this.myNmia.getStaticURL0().toString();
+    protected void addExonymRow(Vio vio, ExonymMatrixRow controlled, ExonymMatrixRow uncontrolled) throws Exception {
+        if (vio==null){
+            handleJoin(controlled, uncontrolled);
+
+        } else { // it's a rejoin
+            handleRejoin(vio, controlled, uncontrolled);
+
+        }
+    }
+
+    public ArrayList<URI> getAllRules() {
+        return allRules;
+    }
+
+    private void handleJoin(ExonymMatrixRow controlled, ExonymMatrixRow uncontrolled) throws Exception {
+        String nodeUrl = this.myNmim.getStaticURL0().toString();
         if (uncontrolled==null){
             String x0 = verifyOnlyControlledRow(controlled);
             openExonymMatrix(nodeUrl, x0, this.xList, this.root);
@@ -115,6 +132,48 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
             matrix.addExonymRow(x0, uncontrolled);
             publish(this.yList);
 
+        }
+    }
+
+    private void handleRejoin(Vio vio, ExonymMatrixRow controlled, ExonymMatrixRow uncontrolled) throws Exception {
+        String nodeUrl = this.myNmim.getStaticURL0().toString();
+
+        if (uncontrolled==null){
+            String x0 = verifyOnlyControlledRow(controlled);
+            openExonymMatrix(nodeUrl, x0, this.xList, this.root);
+            ExonymMatrixRow row = matrix.findExonymRow(x0);
+            if (row!=null) {
+                updateViolation(row, vio);
+
+            } else {
+                matrix.addExonymRow(x0, controlled);
+
+            }
+            publish(this.xList);
+
+        } else {
+            // TODO Unsure whether the violation should/must be published to X and Y lists.
+            String x0 = verifyControlledVsUncontrolled(controlled, uncontrolled);
+            openExonymMatrix(nodeUrl, x0, this.xList, this.root);
+            matrix.addExonymRow(x0, controlled);
+            publish(this.xList);
+
+            openExonymMatrix(nodeUrl, x0, this.yList, this.root);
+            matrix.addExonymRow(x0, uncontrolled);
+            publish(this.yList);
+
+        }
+    }
+
+    private void updateViolation(ExonymMatrixRow row, Vio vio) {
+        String timeOfVio = vio.getTimeOfViolation();
+        ArrayList<Violation> violations = row.getViolations();
+        for (Violation violation : violations){
+            if (violation.getTimestamp().equals(timeOfVio)){
+                violation.setSettled(true);
+                break;
+
+            }
         }
     }
 
@@ -182,7 +241,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
     @Override
     protected ExonymMatrix handleMatrixNotFound(Exception e, String nibble6) throws Exception {
         this.createdMatrix =true;
-        return ExonymMatrix.init(ruleUrns, nibble6);
+        return ExonymMatrix.init(allRules, nibble6);
 
     }
 
@@ -208,36 +267,103 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
         this.poke = poke;
         this.kcw = kcw;
         this.matrix = matrix;
+        logger.info("The matrix was authenticated and opened with rows: " + this.matrix.getMatrix().size());
 
     }
 
     /**
      * An existing user has been revoked and a violation needs adding
      */
-    protected void addViolation(String x0, Violation violation) throws Exception {
-        String nodeUrl = this.myNmia.getStaticURL0().toString();
-        openExonymMatrix(nodeUrl, x0, this.xList, this.root);
-        ExonymMatrixRow row = this.matrix.findExonymRow(x0);
+    protected void resolveViolation(Vio vio, boolean isOverride) throws Exception {
+        String nodeUrl = this.myNmim.getStaticURL0().toString();
+        openExonymMatrix(nodeUrl, vio.getX0Hash(), vio.getNibble6(), this.xList, this.root);
+
+        ExonymMatrixRow row = this.matrix.findExonymRow(vio.getX0Hash());
+
         if (row!=null){
-            String rN = violation.getRuleUrn();
-            int rule = matrix.getRuleUrns().indexOf(rN);
-            if (rule!=-1){
-                String xN = row.getExonyms().get(rule);
+            ArrayList<URI> rNs = vio.getRuleUids();
 
-                if (!xN.equals("null")){
-                    row.getViolations().add(violation);
-                    publish(this.xList);
+            if (!rNs.isEmpty()){
+                URI rN = rNs.get(0);
+                int rule = matrix.getRuleUrns().indexOf(rN);
 
+                if (rule!=-1){
+                    String xN = row.getExonyms().get(rule);
+
+                    if (!xN.equals("null")){
+                        ArrayList<Violation> violations = row.getViolations();
+
+                        for (Violation violation : violations){
+                            if (violation.getTimestamp().equals(vio.getTimeOfViolation())){
+                                if (isOverride){
+                                    violation.setOverride(true);
+
+                                } else {
+                                    violation.setSettled(true);
+
+                                }
+                                break;
+
+                            }
+                        }
+                        publish(this.xList);
+
+                    } else {
+                        throw new UxException("The rule " + rN + " is not controlled locally.  " +
+                                "Search for the controlling host.");
+                    }
                 } else {
-                    throw new UxException("The rule " + rN + " is not controlled locally.  " +
-                            "Search for the controlling host.");
+                    throw new UxException("There is no such RuleUID on this rulebook");
+
                 }
             } else {
-                throw new UxException("There is no such RuleDid on this rulebook");
+                throw new UxException("The RuleUID was not specified.");
 
             }
         } else {
-            throw new UxException("No such exonym.  Are you using the root? n6="
+            throw new UxException("No such exonym. Are you using the root? n6="
+                    + matrix.getNibble6() + "");
+
+        }
+    }
+
+
+    /**
+     * An existing user has been revoked and a violation needs adding
+     */
+    protected void addViolation(String x0, Violation violation) throws Exception {
+        String nodeUrl = this.myNmim.getStaticURL0().toString();
+        openExonymMatrix(nodeUrl, x0, this.xList, this.root);
+        ExonymMatrixRow row = this.matrix.findExonymRow(x0);
+        if (row!=null){
+            ArrayList<URI> rNs = violation.getRuleUids();
+
+            if (!rNs.isEmpty()){
+                URI rN = rNs.get(0);
+                int rule = matrix.getRuleUrns().indexOf(rN);
+
+                if (rule!=-1){
+                    String xN = row.getExonyms().get(rule);
+
+                    if (!xN.equals("null")){
+                        violation.blankForStorage();
+                        row.getViolations().add(violation);
+                        publish(this.xList);
+
+                    } else {
+                        throw new UxException("The rule " + rN + " is not controlled locally.  " +
+                                "Search for the controlling host.");
+                    }
+                } else {
+                    throw new UxException("There is no such RuleUID on this rulebook");
+
+                }
+            } else {
+                throw new UxException("The RuleUID was not specified.");
+
+            }
+        } else {
+            throw new UxException("No such exonym. Are you using the root? n6="
                     + matrix.getNibble6() + "");
 
         }
@@ -288,14 +414,16 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
 
     }
 
+
+
     private void write(String xOrYList, String pokeString, String n3, String n6) throws Exception {
-        Path pokePath0 = Path.of(Const.PATH_OF_STATIC, Const.MODERATOR,
+        Path pokePath0 = Path.of(fileSystemPath.toString(), Const.MODERATOR,
                 computePokePathToFile(xOrYList));
 
-        Path n3Path0 = Path.of(Const.PATH_OF_STATIC, Const.MODERATOR,
+        Path n3Path0 = Path.of(fileSystemPath.toString(), Const.MODERATOR,
                 computeN3PathToFile(matrix.getNibble3(), xOrYList));
 
-        Path n6Path0 = Path.of(Const.PATH_OF_STATIC, Const.MODERATOR,
+        Path n6Path0 = Path.of(fileSystemPath.toString(), Const.MODERATOR,
                 computeN6PathToFile(matrix.getNibble3(), matrix.getNibble6(), xOrYList));
 
         logger.debug(pokePath0);
@@ -333,7 +461,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
     private void initKey() throws Exception {
         if (this.signatureKey==null){
             PassStore store = new PassStore(this.root, false);
-            KeyContainer kc = this.advocateContainer.openResource("keys.xml");
+            KeyContainer kc = this.modContainer.openResource("keys.xml");
             KeyContainerWrapper kcw = new KeyContainerWrapper(kc);
             XKey key = kcw.getKey(KeyContainerWrapper.TN_ROOT_KEY);
             this.signatureKey = AsymStoreKey.blank();
@@ -342,5 +470,61 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
                     store.getDecipher());
 
         }
+    }
+
+    @Override
+    protected Poke openPoke(String primaryUrl, String xOrYList) throws Exception {
+        String poke = computePokePathToFile(xOrYList);
+        Path pokePath = Path.of(fileSystemPath.toString(), Const.MODERATOR, poke).toAbsolutePath();
+
+        logger.debug("Poke Path="  + pokePath);
+        try {
+            String pokeString = Files.readString(pokePath);
+            Gson gson = new Gson();
+            return gson.fromJson(pokeString, Poke.class);
+
+        } catch (IOException e) {
+            return handlePokeNotFound(e);
+
+        }
+    }
+
+    @Override
+    protected KeyContainerWrapper openSignatures(String primaryUrl, String nibble3, String xOrYList) throws Exception {
+        String n3Part = computeN3PathToFile(nibble3, xOrYList);
+        Path n3Path = Path.of(fileSystemPath.toString(), Const.MODERATOR, n3Part);
+        try {
+            String n3 = Files.readString(n3Path);
+            this.signatureByteData = n3.getBytes(StandardCharsets.UTF_8);
+            return new KeyContainerWrapper(JaxbHelper.xmlToClass(n3, KeyContainer.class));
+        } catch (Exception e) {
+            return handleKeyContainerNotFound(e);
+
+        }
+    }
+
+    @Override
+    protected ExonymMatrix openTargetMatrix(String primaryUrl, String nibble3, String nibble6, String xOrYList) throws Exception {
+        if (this.matrixByteData==null){
+            String path = computeN6PathToFile(nibble3, nibble6, xOrYList);
+            Path matrixPath = Path.of(fileSystemPath, Const.MODERATOR, path);
+            logger.debug(matrixPath);
+            try {
+                String m = Files.readString(matrixPath);
+                this.matrixByteData = m.getBytes(StandardCharsets.UTF_8);
+                Gson g = new Gson();
+                return g.fromJson(m, ExonymMatrix.class);
+
+            } catch (Exception e) {
+                return handleMatrixNotFound(e, nibble6);
+
+            }
+        } else {
+            String json = new String(matrixByteData, StandardCharsets.UTF_8);
+            Gson g = new Gson();
+            return g.fromJson(json, ExonymMatrix.class);
+
+        }
+
     }
 }

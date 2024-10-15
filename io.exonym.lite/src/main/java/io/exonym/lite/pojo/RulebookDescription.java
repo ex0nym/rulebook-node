@@ -7,6 +7,7 @@ public class RulebookDescription {
     private String name;
     private String simpleDescriptionEN;
     boolean production = false;
+    private Penalty defaultPenalty;
     public String getName() {
         return name;
     }
@@ -24,5 +25,13 @@ public class RulebookDescription {
     }
     public void setProduction(boolean production) {
         this.production = production;
+    }
+
+    public Penalty getDefaultPenalty() {
+        return defaultPenalty;
+    }
+
+    public void setDefaultPenalty(Penalty defaultPenalty) {
+        this.defaultPenalty = defaultPenalty;
     }
 }

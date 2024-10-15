@@ -13,6 +13,7 @@ import io.exonym.utils.storage.IdContainer;
 import javax.crypto.Cipher;
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.ArrayList;
 
 public final class ExonymIssuer extends AbstractExonymIssuer{
 
@@ -21,7 +22,8 @@ public final class ExonymIssuer extends AbstractExonymIssuer{
 		
 	}
 
-	@Override
+
+    @Override
 	public IssuanceMessageAndBoolean issueInit(VerifiedClaim claim, IssuancePolicy policy, Cipher enc, URI context)
 			throws Exception {
 		return super.issueInit(claim, policy, enc, context);
@@ -33,10 +35,6 @@ public final class ExonymIssuer extends AbstractExonymIssuer{
 		return super.issueInit(claim, policy, internalDataStoreUid, enc, context);
 	}
 
-	@Override
-	public void clearStale() throws Exception {
-		super.clearStale();
-	}
 
 	@Override
 	public <T> T publicParameterOpener(URI uid) throws Exception {
@@ -80,7 +78,7 @@ public final class ExonymIssuer extends AbstractExonymIssuer{
 	}
 
 	@Override
-	protected RevocationInformation revokeCredential(URI raUid, BigInteger handle, Cipher dec) throws Exception {
+	public RevocationInformation revokeCredential(URI raUid, BigInteger handle, Cipher dec) throws Exception {
 		return super.revokeCredential(raUid, handle, dec);
 	}
 
@@ -130,9 +128,16 @@ public final class ExonymIssuer extends AbstractExonymIssuer{
 	}
 
 	@Override
+	public RevocationInformation revocationBulkValidHandles(URI raUid, ArrayList<BigInteger> handles, Cipher dec) throws Exception {
+		return super.revocationBulkValidHandles(raUid, handles, dec);
+	}
+
+	@Override
 	protected void addCredentialSpecification(CredentialSpecification credentialSpecification) {
 		super.addCredentialSpecification(credentialSpecification);
 	}
+
+
 
 	@Override
 	protected URI addIssuerParameters(IssuerParameters issuerParams) throws Exception {
@@ -153,6 +158,8 @@ public final class ExonymIssuer extends AbstractExonymIssuer{
 	protected void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
 		super.addRevocationInformation(rapUid, ri);
 	}
+
+
 
 	@Override
 	protected ExternalResourceContainer initialzeExternalResourceContainer() {

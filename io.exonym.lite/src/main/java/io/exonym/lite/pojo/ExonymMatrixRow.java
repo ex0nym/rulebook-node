@@ -9,7 +9,6 @@ import java.util.ArrayList;
 public class ExonymMatrixRow {
 
     private static final Logger logger = LogManager.getLogger(ExonymMatrixRow.class);
-    private boolean quit = false;
     private ArrayList<String> exonyms = new ArrayList<>();
     private ArrayList<Violation> violations;
 
@@ -46,14 +45,6 @@ public class ExonymMatrixRow {
 
     public void setT(String t) {
         this.t = t;
-    }
-
-    public boolean isQuit() {
-        return quit;
-    }
-
-    public void setQuit(boolean quit) {
-        this.quit = quit;
     }
 
     public void addExonyms(ArrayList<String> nyms) {

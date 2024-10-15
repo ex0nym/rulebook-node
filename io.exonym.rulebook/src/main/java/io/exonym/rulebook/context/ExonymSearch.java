@@ -3,10 +3,10 @@ package io.exonym.rulebook.context;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import eu.abc4trust.xml.PresentationTokenDescription;
 import eu.abc4trust.xml.PseudonymInToken;
+import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.actions.AbstractNetworkMap;
 import io.exonym.lite.couchdb.Query;
 import io.exonym.lite.couchdb.QueryElement;
-import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.ExceptionCollection;
 import io.exonym.lite.exceptions.UxException;
@@ -26,12 +26,12 @@ import java.util.List;
 public class ExonymSearch {
 
     private static final Logger logger = LogManager.getLogger(ExonymSearch.class);
-    private final HashMap<String, String> riToXi = new HashMap<>();
-    private final HashMap<String, String> otherNyms = new HashMap<>();
-    private final String r0;
-    private final UnprotectedCouchRepository<ExoMatrix> repoExonym;
+    private final HashMap<URI, String> riToXi = new HashMap<>();
+    private final HashMap<URI, String> otherNyms = new HashMap<>();
+    private final URI r0;
+    private final CouchRepository<ExoMatrix> repoExonym;
     private final String root;
-    private final NetworkMapItemModerator myAdvocate;
+    private final NetworkMapItemModerator myModNmi;
     private final AbstractNetworkMap networkMap;
 
     /**
@@ -51,8 +51,8 @@ public class ExonymSearch {
      * @throws Exception
      */
     protected ExonymSearch(PresentationTokenDescription token,
-                           ArrayList<String> expectedRules,
-                           UnprotectedCouchRepository<ExoMatrix> repoExonym,
+                           ArrayList<URI> expectedRules,
+                           CouchRepository<ExoMatrix> repoExonym,
                            AbstractNetworkMap networkMap,
                            String root) throws Exception {
         if (expectedRules.isEmpty()){
@@ -63,7 +63,7 @@ public class ExonymSearch {
         this.repoExonym = repoExonym;
         this.root = root;
         this.networkMap=networkMap;
-        this.myAdvocate= networkMap.nmiForMyNodesModerator();
+        this.myModNmi = networkMap.nmiForMyNodesModerator();
         List<PseudonymInToken> nyms = token.getPseudonym();
         if (nyms.isEmpty()){
             throw new UxException(ErrorMessages.NO_EXONYMS_IN_TOKEN);
@@ -82,19 +82,19 @@ public class ExonymSearch {
 
             if (nym.isExclusive()){
                 logger.debug(ri + " " + xi);
-                riToXi.put(ri, xi);
+                riToXi.put(URI.create(ri), xi);
 
             } else {
                 logger.debug("Non-Exclusive: " + ri + " " + xi);
-                otherNyms.put(ri, xi);
+                otherNyms.put(URI.create(ri), xi);
 
             }
         }
     }
 
-    private void verifyRuleUrns(ArrayList<String> expectedRules) throws UxException {
-        ArrayList<String> missing = new ArrayList<>();
-        for (String r : expectedRules){
+    private void verifyRuleUrns(ArrayList<URI> expectedRules) throws UxException {
+        ArrayList<URI> missing = new ArrayList<>();
+        for (URI r : expectedRules){
             if (!riToXi.containsKey(r)) {
                 missing.add(r);
 
@@ -103,7 +103,7 @@ public class ExonymSearch {
         }
         if (!missing.isEmpty()){
             String message = "";
-            for (String m : missing){
+            for (URI m : missing){
                 if (message.length()!=0){
                     message += ", ";
 
@@ -120,6 +120,7 @@ public class ExonymSearch {
         try {
             String x0 = riToXi.get(r0);
             logger.debug("Searching for " + x0);
+
             if (x0!=null){
                 String n6 = x0.substring(0, 6);
                 String x0Hash = CryptoUtils.computeSha256HashAsHex(x0);
@@ -162,9 +163,9 @@ public class ExonymSearch {
         result.setX0Hash(x0Hash);
         result.setNibble6(n6);
         result.setX0(x0);
-        ArrayList<URI> hostUuids = result.getHostUuids();
+        ArrayList<URI> hostUuids = result.getModUids();
         for (ExoMatrix m : matches){
-            hostUuids.add(m.getHostUuid());
+            hostUuids.add(m.getModUid());
 
         }
         return result;
@@ -174,7 +175,7 @@ public class ExonymSearch {
     protected ApplicantReport expandResults(ExonymResult input){
         String n6 = input.getNibble6();
         String x0 = input.getX0();
-        ArrayList<URI> hosts = input.getHostUuids();
+        ArrayList<URI> hosts = input.getModUids();
         ExceptionCollection collection = new ExceptionCollection();
         ArrayList<ExonymDetailedResult> resultSet = collectDetailedReports(n6, x0, hosts, collection);
         return analyseDetailedReports(n6, x0, resultSet, collection);
@@ -182,15 +183,15 @@ public class ExonymSearch {
     }
 
     private ArrayList<ExonymDetailedResult> collectDetailedReports(String n6, String x0,
-                                                                   ArrayList<URI> hosts,
+                                                                   ArrayList<URI> mods,
                                                                    ExceptionCollection collection) {
         ArrayList<ExonymDetailedResult> resultSet = new ArrayList<>();
 
-        for (URI hostUuid : hosts){
+        for (URI modUid : mods){
             try {
                 ExonymMatrixManagerGlobal matrixManager = new ExonymMatrixManagerGlobal(
-                        (NetworkMapItemModerator) this.networkMap.nmiForNode(hostUuid),
-                        myAdvocate, n6,  root);
+                        (NetworkMapItemModerator) this.networkMap.nmiForNode(modUid),
+                        myModNmi, n6,  root);
                 ExonymDetailedResult result = matrixManager.detailedResult(x0);
                 resultSet.add(result);
 
@@ -214,17 +215,22 @@ public class ExonymSearch {
 
         int offences = 0;
         boolean unsettled = false;
+
         ArrayList<URI> hosts = report.getPreviousHosts();
+
         DateTime mostRecent = new DateTime(DateTimeZone.UTC)
                 .withDate(2020, 1 ,1);
 
         for (ExonymDetailedResult detail : resultSet){
             offences += detail.getOffences();
+            logger.debug("Detail for analysis: " + JaxbHelper.gson.toJson(detail));
+
             if (detail.isUnsettled()){
                 unsettled = true;
 
             }
             hosts.add(detail.getModUID());
+
             if (detail.getLastViolationTime()!=null){
                 if (mostRecent.isBefore(detail.getLastViolationTime())){
                     mostRecent = detail.getLastViolationTime();
@@ -232,10 +238,13 @@ public class ExonymSearch {
                 }
             }
             if (!detail.getActiveControlledRules().isEmpty()){
-                report.setMember(true);
+                if (!detail.isOverridden()){
+                    report.setMember(true);
 
+                }
             }
         }
+        logger.info("Setting unresolved: " + unsettled);
         report.setTotalOffences(offences);
         report.setUnresolvedOffences(unsettled);
 

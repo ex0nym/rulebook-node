@@ -3,7 +3,6 @@ package io.exonym.rulebook.context;
 import eu.abc4trust.xml.*;
 import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.VerifiedClaim;
-import io.exonym.actor.actions.ExonymIssuer;
 import io.exonym.actor.actions.ExonymMatrix;
 import io.exonym.actor.actions.NodeVerifier;
 import io.exonym.actor.actions.TokenVerifier;
@@ -11,6 +10,7 @@ import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.HubException;
+import io.exonym.lite.exceptions.PenaltyException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.*;
 import io.exonym.lite.standard.CryptoUtils;
@@ -24,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.xml.bind.JAXBElement;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -35,34 +36,24 @@ public class JoinProcessor {
 
     private static final Logger logger = LogManager.getLogger(JoinProcessor.class);
     private final VerifiedClaim claim;
-    private ExonymIssuer myModIssuer;
-    private IdContainer myModContainer;
+
     private JoinSupportSingleton support = JoinSupportSingleton.getInstance();
 
     private RulebookNodeProperties props = RulebookNodeProperties.instance();
 
-    private final HashMap<String, String> riToXj = new HashMap<>();
+    private final HashMap<URI, String> riToXj = new HashMap<>();
 
     private String hashOfNonce = null;
 
 
     public JoinProcessor() throws Exception {
         if (support!=null){
-            myModContainer = new IdContainer(support.getMyModerator().getModeratorName());
-            myModIssuer = new ExonymIssuer(myModContainer);
-            myModIssuer.openContainer(support.getStore().getDecipher());
-            support.loadAdvocateWithSybilCryptoMaterials(myModIssuer);
-            CredentialSpecification cs = myModContainer.openResource(
-                    support.getMyModeratorHelper().getCredentialSpecFileName());
-
-            claim = new VerifiedClaim(cs);
+            claim = new VerifiedClaim(support.getMyModCs());
 
         } else {
             throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED,
                     "This Rulebook Node is not fully defined.",
-                    "If you are an admin; go to https://docs.exonym.io",
-                    "If you are not, please be patient while the administrator sets up this node");
-
+                    "Please be patient while the administrator sets up this node");
 
         }
 
@@ -72,14 +63,10 @@ public class JoinProcessor {
         try {
             IssuanceMessageAndBoolean imab = initIssuance();
             Rulebook challengedRulebook = support.getRulebookVerifier().getDeepCopy();
-            String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(imab);
-            logger.debug("Size at XML=" + xml.length());
+            String xml = IdContainer.convertObjectToXml(imab);
             byte[] compressed = WebUtils.compress(xml.getBytes(StandardCharsets.UTF_8));
-            logger.debug("Size at compressed=" + compressed.length);
             String b64Xml = Base64.encodeBase64String(compressed);
-            logger.debug("Size at B64XML=" + b64Xml.length());
             String link = Namespace.UNIVERSAL_LINK_JOIN_REQUEST + b64Xml;
-            logger.debug("Size at link=" + link.length());
             if (qr){
                 String qrImage = QrCode.computeQrCodeAsPngB64(link, 300);
                 challengedRulebook.setChallengeB64(qrImage);
@@ -102,46 +89,83 @@ public class JoinProcessor {
         String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(policy);
         logger.debug(xml);
 
-        return myModIssuer.issueInit(claim, policy, support.getStore().getEncrypt(),
+        return support.getMyModIssuer().issueInit(claim, policy, support.getStore().getEncrypt(),
                 URI.create("urn:" + UUID.randomUUID()));
 
     }
 
-    protected IssuanceMessageAndBoolean rejoin(IssuanceMessage im, IssuanceToken issuanceToken) throws Exception {
+    protected IssuanceMessageAndBoolean rejoin(IssuanceMessage im,
+                                               IssuanceToken issuanceToken, Vio vio) throws Exception {
+
         PresentationTokenDescription ptd = issuanceToken
                 .getIssuanceTokenDescription()
                 .getPresentationTokenDescription();
-        ImabAndHandle imab = myModIssuer.issueStep(im, support.getStore().getDecipher());
-        buildExonymMap(ptd);
-        finaliseMembership(new ArrayList<>()); // see register potential honesty claims.
+
+        ImabAndHandle imab = support.getMyModIssuer().issueStep(
+                im, support.getStore().getDecipher());
+
+        String x0 = buildExonymMap(ptd);
+        addMemberToDb(imab, x0);
+        publishExonymMapAndBroadcast(new ArrayList<>(), vio); // see register potential honesty claims.
         return imab.getImab();
 
     }
 
-    protected IssuanceMessageAndBoolean join(IssuanceMessage im, IssuanceToken issuanceToken) throws Exception {
-        PresentationTokenDescription ptd = issuanceToken.getIssuanceTokenDescription()
+    protected IssuanceMessageAndBoolean join(IssuanceMessage im,
+                                             IssuanceToken issuanceToken) throws Exception {
+
+        PresentationTokenDescription ptd = issuanceToken
+                .getIssuanceTokenDescription()
                 .getPresentationTokenDescription();
 
+        // This will throw the penalty exception.
         ArrayList<String> uncontrolled = verifyConditionsToJoin(ptd);
 
-        ImabAndHandle imab = myModIssuer.issueStep(im, support.getStore().getDecipher());
-        buildExonymMap(ptd);
-        finaliseMembership(uncontrolled); // see register potential honesty claims.
+        ImabAndHandle imab = support.getMyModIssuer().issueStep(
+                im, support.getStore().getDecipher());
+
+        String x0 = buildExonymMap(ptd);
+        addMemberToDb(imab, x0);
+        publishExonymMapAndBroadcast(uncontrolled, null); // see register potential honesty claims.
         return imab.getImab();
 
     }
 
-    private void buildExonymMap(PresentationTokenDescription token) {
-        List<PseudonymInToken> nyms = token.getPseudonym();
-        for (PseudonymInToken nym : nyms){
-            String xj = Form.toHex(nym.getPseudonymValue());
-            String ri = nym.getScope();
-            this.riToXj.put(ri, xj);
+    private void addMemberToDb(ImabAndHandle imab, String x0) throws Exception {
+        try {
+            logger.info("Adding user to the database");
+            String[] nibbles = ExonymMatrix.extractNibbles(x0);
+            String hashOfH = CryptoUtils.computeSha256HashAsHex(
+                    imab.getHandle().toByteArray());
+            IUser user = new IUser();
+            user.setType(IUser.I_USER_MEMBER);
+            user.setX0(x0);
+            user.setNibble6(nibbles[1]);
+            user.set_id(hashOfH);
+            CouchDbHelper.repoUsersAndAdmins().create(user);
+
+        } catch (Exception e) {
+            throw e;
 
         }
     }
 
-    private ArrayList<String> registerPotentialHonestyClaim(TokenVerifier verifier,
+    private String buildExonymMap(PresentationTokenDescription token) {
+        List<PseudonymInToken> nyms = token.getPseudonym();
+        String x0 = null;
+        for (PseudonymInToken nym : nyms){
+            String xj = Form.toHex(nym.getPseudonymValue());
+            if (nym.isExclusive() && x0==null) {
+                x0 = xj;
+            }
+            String ri = nym.getScope();
+            this.riToXj.put(URI.create(ri), xj);
+
+        }
+        return x0;
+    }
+
+    private ArrayList<URI> registerPotentialHonestyClaim(TokenVerifier verifier,
                                                             PresentationToken token) throws Exception {
         PresentationTokenDescription ptd = token.getPresentationTokenDescription();
         List<CredentialInToken> credentials = ptd.getCredential();
@@ -167,7 +191,7 @@ public class JoinProcessor {
     }
 
 
-    private ArrayList<String> loadVerifierWithCurrentProofsOfHonesty(TokenVerifier verifier,
+    private ArrayList<URI> loadVerifierWithCurrentProofsOfHonesty(TokenVerifier verifier,
                                                                      URI issuerUid, PresentationToken token) throws Exception {
         UIDHelper uids = new UIDHelper(issuerUid);
 
@@ -188,8 +212,8 @@ public class JoinProcessor {
 //        }
     }
 
-    private ArrayList<String> collectUncontrolledRules(URI host, PresentationToken token) throws Exception {
-        ArrayList<String> uncontrolledRules = new ArrayList<>();
+    private ArrayList<URI> collectUncontrolledRules(URI host, PresentationToken token) throws Exception {
+        ArrayList<URI> uncontrolledRules = new ArrayList<>();
         byte[] unverifiedX0Bytes = token
                 .getPresentationTokenDescription()
                 .getPseudonym().get(0)
@@ -204,7 +228,7 @@ public class JoinProcessor {
         try {
             ExonymMatrix matrix = global.openUncontrolledList(unverifiedX0);
             ExonymMatrixRow row = matrix.findExonymRow(unverifiedX0);
-            ArrayList<String> nodeRules = matrix.getRuleUrns();
+            ArrayList<URI> nodeRules = matrix.getRuleUrns();
 
             int n = 0;
             for (String xn : row.getExonyms()) {
@@ -224,6 +248,7 @@ public class JoinProcessor {
     private ArrayList<String> verifyConditionsToJoin(PresentationTokenDescription token) throws Exception {
         ArrayList<String> result = new ArrayList<>();
         ApplicantReport report = performSearch(token, support.getMyRules());
+        logger.info(JaxbHelper.gson.toJson(report));
 
         if (report!=null){
             if (!report.getExceptions().isEmpty()){
@@ -239,24 +264,29 @@ public class JoinProcessor {
                     i++;
 
                 }
-                throw new UxException(ErrorMessages.ALREADY_SUBSCRIBED, p);
+                throw new UxException(ErrorMessages.ALREADY_JOINED, p);
 
-            } if (report.isUnresolvedOffences()){
-                throw new UxException(ErrorMessages.BANNED_UNTIL,
-                        DateHelper.isoUtcDate(report.getMostRecentOffenceTimeStamp()));
+            }
+            if (report.isUnresolvedOffences()){
+                logger.info(JaxbHelper.gson.toJson(report));
+                PenaltyException e = new PenaltyException(ErrorMessages.BANNED_UNTIL);
+                e.setReport(report);
+                throw e;
 
             }
         }
-        return result; // TODO note that the report needs to return a list of the rules that are uncontrolled
+        // TODO note that the report needs to return a list of the rules that are uncontrolled
+        return result;
 
     }
 
-    private ApplicantReport performSearch(PresentationTokenDescription token, ArrayList<String> rules) throws Exception {
+    private ApplicantReport performSearch(PresentationTokenDescription token, ArrayList<URI> rules) throws Exception {
         ExonymSearch network = new ExonymSearch(token, rules,
                 CouchDbHelper.repoExoMatrix(), support.getNetworkMap(),
                 this.props.getNodeRoot());
 
         ExonymResult result = network.search();
+        logger.info("Expanding results if not null: " + JaxbHelper.gson.toJson(result));
 
         if (result!=null){
             return network.expandResults(result);
@@ -267,15 +297,15 @@ public class JoinProcessor {
         }
     }
 
-    private void finaliseMembership(ArrayList<String> uncontrolled) throws Exception {
+    private void publishExonymMapAndBroadcast(ArrayList<String> uncontrolled, Vio vio) throws Exception {
         ExonymMatrixRowAndX0 xyLists = buildXYLists(uncontrolled);
         ExonymMatrixManagerLocal local = new ExonymMatrixManagerLocal(
-                myModContainer,
+                support.getMyModContainer(),
                 support.getMyRules(), support.getMyModerator(),
                 props.getNodeRoot());
 
-        local.addExonymRow(xyLists.getExox(), xyLists.getExoy());
-        broadcastJoin(xyLists.getN6(), xyLists.getX0());
+        local.addExonymRow(vio, xyLists.getExox(), xyLists.getExoy());
+        broadcastJoin(xyLists.getN6(), xyLists.getX0(), vio);
 
     }
 
@@ -283,12 +313,12 @@ public class JoinProcessor {
         ExonymMatrixRowAndX0 result = new ExonymMatrixRowAndX0();
         ArrayList<String> u = new ArrayList<>();
         ArrayList<String> c = new ArrayList<>();
-        ArrayList<String> myRules = support.getMyRules();
+        ArrayList<URI> myRules = support.getMyRules();
         String x0 = riToXj.get(myRules.get(0));
         String x0Hash = CryptoUtils.computeSha256HashAsHex(x0);
         String n6 = x0.substring(0,6);
 
-        for (String ri : myRules){
+        for (URI ri : myRules){
             if (uncontrolledRules.contains(ri)){
                 u.add(riToXj.get(ri));
                 c.add("null");
@@ -319,13 +349,14 @@ public class JoinProcessor {
         return result;
     }
 
-    protected void broadcastJoin(String n6, String x0Hash) throws Exception {
+    protected void broadcastJoin(String n6, String x0Hash, Vio vio) throws Exception {
         ExoNotify notify = new ExoNotify();
         notify.setType(ExoNotify.TYPE_JOIN);
         notify.setNibble6(n6);
         notify.setHashOfX0(x0Hash);
-        notify.setNodeUID(support.getMyModerator().getNodeUID());
+        notify.setNodeUid(support.getMyModerator().getNodeUID());
         notify.setT(DateHelper.currentIsoUtcDateTime());
+        notify.setTimeOfViolation(vio!=null ? vio.getTimeOfViolation() : null);
         signAndSend(notify);
 
     }
@@ -342,10 +373,8 @@ public class JoinProcessor {
             String sig = Base64.encodeBase64String(sigBytes);
             notify.setSigB64(sig);
 
-            CouchRepository<NetworkMapItem> networkRepo = CouchDbHelper.repoNetworkMapItem();
-            Broadcaster broadcaster = new Broadcaster(notify, networkRepo);
-            broadcaster.execute();
-            broadcaster.close();
+            NotificationPublisher.getInstance()
+                    .getPipe().put(notify);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

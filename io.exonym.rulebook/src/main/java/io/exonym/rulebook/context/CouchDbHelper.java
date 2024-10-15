@@ -113,7 +113,7 @@ public class CouchDbHelper {
 
     }
 
-    protected static CouchRepository<NetworkMapNodeOverview> repoNetworkMapSourceOverview() throws Exception {
+    protected static CouchRepository<NetworkMapNodeOverview> repoNetworkMapLeadOverview() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.getNetworkMap(), true);
         return new CouchRepository<>(db, NetworkMapNodeOverview.class);
@@ -127,7 +127,7 @@ public class CouchDbHelper {
 
     }
 
-    protected static CouchRepository<IUser> repoAdminUsers() throws Exception {
+    protected static CouchRepository<IUser> repoUsersAndAdmins() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.getDbUsers(), true);
         return new CouchRepository<>(db, IUser.class);
@@ -148,12 +148,21 @@ public class CouchDbHelper {
 
     }
 
-    protected static UnprotectedCouchRepository<ExoMatrix> repoExoMatrix() throws Exception {
+    @Deprecated
+    protected static UnprotectedCouchRepository<ExoMatrix> repoUnprotectedExoMatrix() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.get(EXONYM_MAP), true);
         return new UnprotectedCouchRepository<>(db, ExoMatrix.class);
 
     }
+
+    protected static CouchRepository<ExoMatrix> repoExoMatrix() throws Exception {
+        CloudantClient client = CouchDbClient.instance();
+        Database db = client.database(CouchDbHelper.get(EXONYM_MAP), true);
+        return new CouchRepository<>(db, ExoMatrix.class);
+
+    }
+
 
     protected static CouchRepository<Vio> repoVio() throws Exception {
         CloudantClient client = CouchDbClient.instance();
@@ -191,10 +200,10 @@ public class CouchDbHelper {
 
 
 
-    protected static CouchRepository<XNodeContainerSchema> repoContainerStore() throws Exception {
+    protected static CouchRepository<IdContainerSchema> repoContainerStore() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.getDbContainers(), true);
-        return new CouchRepository<>(db, XNodeContainerSchema.class);
+        return new CouchRepository<>(db, IdContainerSchema.class);
 
     }
 

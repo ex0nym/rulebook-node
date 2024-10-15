@@ -6,6 +6,7 @@ import io.exonym.lite.pojo.ExoNotify;
 
 import java.util.ArrayList;
 
+@Deprecated
 public class Broadcaster extends io.exonym.lite.connect.Broadcaster {
 
     private final CouchRepository<BroadcastInProgress> broadcastRepo;

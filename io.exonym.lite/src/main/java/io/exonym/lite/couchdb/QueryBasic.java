@@ -35,6 +35,19 @@ public class QueryBasic extends Query {
 
     }
 
+    public static QueryBasic select_id(String id) {
+        QueryBasic query = new QueryBasic();
+        HashMap<String, String> selector = new HashMap<>();
+        if (id!=null){
+            selector.put("_id", id);
+        }
+        query.setSelector(selector);
+        return query;
+
+    }
+
+
+
     @Override
     public String getJson() {
         Proxy proxy = new Proxy(this.selector);

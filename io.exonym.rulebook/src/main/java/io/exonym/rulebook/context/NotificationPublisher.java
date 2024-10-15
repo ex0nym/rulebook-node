@@ -12,6 +12,7 @@ import io.exonym.utils.storage.NodeInformation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.net.URI;
@@ -20,11 +21,11 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class ExonymPublisher extends ModelCommandProcessor {
+public class NotificationPublisher extends ModelCommandProcessor {
 
-    private static final Logger logger = LogManager.getLogger(ExonymPublisher.class);
+    private static final Logger logger = LogManager.getLogger(NotificationPublisher.class);
     private RulebookNodeProperties props = RulebookNodeProperties.instance();
-    private static ExonymPublisher instance;
+    private static NotificationPublisher instance;
     private MqttClient mqttClient;
     private Gson gson = new Gson();
 
@@ -33,14 +34,14 @@ public class ExonymPublisher extends ModelCommandProcessor {
     private HashMap<String, String> uidToTopic = new HashMap<>();
 
     static {
-        instance = new ExonymPublisher();
+        instance = new NotificationPublisher();
     }
-    protected static ExonymPublisher getInstance(){
+    protected static NotificationPublisher getInstance(){
         return instance;
 
     }
 
-    private ExonymPublisher()  {
+    private NotificationPublisher()  {
         super(100, "ExonymPublisher", 60000);
         try {
             String uid = UUID.randomUUID().toString()
@@ -55,10 +56,13 @@ public class ExonymPublisher extends ModelCommandProcessor {
 
             mqttClient = new MqttClient(props.getMqttBroker(), uid);
 
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(false);
 
             MyTrustNetworks myTrustNetworks = new MyTrustNetworks();
             if (myTrustNetworks.isDefined()){
-                mqttClient.connect();
+                mqttClient.connect(options);
+
                 NodeInformation ni = myTrustNetworks.getOnePrioritizeModerator()
                         .getTrustNetwork().getNodeInformation();
                 if (myTrustNetworks.isModerator()){
@@ -94,26 +98,32 @@ public class ExonymPublisher extends ModelCommandProcessor {
         if (msg instanceof ExoNotify){
             try {
                 ExoNotify notify = (ExoNotify)msg;
-                String json = gson.toJson(notify);
-                byte[] toBroadcast = json.getBytes(StandardCharsets.UTF_8);
-                int len = toBroadcast.length;
-                json = len + json;
-                MqttMessage message = new MqttMessage(
-                        json.getBytes(StandardCharsets.UTF_8));
+                if (notify.getType()!=null){
+                    String json = gson.toJson(notify);
+                    logger.debug("Sending message to network=" + json);
 
-                message.setQos(1);
-                String topic = null;
+                    byte[] toBroadcast = json.getBytes(StandardCharsets.UTF_8);
+                    int len = toBroadcast.length;
+                    json = len + json;
+                    MqttMessage message = new MqttMessage(
+                            json.getBytes(StandardCharsets.UTF_8));
 
-                if (notify.getType().equals(ExoNotify.TYPE_LEAD)){
-                    topic = uidToTopic.get(notify.getNodeUID().toString());
-                    logger.debug("broadcast topic=" + topic);
+                    message.setQos(2);
+                    message.setRetained(true);
 
-                }
-                if (topic!=null){
-                    mqttClient.publish(topic, message);
+                    String topic = uidToTopic.get(notify.getNodeUid().toString());
 
+                    if (topic!=null){
+                        topic += notify.getType();
+                        logger.debug(topic);
+                        mqttClient.publish(topic, message);
+
+                    } else {
+                        throw new UxException("Failed to send message, topic was null");
+
+                    }
                 } else {
-                    logger.warn("Failed to send message, topic was null");
+                    throw new UxException("TYPE_NOT_SET");
 
                 }
             } catch (Exception e) {

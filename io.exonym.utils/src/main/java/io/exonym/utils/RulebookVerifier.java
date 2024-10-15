@@ -14,6 +14,7 @@ import io.exonym.lite.standard.Regex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -70,17 +71,18 @@ public class RulebookVerifier {
         return JaxbHelper.jsonToClass(this.rulebookJson, Rulebook.class);
     }
 
-    public ArrayList<String> toRulebookUIDs(){
+    public ArrayList<URI> toRulebookUIDs(){
+
         if (this.rulebook!=null){
-            ArrayList<String> result = new ArrayList<>();
+            ArrayList<URI> result = new ArrayList<>();
             ArrayList<RulebookItem> r = this.rulebook.getRules();
             for (RulebookItem item : r){
-                result.add(item.getId());
+                result.add(URI.create(item.getId()));
 
             }
             ArrayList<RulebookItem> e = this.rulebook.getRuleExtensions();
             for (RulebookItem item : e){
-                result.add(item.getId());
+                result.add(URI.create(item.getId()));
 
             }
             return result;

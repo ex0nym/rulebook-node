@@ -21,10 +21,6 @@ public class ExonymIssuerTest extends AbstractExonymIssuer {
         super(container);
     }
 
-    @Override
-    public void clearStale() throws Exception {
-        super.clearStale();
-    }
 
     @Override
     protected <T> T publicParameterOpener(URI uid) throws Exception {

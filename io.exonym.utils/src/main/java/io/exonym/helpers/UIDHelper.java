@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,6 +64,7 @@ public class UIDHelper {
     }
 
     private void assemble(String issuerParamsOrLead) throws Exception {
+
         boolean isLead = WhiteList.isLeadUid(issuerParamsOrLead);
         String[] parts = issuerParamsOrLead.split(":");
 
@@ -80,39 +82,41 @@ public class UIDHelper {
         if (!isLead){
             String mod = parts[0] + ":" +parts[1] + ":" +parts[2] + ":" +parts[3]+ ":" +parts[4] + ":" +parts[5];
             lead = parts[0] + ":" +parts[1] + ":" +parts[2] + ":" +parts[3] + ":" +parts[5];
-
             this.moderatorUid = URI.create(mod);
             this.moderatorName = parts[4];
-            this.issuerParameters = URI.create(issuerParamsOrLead);
-            this.issuerParametersFileName = IdContainer.uidToXmlFileName(issuerParamsOrLead);
-            String root = Namespace.URN_PREFIX_COLON  + IdContainer
-                    .stripUidSuffix(this.issuerParameters, 1);
 
-            issuedCredential = URI.create(root + ":ic");
-            issuedCredentialFileName  = IdContainer.uidToXmlFileName(issuedCredential);
+            String issuerRnd = null;
+            boolean containsIssuer = WhiteList.isContainsIssuerUid(issuerParamsOrLead);
 
-            revocationAuthority = URI.create(root + ":ra");
-            revocationAuthorityFileName = IdContainer.uidToXmlFileName(revocationAuthority);
+            if (containsIssuer){
+                issuerRnd = parts[6];
+                String root = mod + ":" + issuerRnd;
 
-            revocationAuthorityInfo = URI.create(root + ":rai");
-            revocationInfoFileName = IdContainer.uidToXmlFileName(revocationAuthorityInfo);
+                this.issuerParameters = URI.create(root + ":i");
+                this.issuerParametersFileName = IdContainer.uidToXmlFileName(issuerParameters);
 
-            issuancePolicy = URI.create(root + ":ip");
-            issuancePolicyFileName = IdContainer.uidToXmlFileName(issuancePolicy);
+                issuedCredential = URI.create(root + ":ic");
+                issuedCredentialFileName  = IdContainer.uidToXmlFileName(issuedCredential);
 
-            this.inspectorParams = URI.create(mod + ":ins");
-            inspectorParamsFileName = IdContainer.uidToXmlFileName(inspectorParams);
+                revocationAuthority = URI.create(root + ":ra");
+                revocationAuthorityFileName = IdContainer.uidToXmlFileName(revocationAuthority);
 
+                revocationAuthorityInfo = URI.create(root + ":rai");
+                revocationInfoFileName = IdContainer.uidToXmlFileName(revocationAuthorityInfo);
+
+                issuancePolicy = URI.create(root + ":ip");
+                issuancePolicyFileName = IdContainer.uidToXmlFileName(issuancePolicy);
+
+                this.inspectorParams = URI.create(mod + ":ins");
+                inspectorParamsFileName = IdContainer.uidToXmlFileName(inspectorParams);
+
+            }
             this.rulebookModTopic = this.rulebookLeadTopic + "/" + moderatorName;
-
 
         } else {
             lead = issuerParamsOrLead;
 
         }
-
-
-
 
         this.leadUid = URI.create(lead);
 
@@ -132,6 +136,20 @@ public class UIDHelper {
                 .replaceAll("urn:", "")
                 .replaceAll(":", "/");
     }
+
+    public static URI transformMaterialUid(URI origin, String suffix) {
+        if (origin!=null && suffix!=null){
+            String o = origin.toString();
+            int i = o.lastIndexOf(":");
+            o = o.substring(0,i+1);
+            return URI.create(o + suffix);
+
+        } else {
+            throw new NullPointerException("origin/suffix" + origin + "/" + suffix);
+
+        }
+    }
+
 
     public static String computeRulebookTopicFromUid(URI uid) throws UxException {
         String hash = UIDHelper.computeRulebookHashUid(uid);
@@ -158,9 +176,38 @@ public class UIDHelper {
         return advocateUid.toString().split(":")[4];
     }
 
+    public static String computeShortRulebookHashUid(URI leadUid) throws UxException {
+        String r = computeRulebookHashUid(leadUid);
+        return r.substring(0,3) + "_" + r.substring(r.length()-3, r.length());
+    }
+
+
     public static String computeRulebookHashUid(String uid) throws UxException {
         return computeRulebookHashUid(URI.create(uid));
     }
+
+    public static URI computeRulebookUidFromNodeUid(URI nodeUid) throws UxException {
+        if (nodeUid==null){
+            throw new NullPointerException();
+        }
+        return URI.create(Namespace.URN_PREFIX_COLON +
+                nodeUid.toString().split(":")[2] + ":" +
+                computeRulebookHashUid(nodeUid));
+    }
+
+
+    public ArrayList<CredentialInPolicy.IssuerAlternatives.IssuerParametersUID> computeIssuerParametersUIDAsList(){
+        ArrayList<CredentialInPolicy.IssuerAlternatives.IssuerParametersUID> list = new ArrayList<>();
+        list.add(computeIssuerParametersUID());
+        return list;
+    }
+
+    public ArrayList<URI> getCredentialSpecAsList() {
+        ArrayList<URI> r = new ArrayList();
+        r.add(credentialSpec);
+        return r;
+    }
+
 
 
     public static String computeRulebookHashUid(URI uid) throws UxException {
@@ -486,22 +533,6 @@ public class UIDHelper {
         logger.info(">>>>>>>>>>>>> ");
 
     }
-
-    public static void main(String[] args) {
-        URI staticUrl = URI.create("http://example.com/")
-                .resolve("/static/")
-                .resolve("c30/")
-                .resolve("lead/");
-        System.out.println(staticUrl);
-        Path parent = Path.of(staticUrl.getPath())
-                .getParent().resolve("rulebook.json");
-
-
-        System.out.println(parent);
-
-    }
-
-
 
 }
 

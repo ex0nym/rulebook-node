@@ -44,6 +44,7 @@ public class ErrorMessages {
      *
      */
     public static final String REVOKED = "REVOKED";
+    public static final String REVOCATION_EVIDENCE_DESCRIPTION_MUST_BE_190_BYTES_OR_LESS = "REVOCATION_EVIDENCE_DESCRIPTION_MUST_BE_190_BYTES_OR_LESS";
 
     /**
      *
@@ -84,7 +85,7 @@ public class ErrorMessages {
     /**
      *
      */
-    public static final String HOST_NOT_FOUND_ON_NETWORK_MAP = "HOST_NOT_FOUND_ON_NETWORK_MAP";
+    public static final String MOD_NOT_FOUND_ON_NETWORK_MAP = "MOD_NOT_FOUND_ON_NETWORK_MAP";
     /**
      *
      */
@@ -129,7 +130,7 @@ public class ErrorMessages {
     /**
      *
      */
-    public static final String ALREADY_SUBSCRIBED = "ALREADY_SUBSCRIBED";
+    public static final String ALREADY_JOINED = "ALREADY_JOINED";
 
     /**
      *
@@ -409,4 +410,6 @@ public class ErrorMessages {
      */
     public static final String SCREEN_NAME_IN_USE = "SCREEN_NAME_IN_USE";
 
+    public static final String BLANK_TOKEN_DISCOVERED = "BLANK_TOKEN_DISCOVERED";
+    public static final String BLANK_RULE_URI = "BLANK_RULE_URI";
 }

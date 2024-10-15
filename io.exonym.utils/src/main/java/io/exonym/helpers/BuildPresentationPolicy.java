@@ -28,8 +28,7 @@ public class BuildPresentationPolicy {
 	private static final Logger logger = LogManager.getLogger(BuildPresentationPolicy.class);
 	
 	private static final ObjectFactory of = new ObjectFactory();
-	private final URI revocationHandle = URI.create("http://abc4trust.eu/wp2/abcschemav1.0/revocationhandle");
-	
+
 	private final PresentationPolicy policy;
 	
 	private final HashMap<URI, ArrayList<AttributeDescription>> credentialToAcceptableAttributesMap = new HashMap<>();
@@ -109,7 +108,6 @@ public class BuildPresentationPolicy {
 	
 	/**
 	 * 
-	 * @param cSpecUids
 	 * @param issuerUids
 	 * @param alias
 	 * @param sameKeyBindingAs
@@ -117,14 +115,14 @@ public class BuildPresentationPolicy {
 	 * 
 	 * @throws UxException
 	 */
-	public List<URI> addCredentialInPolicy(List<URI> cSpecUids, List<IssuerParametersUID> issuerUids, 
+	public List<URI> addCredentialInPolicy(List<CredentialSpecification> cSpecs, List<IssuerParametersUID> issuerUids,
 										String alias, /*nullable*/ URI sameKeyBindingAs) throws UxException{
 		
-		if (cSpecUids==null || cSpecUids.isEmpty()){
+		if (cSpecs==null || cSpecs.isEmpty()){
 			throw new UxException("Credential Specifications are not defined");
 			
 		} else if (issuerUids == null || issuerUids.isEmpty()){
-			throw new UxException("Issuers of credential " + cSpecUids.get(0) + " are not defined.");
+			throw new UxException("Issuers of credential " + cSpecs.get(0) + " are not defined.");
 			
 		} if (alias == null){
 			throw new RuntimeException("You must set an alias for a set of Credential Specs and Issuers"); 
@@ -133,22 +131,15 @@ public class BuildPresentationPolicy {
 		ArrayList<CredentialSpecification> specs = new ArrayList<>();
 		ArrayList<URI> foundUids = new ArrayList<>();
 		String notFound = "";
-		
-		for (URI uid : cSpecUids){
-			try {
-				CredentialSpecification spec = external.openResource(uid);
-				specs.add(spec);
-				foundUids.add(uid);
-				
-			} catch (Exception e) {
-				notFound += uid + "; "; 
-				logger.debug("Credential Specification not found on ledger " + uid);
-				
-			}
+
+		for (CredentialSpecification spec : cSpecs){
+			specs.add(spec);
+			foundUids.add(spec.getSpecificationUID());
+
 		}
 		if (foundUids.isEmpty()){
 			throw new UxException("The credential specifications do not exist.  Create them first. [" + notFound.trim() + "]");
-			
+
 		}
 		URI root = foundUids.get(0);
 		for (URI uid : foundUids){

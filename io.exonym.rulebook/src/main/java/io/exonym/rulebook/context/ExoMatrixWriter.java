@@ -1,16 +1,18 @@
 package io.exonym.rulebook.context;
 
 import com.cloudant.client.org.lightcouch.NoDocumentException;
+import io.exonym.actor.actions.MyTrustNetworks;
 import io.exonym.lite.couchdb.QueryBasic;
-import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.ExoMatrix;
 import io.exonym.lite.pojo.ExoNotify;
+import io.exonym.lite.pojo.Vio;
 import io.exonym.lite.standard.Const;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,15 +22,30 @@ public class ExoMatrixWriter extends ModelCommandProcessor {
 
     private static final Logger logger = LogManager.getLogger(ExoMatrixWriter.class);
     private final ArrayList<ExoMatrix> toWrite = new ArrayList<>();
-    private final UnprotectedCouchRepository<ExoMatrix> exonymMap;
+    private final CouchRepository<ExoMatrix> exonymMap;
+    private final CouchRepository<Vio> vioRepo;
     private final QueryBasic queryExo = new QueryBasic();
-    private final ArrayBlockingQueue<Msg> pipeToConflictResolver;
+    private final MyTrustNetworks myTrustNetworks;
 
-    protected ExoMatrixWriter(ArrayBlockingQueue<Msg> pipeToConflictResolver) throws Exception {
+    private final ExoMatrix myModTmpMatrix;
+
+
+    protected ExoMatrixWriter(MyTrustNetworks myTrustNetworks) throws Exception {
         super(Const.FLUX_CAPACITY, "ExoMatrixWriter", 1000);
         this.exonymMap = CouchDbHelper.repoExoMatrix();
-        this.pipeToConflictResolver = pipeToConflictResolver;
+        this.vioRepo = CouchDbHelper.repoVio();
+        this.myTrustNetworks = myTrustNetworks;
+        if (myTrustNetworks.isModerator()){
+            URI myMod = myTrustNetworks.getModerator()
+                    .getTrustNetwork()
+                    .getNodeInformation()
+                    .getNodeUid();
+            myModTmpMatrix = ExoMatrix.withModUid(myMod);
 
+        } else {
+            myModTmpMatrix = ExoMatrix.withModUid(URI.create("urn:not:a:mod"));
+
+        }
     }
 
     @Override
@@ -36,8 +53,12 @@ public class ExoMatrixWriter extends ModelCommandProcessor {
         if (msg instanceof ExoNotify) {
             ExoNotify notify = (ExoNotify) msg;
             try {
-                write(notify);
+                boolean wasModeratedByMe = writeExoAndDetectMyself(notify);
+                Vio vio = resolveVio(notify);
 
+                if (vio!=null && wasModeratedByMe){
+                    resolveLocalExonymMatrix(notify, vio);
+                }
             } catch (Exception e) {
                 logger.error("Error", e);
 
@@ -45,31 +66,102 @@ public class ExoMatrixWriter extends ModelCommandProcessor {
         }
     }
 
-    private void write(ExoNotify notify) throws Exception {
+    private void resolveLocalExonymMatrix(ExoNotify notify, Vio vio) {
+        try {
+            JoinSupportSingleton join = JoinSupportSingleton.getInstance();
+            ExonymMatrixManagerLocal localMatrix = join.getExonymMatrixManagerLocal();
+            localMatrix.resolveViolation(vio, false);
+
+        } catch (Exception e) {
+            logger.info("Error", e);
+
+        }
+    }
+
+    private Vio resolveVio(ExoNotify notify) {
+        if (notify.getTimeOfViolation()!=null){
+            try {
+                List<Vio> vios = vioRepo.read(queryExo);
+                String tOfVio = notify.getTimeOfViolation();
+                Vio resolved = null;
+
+                for (Vio vio : vios){
+                    if (vio.getTimeOfViolation().equals(tOfVio)){
+                        resolved = vio;
+                        break;
+                    }
+                }
+                resolved.setReissued(true);
+                vioRepo.update(resolved);
+                return resolved;
+
+            } catch (Exception e) {
+                logger.warn("There are no violations for this x0Hash "
+                        + notify.getHashOfX0(), e);
+                return null;
+
+            }
+        } else {
+            logger.debug("Join @ resolveViolation and not Rejoin");
+            return null;
+
+        }
+    }
+
+    private boolean writeExoAndDetectMyself(ExoNotify notify) throws Exception {
+        int indexMyMod = -1;
         try {
             HashMap<String, String> selector = queryExo.getSelector();
             selector.put(ExoMatrix.FIELD_NIBBLE6, notify.getNibble6());
-            List<ExoMatrix> matrix = this.exonymMap.read(queryExo, 200);
+            List<ExoMatrix> matrix = this.exonymMap.read(queryExo, 25);
+            for (ExoMatrix m : matrix){
+                logger.info("Detect myself " + m.getNibble6() + " " + m.getModUid() + " " + m.equals(myModTmpMatrix) );
+                logger.info("MyMod=" + myModTmpMatrix.getModUid());
+            }
             if (!matrix.isEmpty()){
-                Conflict conflict = new Conflict();
-                conflict.setMatrices(matrix);
-                conflict.setNotify(notify);
-                this.pipeToConflictResolver.put(conflict);
+                ExoMatrix sender = ExoMatrix.withModUid(notify.getNodeUid());
+                int index = matrix.indexOf(sender);
+                indexMyMod = matrix.indexOf(myModTmpMatrix);
 
+                logger.info("Found index for existing matrix at writeExo(): " + index);
+                logger.info("Found index for my node (): " + indexMyMod);
+
+                if (index>-1){
+                    ExoMatrix matrixMod = matrix.get(index);
+                    logger.info("Found matrix for mod = " + matrixMod.toString());
+                    boolean joiningSameNode = matrixMod.getX0Hash()
+                            .contains(notify.getHashOfX0());
+
+                    if (!joiningSameNode){
+                        logger.warn("x0' was not in the Exonym Map and should have been - adding.");
+                        matrixMod.getX0Hash().add(notify.getHashOfX0());
+                        exonymMap.update(matrixMod);
+
+                    }
+                } else {
+                    throw new NoDocumentException("See Below");
+
+                }
             } else {
                 throw new NoDocumentException("See Below");
 
             }
+            return indexMyMod > -1;
+
         } catch (NoDocumentException e) {
             ExoMatrix matrix = new ExoMatrix();
             matrix.setNibble6(notify.getNibble6());
-            matrix.setHostUuid(notify.getNodeUID());
+            matrix.setModUid(notify.getNodeUid());
             matrix.getX0Hash().add(notify.getHashOfX0());
+            matrix.set_id(matrix.index());
+
             this.toWrite.add(matrix);
             if (this.toWrite.size()>501){
                 bulkAdd();
 
             }
+            return indexMyMod > -1;
+
         } catch (Exception e) {
             throw e;
 

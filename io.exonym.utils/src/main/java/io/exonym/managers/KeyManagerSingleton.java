@@ -99,7 +99,7 @@ public class KeyManagerSingleton {
     }
 
     public RevocationInformation getRevocationInformation(URI rapuid, URI revinfouid) throws KeyManagerException {
-        logger.debug("REVOCATION INFORMATION REQUEST" + rapuid + " " + revinfouid);
+        logger.debug("REVOCATION INFORMATION REQUEST=\n" + rapuid + "\n" + revinfouid);
         RevocationInformation ri = this.revocationInfoMap.get(rapuid);
         if (ri == null) {
             logger.debug("Could not get revocation information: " + ri);
