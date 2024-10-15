@@ -116,12 +116,9 @@ public class JoinServlet extends HttpServlet {
             if (join != null) {
                 /**
                  *
-                 *
-                 *
                  */
                 IssuanceMessageAndBoolean imab = join.join(message, issuanceToken);
                 /**
-                 *
                  */
                 String response = IdContainer.convertObjectToXml(imab);
                 resp.getWriter().write(response);
@@ -131,15 +128,8 @@ public class JoinServlet extends HttpServlet {
 
             }
         } catch (PenaltyException e) {
-            /**
-             *
-             *
-             *
-             */
-            evalPenaltyReport(e.getReport(), message, issuanceToken, join, resp);
-            /**
-             *
-             */
+            penalty(e.getReport(), join, message, issuanceToken, resp);
+
         } catch (UxException e) {
             WebUtils.processError(e, resp);
 
@@ -151,162 +141,20 @@ public class JoinServlet extends HttpServlet {
         }
     }
 
-    private void evalPenaltyReport(ApplicantReport report,
-                                   IssuanceMessage message,
-                                   IssuanceToken token,
-                                   JoinProcessor join,
-                                   HttpServletResponse resp) {
+    private void penalty(ApplicantReport report, JoinProcessor join, IssuanceMessage message, IssuanceToken issuanceToken, HttpServletResponse resp) {
         try {
-            JoinSupportSingleton joinSupport = JoinSupportSingleton.getInstance();
-            RulebookGovernor governor = joinSupport.getGovernor();
-
-            DateTime tOffence = report.getMostRecentOffenceTimeStamp();
-            String t0 = DateHelper.isoUtcDateTime(tOffence);
-            String x0Hash = CryptoUtils.computeSha256HashAsHex(report.getX0());
-
-            Vio vio = targetWithHistory(x0Hash, report.getN6(), t0);
-            ArrayList<Penalty> penalties = governor.getPenaltiesMaxIndex0(
-                    vio.getHistoric());
-
-            RejoinCriteria rejoin = applyPenalty(penalties.get(0), t0, vio);
-
-            if (rejoin.isCanRejoin()){
-                settlePenalty(rejoin, join, message, token, vio, resp);
-
-            } else {
-                throw new UxException(JaxbHelper.gson.toJson(rejoin));
-
-            }
-        } catch (UxException e) {
-            WebUtils.processError(e, resp);
-
-        } catch (Exception e) {
-            WebUtils.processError(
-                    new UxException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR, e),
-                    resp);
-
-        }
-
-    }
-
-    private void settlePenalty(RejoinCriteria rejoin, JoinProcessor join,
-                               IssuanceMessage message, IssuanceToken token,
-                               Vio vio, HttpServletResponse resp) throws UxException {
-        try {
-            IssuanceMessageAndBoolean imab = join.rejoin(message, token, vio);
-            String xml = IdContainer.convertObjectToXml(imab);
-            String imabB64 = Base64.encodeBase64String(
-                    xml.getBytes(StandardCharsets.UTF_8));
-            rejoin.setImabFinalB64(imabB64);
-            String json = JaxbHelper.gson.toJson(rejoin);
+            RejoinCriteria rejoinCriteria = join.evalPenaltyReport(report, message, issuanceToken);
+            String json = JaxbHelper.gson.toJson(rejoinCriteria);
             resp.getWriter().write(json);
 
-        } catch (Exception e) {
-            throw new UxException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR, e);
-
-        }
-    }
-
-    private RejoinCriteria applyPenalty(Penalty penalty, String t0, Vio vio) throws UxException {
-        RejoinCriteria result = new RejoinCriteria();
-        String type = penalty.getType();
-        result.setPenaltyType(type);
-        // N.B: this will need to be modified when cascading revocation is implemented.
-        result.getRevokedModerators().add(vio.getModOfVioUid());
-
-        if (Penalty.TYPE_TIME_BAN.equals(type)){
-            return applyTimeban(result, penalty, t0);
-
-        } else if (Penalty.TYPE_NONE.equals(type)){
-            result.setCanRejoin(true);
-            return result;
-
-        } else {
-            throw new UxException("PENALTY_TYPE_NOT_IMPLEMENTED");
-
-        }
-    }
-
-    private RejoinCriteria applyTimeban(RejoinCriteria criteria,
-                                        Penalty penalty, String t0) {
-
-        if (Penalty.DEN_TEMP_PERMANENT.equals(penalty.getDenomination())){
-            criteria.setCanRejoin(false);
-            criteria.setPenaltyType(Penalty.DEN_TEMP_PERMANENT);
-
-        } else {
-            ZonedDateTime timeOfBan = ZonedDateTime.parse(t0,
-                    DateTimeFormatter.ISO_ZONED_DATE_TIME);
-
-            ChronoUnit timeUnit = ChronoUnit.valueOf(
-                    penalty.getDenomination().toUpperCase());
-
-            int size = penalty.getQuantity();
-            double coeff = (penalty.getOffenceCount() - 1) * penalty.getRepeatOffenceMultiplier();
-            double b = coeff > 0 ? size * coeff : size;
-            int banTime = (int) Math.ceil(b);
-
-            ZonedDateTime banLiftedAt = timeOfBan.plus(banTime, timeUnit);
-            criteria.setBannedLiftedUTC(banLiftedAt.toString());
-            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-
-            boolean isAfter = now.isAfter(banLiftedAt);
-
-            criteria.setCanRejoin(isAfter);
-            logger.info("Banned@" + t0  + " Lifted@" + banLiftedAt + " Now@" + now);
-
-        }
-        return criteria;
-
-    }
-
-    private Vio targetWithHistory(String x0Hash, String n6, String t0) throws UxException {
-        try {
-            QueryBasic q = new QueryBasic();
-            q.getSelector().put(Vio.FIELD_X0_HASH, x0Hash);
-            ArrayList<Vio> vios = (ArrayList<Vio>) CouchDbHelper.repoVio().read(q);
-            ArrayList<URI> previous = new ArrayList<>();
-            Vio thisVio = null;
-
-            for (Vio vio : vios){
-                if (vio.getNibble6().equals(n6)){
-                    if (t0.equals(vio.getTimeOfViolation())){
-                        thisVio = vio;
-
-                    } else {
-                        previous.addAll(vio.getRuleUids());
-
-                    }
-                } else {
-                    logger.info("Ignoring hash collision " + vio.getNibble6() + " " + n6);
-
-                }
-            }
-            if (thisVio!=null){
-                ArrayList<URI> thisViolationsRules = thisVio.getRuleUids();
-                HashMap<String, Integer> history = thisVio.getHistoric();
-                if (history.isEmpty()){
-                    for (URI rN : thisViolationsRules){
-                        int count = Collections.frequency(previous, rN);
-                        history.put(rN.toString(), count);
-
-                    }
-                    CouchDbHelper.repoVio().update(thisVio);
-                }
-                return thisVio;
-
-            } else {
-                throw new HubException("Couldn't find this violation");
-
-            }
-        } catch (NoDocumentException e) {
-            throw new UxException(ErrorMessages.DB_TAMPERING, e);
+        } catch (UxException e) {
+            WebUtils.processError(e, resp);
 
         } catch (Exception e) {
-            throw new UxException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR);
+            WebUtils.processError(
+                    new UxException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR, e),
+                    resp);
 
         }
     }
-
-
 }
