@@ -88,6 +88,7 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
 
         ExonymDetailedResult result = new ExonymDetailedResult();
         result.setModUID(this.targetMod.getNodeUID());
+        result.getViolations().addAll(violations);
         analyseViolations(violations, result);
         analyseRow(row, rules, result);
         return result;
@@ -98,14 +99,14 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
         ArrayList<DateTime> violationTime = new ArrayList<>();
         if (violations!=null && !violations.isEmpty()){
             for (Violation v : violations){
-                logger.info("Found Violation=" + JaxbHelper.gson.toJson(v));
+                logger.debug("Found Violation=" + JaxbHelper.gson.toJson(v));
 
                 if (!(v.isSettled() && result.isUnsettled())){
                     result.setUnsettled(true);
                     result.getUnsettledRuleId().addAll(v.getRuleUids());
 
                 }
-                if (v.isOverride()){ // It might be unsettled, but can be overridden by lead
+                if (v.isOverride()){ // It might be unsettled, but can be overridden by the Lead
                     result.setUnsettled(false);
                     result.setOverridden(true);
 
@@ -114,8 +115,8 @@ public class ExonymMatrixManagerGlobal extends ExonymMatrixManagerAbstract {
                 result.incrementOffences();
 
             }
-            Collections.sort(violationTime);
-            DateTime last = violationTime.get(violationTime.size()-1);
+            Collections.sort(violationTime, Collections.reverseOrder());
+            DateTime last = violationTime.get(0);
             result.setLastViolationTime(last);
 
         }

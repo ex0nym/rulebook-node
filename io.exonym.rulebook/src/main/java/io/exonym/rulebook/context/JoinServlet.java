@@ -72,13 +72,13 @@ public class JoinServlet extends HttpServlet {
         String path = req.getPathInfo();
         String response = null;
         if (path == null) {
-            response = join.joinChallenge(false);
+            response = join.joinChallenge(false, false);
 
         } else {
             String[] request = path.split("/");
             if (request.length > 1) {
                 if (request[1].equals("qr")) {
-                    response = join.joinChallenge(true);
+                    response = join.joinChallenge(true, false);
 
                 } else {
                     logger.debug("Ignoring request " + request);

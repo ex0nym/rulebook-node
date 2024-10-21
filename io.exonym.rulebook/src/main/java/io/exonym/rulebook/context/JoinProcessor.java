@@ -20,14 +20,16 @@ import io.exonym.lite.standard.Form;
 import io.exonym.lite.standard.PassStore;
 import io.exonym.lite.standard.QrCode;
 import io.exonym.lite.time.DateHelper;
+import io.exonym.rulebook.schema.Appeal;
+import io.exonym.rulebook.schema.AppealTransaction;
 import io.exonym.rulebook.schema.IdContainer;
+import io.exonym.rulebook.schema.RuleForAppeal;
 import io.exonym.utils.storage.ImabAndHandle;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 
-import javax.xml.bind.JAXBElement;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
@@ -63,14 +65,15 @@ public class JoinProcessor {
 
     }
 
-    protected String joinChallenge(boolean qr) throws Exception {
+    protected String joinChallenge(boolean qr, boolean isAppeal) throws Exception {
         try {
-            IssuanceMessageAndBoolean imab = initIssuance();
+            IssuanceMessageAndBoolean imab = initIssuance(isAppeal);
             Rulebook challengedRulebook = support.getRulebookVerifier().getDeepCopy();
             String xml = IdContainer.convertObjectToXml(imab);
             byte[] compressed = WebUtils.compress(xml.getBytes(StandardCharsets.UTF_8));
             String b64Xml = Base64.encodeBase64String(compressed);
             String link = Namespace.UNIVERSAL_LINK_JOIN_REQUEST + b64Xml;
+
             if (qr){
                 String qrImage = QrCode.computeQrCodeAsPngB64(link, 300);
                 challengedRulebook.setChallengeB64(qrImage);
@@ -85,15 +88,18 @@ public class JoinProcessor {
         }
     }
 
-    private IssuanceMessageAndBoolean initIssuance() throws Exception {
-        IssuancePolicy policy = support.buildIssuancePolicy();
+    private IssuanceMessageAndBoolean initIssuance(boolean appeal) throws Exception {
+        IssuancePolicy policy = support.buildIssuancePolicy(appeal);
         byte[] nonce = policy.getPresentationPolicy().getMessage().getNonce();
         this.hashOfNonce = CryptoUtils.computeSha256HashAsHex(nonce);
 
-        String xml = io.exonym.utils.storage.IdContainer.convertObjectToXml(policy);
-        logger.debug(xml);
+        String xml = io.exonym.utils.storage.
+                IdContainer.convertObjectToXml(policy);
 
-        return support.getMyModIssuer().issueInit(claim, policy, support.getStore().getEncrypt(),
+        logger.debug("Challenge for joiner: " + xml);
+
+        return support.getMyModIssuer().issueInit(claim, policy,
+                support.getStore().getEncrypt(),
                 URI.create("urn:" + UUID.randomUUID()));
 
     }
@@ -211,7 +217,7 @@ public class JoinProcessor {
 
     }
 
-    private Vio targetWithHistory(String x0Hash, String n6, String t0) throws UxException {
+    private Vio targetWithHistory(String x0Hash, String n6, String tov) throws UxException {
         try {
             QueryBasic q = new QueryBasic();
             q.getSelector().put(Vio.FIELD_X0_HASH, x0Hash);
@@ -221,7 +227,7 @@ public class JoinProcessor {
 
             for (Vio vio : vios){
                 if (vio.getNibble6().equals(n6)){
-                    if (t0.equals(vio.getTimeOfViolation())){
+                    if (tov.equals(vio.getTimeOfViolation())){
                         thisVio = vio;
 
                     } else {
@@ -257,6 +263,99 @@ public class JoinProcessor {
             throw new UxException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR);
 
         }
+    }
+
+    protected Appeal searchAndVerify(IssuanceMessage im, IssuanceToken issuanceToken) throws Exception {
+        // Verify token is real before revealing information.
+        support.getMyModIssuer().issueStep(
+                im, support.getStore().getDecipher());
+
+        PresentationTokenDescription ptd = issuanceToken
+                .getIssuanceTokenDescription()
+                .getPresentationTokenDescription();
+
+        ApplicantReport report = generateApplicantReport(ptd);
+        return initAppeal(report);
+
+    }
+
+    private Appeal initAppeal(ApplicantReport report) throws UxException {
+        if (report.isUnresolvedOffences()){
+            Appeal result = new Appeal();
+            result.setTimeOfViolation(DateHelper.isoUtcDateTime(
+                    report.getMostRecentOffenceTimeStamp()));
+
+            ArrayList<ExonymDetailedResult> relevant = isolateRelevantResults(
+                    report.getDetailedResults());
+            ExonymDetailedResult target = relevant.get(0);
+            Violation mostRecentViolation = target.getViolations().get(0);
+
+            ArrayList<URI> unsettledRules = new ArrayList<>();
+            RulebookGovernor governor = support.getGovernor();
+            for (ExonymDetailedResult detail : relevant){
+                unsettledRules.addAll(detail.getUnsettledRuleId());
+
+            }
+            for (URI unsettled : unsettledRules){
+                RuleForAppeal ruleForAppeal = new RuleForAppeal();
+                RulebookItem ri = governor.getRule(unsettled.toString());
+                ruleForAppeal.setRuleUid(unsettled);
+                ruleForAppeal.setCurrentPenalty(ri.getPenalty());
+                ruleForAppeal.setRuleOriginal(ri.getDescription());
+                result.getTargetRules().add(ruleForAppeal);
+
+            }
+            result.setModOfVioUid(target.getModUID());
+            result.setRequestingModUid(
+                    mostRecentViolation.getRequestingModUid());
+
+            result.setNibble6(report.getN6());
+            result.setOpenForAppeal(true);
+
+            Vio vio = targetWithHistory(
+                    CryptoUtils.computeSha256HashAsHex(report.getX0()),
+                    report.getN6(),
+                    result.getTimeOfViolation());
+
+            Penalty appliedPenalty = governor
+                    .getPenaltiesMaxIndex0(
+                    vio.getHistoric()).get(0);
+
+            RejoinCriteria rejoin = applyPenalty(appliedPenalty, result.getTimeOfViolation(), vio);
+            result.setBanLifted(rejoin.getBannedLiftedUTC());
+
+            AppealTransaction history0 = new AppealTransaction();
+            history0.setActor(AppealTransaction.ACTOR_PRODUCER);
+            history0.setTimestamp(DateHelper.getCurrentUtcMillis());
+            history0.setDateTime(DateHelper.isoUtcDateTime(history0.getTimestamp()));
+            result.setStatus(Appeal.STATUS_RAISING);
+            result.getHistory().add(history0);
+
+            return result;
+
+        } else {
+            throw new UxException(ErrorMessages.NO_OUTSTANDING_APPEALS);
+
+        }
+    }
+
+    private ArrayList<ExonymDetailedResult> isolateRelevantResults(
+            ArrayList<ExonymDetailedResult> detailedResults) throws UxException {
+        ArrayList<ExonymDetailedResult> relevant = new ArrayList<>();
+
+        for (ExonymDetailedResult detail : detailedResults){
+            if (detail.isUnsettled() && !detail.isOverridden()){
+                relevant.add(detail);
+            }
+        }
+        if (relevant.size()>1){
+            logger.warn("Selecting the most recent incident for reporting");
+
+        } else if (relevant.isEmpty()){
+            throw new UxException(ErrorMessages.NO_OUTSTANDING_APPEALS, "relevant was empty.");
+
+        }
+        return relevant;
     }
 
 
@@ -314,11 +413,21 @@ public class JoinProcessor {
         return x0;
     }
 
+    /**
+     * This isn't complete.
+     *
+     * TODO when users can join multiple rules.
+     *
+     * @param verifier
+     * @param token
+     * @return
+     * @throws Exception
+     */
     private ArrayList<URI> registerPotentialHonestyClaim(TokenVerifier verifier,
                                                             PresentationToken token) throws Exception {
         PresentationTokenDescription ptd = token.getPresentationTokenDescription();
         List<CredentialInToken> credentials = ptd.getCredential();
-        URI sourceUuid = support.getMyModerator().getLeadUID();
+        URI myLeadUid = support.getMyModerator().getLeadUID();
 
         for (CredentialInToken cit : credentials){
             URI ip = cit.getIssuerParametersUID();
@@ -327,12 +436,12 @@ public class JoinProcessor {
             if (!(ips.contains("sybil") && ips.contains("anticlone"))) { // todo error
                 UIDHelper helper = new UIDHelper(ip);
 
-                if (helper.getLeadUid().equals(sourceUuid)){
+                if (helper.getLeadUid().equals(myLeadUid)){
                     return loadVerifierWithCurrentProofsOfHonesty(verifier, ip, token);
 
                 } else {
                     throw new UxException(ErrorMessages.PROOF_IS_OUT_OF_SCOPE,
-                            helper.getLeadUid().toString(), sourceUuid.toString());
+                            helper.getLeadUid().toString(), myLeadUid.toString());
                 }
             }
         }
@@ -340,12 +449,13 @@ public class JoinProcessor {
     }
 
 
+    @Deprecated
     private ArrayList<URI> loadVerifierWithCurrentProofsOfHonesty(TokenVerifier verifier,
                                                                      URI issuerUid, PresentationToken token) throws Exception {
         UIDHelper uids = new UIDHelper(issuerUid);
 
+        NodeVerifier n0 = new NodeVerifier(support.getMyModerator().getNodeUID());
 
-        NodeVerifier n0 = NodeVerifier.openNode(support.getMyModerator().getStaticURL0(), false, false);
         n0.loadTokenVerifierFromNodeVerifier(verifier, uids);
 
         /**
@@ -394,18 +504,33 @@ public class JoinProcessor {
         return uncontrolledRules;
     }
 
+    private ApplicantReport generateApplicantReport(PresentationTokenDescription token) throws Exception {
+        ApplicantReport applicantReport = performSearch(token, support.getMyRules());
+        if (applicantReport==null){
+            throw new UxException(ErrorMessages.NO_OUTSTANDING_APPEALS);
+
+        } else {
+            logger.debug("generateApplicantReport(): " + JaxbHelper.gson.toJson(applicantReport));
+
+        }
+        return applicantReport;
+
+    }
+
     private ArrayList<String> verifyConditionsToJoin(PresentationTokenDescription token) throws Exception {
         ArrayList<String> result = new ArrayList<>();
-        ApplicantReport report = performSearch(token, support.getMyRules());
-        logger.info(JaxbHelper.gson.toJson(report));
+        ApplicantReport applicantReport = performSearch(token, support.getMyRules());
 
-        if (report!=null){
-            if (!report.getExceptions().isEmpty()){
-                throw report.getExceptions();
+        logger.debug("verifyConditionsToJoin(applicantReport)",
+                () -> JaxbHelper.gson.toJson(applicantReport));
+
+        if (applicantReport!=null){
+            if (!applicantReport.getExceptions().isEmpty()){
+                throw applicantReport.getExceptions();
 
             }
-            if (report.isMember()){
-                ArrayList<URI> previous = report.getPreviousHosts();
+            if (applicantReport.isMember()){
+                ArrayList<URI> previous = applicantReport.getPreviousHosts();
                 String[] p = new String[previous.size()];
                 int i = 0;
                 for (URI a : previous){
@@ -416,10 +541,10 @@ public class JoinProcessor {
                 throw new UxException(ErrorMessages.ALREADY_JOINED, p);
 
             }
-            if (report.isUnresolvedOffences()){
-                logger.info(JaxbHelper.gson.toJson(report));
+            if (applicantReport.isUnresolvedOffences()){
+                logger.info(JaxbHelper.gson.toJson(applicantReport));
                 PenaltyException e = new PenaltyException(ErrorMessages.BANNED_UNTIL);
-                e.setReport(report);
+                e.setReport(applicantReport);
                 throw e;
 
             }
@@ -435,7 +560,8 @@ public class JoinProcessor {
                 this.props.getNodeRoot());
 
         ExonymResult result = network.search();
-        logger.info("Expanding results if not null: " + JaxbHelper.gson.toJson(result));
+        logger.debug("Will expand results if not null: ",
+                ()-> JaxbHelper.gson.toJson(result));
 
         if (result!=null){
             return network.expandResults(result);
@@ -445,6 +571,7 @@ public class JoinProcessor {
 
         }
     }
+
 
     private void publishExonymMapAndBroadcast(ArrayList<String> uncontrolled, Vio vio) throws Exception {
         ExonymMatrixRowAndX0 xyLists = buildXYLists(uncontrolled);

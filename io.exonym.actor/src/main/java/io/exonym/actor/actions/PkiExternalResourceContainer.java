@@ -13,11 +13,13 @@ import io.exonym.lite.standard.WhiteList;
 import io.exonym.utils.storage.CacheContainer;
 import io.exonym.utils.RulebookVerifier;
 import io.exonym.utils.storage.ExternalResourceContainer;
+import io.exonym.utils.storage.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
 import java.net.URL;
+import java.rmi.server.UID;
 
 public final class PkiExternalResourceContainer extends ExternalResourceContainer {
 	
@@ -49,10 +51,6 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 	}
 	
 	public synchronized <T> T openResource(String fileName, boolean overrideCache) throws Exception {
-		if (fileName == null) {
-			throw new NullPointerException("File Name");
-
-		}
 		logger.info("Opening External Resource: Overriding Cache ("+overrideCache+")" + fileName);
 
 		T t = null;
@@ -63,10 +61,15 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		}
 		if (t == null) {
 			boolean isCredSpec = FileType.isCredentialSpecification(fileName);
+
 			if (FileType.isPresentationPolicy(fileName) || isCredSpec) {
 				t = verifyLead(fileName);
+
 				if (isCredSpec){
 					this.cache.store(t);
+
+				} else {
+					logger.debug("Not storing credential in cache: isCredSpec=" + isCredSpec + " " + fileName);
 
 				}
 				return t;
@@ -90,6 +93,14 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 		return t;
 	}
 
+	private void tryLocal(String fileName) throws Exception {
+		URI target = URI.create(IdContainer.fileNameToUid(fileName));
+		UIDHelper helper = new UIDHelper(target);
+		helper.out();
+
+
+	}
+
 	private <T> T verifyLead(String fileName) throws Exception {
 		if (FileType.isCredentialSpecification(fileName)){
 			if (Rulebook.isSybil(fileName)){
@@ -108,10 +119,12 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 						.getCredentialSpecification();
 			}
 		} else {
-			URI leadUID = UIDHelper.computeLeadUidFromModUid(UIDHelper.fileNameToUid(fileName));
-			NetworkMapItem nmi = getNetworkMap().nmiForNode(leadUID);
-			NodeVerifier leadVerifier = NodeVerifier.tryNode(nmi.getStaticURL0(),
-					nmi.getRulebookNodeURL().resolve("static"), true, false);
+			URI modUid = UIDHelper.computeModUidFromMaterialUID(UIDHelper.fileNameToUid(fileName));
+			URI leadUid = UIDHelper.computeLeadUidFromModUid(modUid);
+			NetworkMapItem nmi = getNetworkMap().nmiForNode(leadUid);
+
+			NodeVerifier leadVerifier = new NodeVerifier(nmi.getNodeUID());
+
 			CacheContainer cache = this.getCache();
 			cache.store(leadVerifier.getPresentationPolicy());
 			cache.store(leadVerifier.getCredentialSpecification());
@@ -146,8 +159,7 @@ public final class PkiExternalResourceContainer extends ExternalResourceContaine
 	private <T> T verifyModerator(String fileName) throws Exception {
 		URI searchingFor = UIDHelper.fileNameToUid(fileName);
 		URI modUID = UIDHelper.computeModUidFromMaterialUID(searchingFor);
-		NetworkMapItem nmi = getNetworkMap().nmiForNode(modUID);
-		NodeVerifier modVerifier = NodeVerifier.openNode(nmi.getStaticURL0(), false, false);
+		NodeVerifier modVerifier = new NodeVerifier(modUID);
 
 		CacheContainer cache = this.getCache();
 		TrustNetworkWrapper tnw = new TrustNetworkWrapper(modVerifier.getTargetTrustNetwork());

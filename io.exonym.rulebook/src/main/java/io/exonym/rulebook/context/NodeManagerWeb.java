@@ -53,17 +53,6 @@ public final class NodeManagerWeb extends NodeManager {
 		}
 	}
 
-	@Override
-	protected void saveKey(XKey xk) {
-		try {
-			CouchRepository<XKey> repo = CouchDbHelper.repoRootKey();
-			repo.create(xk);
-
-		} catch (Exception e) {
-			logger.error("Failed to save Store Key", e);
-
-		}
-	}
 
 	public static String issuerUidToNodeUid(URI issuerUid) throws ProgrammingException {
 		if (issuerUid!=null) {

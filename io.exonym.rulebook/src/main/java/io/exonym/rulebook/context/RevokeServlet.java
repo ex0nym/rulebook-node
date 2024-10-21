@@ -363,6 +363,7 @@ public class RevokeServlet extends HttpServlet {
 
         }
         RevocationInformation ri = issuer.revocationBulkValidHandles(ra, handles, store.getDecipher());
+        ExonymIssuer.removeRevocationHistory(ri);
 
         NodeManagerWeb nodeManager = new NodeManagerWeb(myNode.getLeadName());
 

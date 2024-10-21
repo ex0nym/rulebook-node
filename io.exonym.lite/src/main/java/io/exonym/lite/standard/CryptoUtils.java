@@ -139,7 +139,7 @@ public class CryptoUtils {
 			return randomNonce;
 
 		} catch (NoSuchAlgorithmException e) {
-			logger.error("Critical Error", e);
+			logger.error("--------- Critical Error ---------- ", e);
 			return null;
 
 		}

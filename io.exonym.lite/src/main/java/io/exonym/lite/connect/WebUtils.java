@@ -1,8 +1,10 @@
 package io.exonym.lite.connect;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import io.exonym.lite.couchdb.Base64TypeAdapter;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.ProgrammingException;
 import io.exonym.lite.exceptions.UxException;
@@ -36,9 +38,15 @@ import java.util.zip.InflaterOutputStream;
 
 public class WebUtils {
 
-
     private static final Logger logger = LogManager.getLogger(WebUtils.class);
-    private final static Gson gson = new Gson();
+    public final static Gson GSON;
+
+    static {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeHierarchyAdapter(byte[].class, new Base64TypeAdapter());
+        GSON = builder.setPrettyPrinting().create();
+
+    }
 
     public static HashMap<String, String> buildParams(HttpServletRequest request, HttpServletResponse response) throws Exception {
         try {
@@ -281,7 +289,7 @@ public class WebUtils {
                         String error = arg0.getStatusLine().getReasonPhrase();
                         HashMap<String, String> err = new HashMap<>();
                         err.put("error", error);
-                        return gson.toJson(err);
+                        return GSON.toJson(err);
 
                     } else {
                         throw new ClientProtocolException("Error Code " + status);
@@ -388,4 +396,5 @@ public class WebUtils {
                 , StandardCharsets.UTF_8);
 
     }
+
 }

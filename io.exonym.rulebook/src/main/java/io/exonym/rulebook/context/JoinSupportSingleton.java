@@ -68,13 +68,17 @@ public class JoinSupportSingleton {
         this.sybilHelper = new UIDHelper(this.networkMap
                 .nmiForSybilModTest().getLastIssuerUID());
 
-        myModContainer = new IdContainer(myModerator.getModeratorName());
-        modCs = myModContainer.openResource(myModeratorHelper.getCredentialSpecFileName());
-        sybilCs = external.openResource(
+        this.myModContainer = new IdContainer(myModerator.getModeratorName());
+
+        this.modCs = myModContainer.openResource(
+                myModeratorHelper.getCredentialSpecFileName());
+
+        this.sybilCs = external.openResource(
                 sybilHelper.getCredentialSpecFileName());
 
         this.rulebookVerifier = openRulebookVerifier();
         this.myRules = rulebookVerifier.toRulebookUIDs();
+
         Rulebook leadRulebook = openLeadRulebook();
 
         this.governor = new RulebookGovernor(leadRulebook);
@@ -170,15 +174,26 @@ public class JoinSupportSingleton {
     }
 
 
-    protected IssuancePolicy buildIssuancePolicy() throws Exception {
+    protected IssuancePolicy buildIssuancePolicy(boolean appeal) throws Exception {
         ArrayList<CredentialSpecification> cspecs = new ArrayList<>();
         cspecs.add(sybilCs);
+        byte[] nonce = null;
+
+        if (appeal){
+            nonce = CryptoUtils.generateNonce(16);
+
+        } else {
+            nonce = CryptoUtils.generateNonce(32);
+
+        }
         PresentationPolicy pp = JoinHelper.baseJoinPolicy(
-                rulebookVerifier, this.sybilHelper.getIssuerParameters(),
-                external, cspecs, CryptoUtils.generateNonce(32));
+                rulebookVerifier,
+                this.sybilHelper.getIssuerParameters(),
+                external, cspecs, nonce);
 
         BuildIssuancePolicy bip = new BuildIssuancePolicy(pp,
-                myModeratorHelper.getCredentialSpec(), myModeratorHelper.getIssuerParameters());
+                myModeratorHelper.getCredentialSpec(),
+                myModeratorHelper.getIssuerParameters());
 
         return bip.getIssuancePolicy();
     }

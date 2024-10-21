@@ -292,7 +292,6 @@ public class IdContainerJSON extends AbstractIdContainer {
 			byte[] xml = Base64.decodeBase64(encB64.getBytes());
 			ByteArrayInputStream is = new ByteArrayInputStream(xml);
 			JAXBElement<?> resourceAsJaxbElement = JaxbHelperClass.deserialize(is, true);
-			logger.debug(fullFileName + "\n" + new String(xml));
 			return (T)JAXBIntrospector.getValue(resourceAsJaxbElement);
 			
 		} else {
@@ -309,7 +308,6 @@ public class IdContainerJSON extends AbstractIdContainer {
 		String encB64 = l.get(fullFileName);
 		if (encB64!=null){
 			byte[] xml = Base64.decodeBase64(encB64.getBytes());
-			logger.debug(fullFileName + "\n" + new String(xml));	
 			return (T)JaxbHelper.xmlToClass(new String(xml), clazz);
 			
 		} else {

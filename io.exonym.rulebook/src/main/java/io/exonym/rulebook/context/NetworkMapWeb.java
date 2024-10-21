@@ -43,6 +43,8 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     private final RulebookNodeProperties props = RulebookNodeProperties.instance();
     private NetworkMapNodeOverview allLeads = null;
 
+    private MyTrustNetworks myTrustNetworks = new MyTrustNetworks();
+
     private URI myModeratorsLeadUID;
     private URI myModeratorUID;
     private URI myNodesLeadUID;
@@ -83,10 +85,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
     }
 
 
-    @Override
-    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, boolean isTargetSource) throws Exception {
-        return NodeVerifier.openNode(staticNodeUrl0, true, false);
-    }
 
     protected void refresh(){
         spawn();
@@ -159,38 +157,31 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         }
     }
 
+    @Override
+    protected NodeVerifier openNodeVerifier(URI staticNodeUrl0, boolean isTargetSource) throws Exception {
+        throw new HubException("DEPRECATED");
+    }
+
     private void localStateDefinition(NetworkMapNodeOverview allLeads) {
         try {
-            CouchRepository<NodeData> repo = CouchDbHelper.repoNodeData();
-            ArrayList<String> orGate = new ArrayList<>();
-            orGate.add(NodeData.TYPE_MODERATOR);
-            orGate.add(NodeData.TYPE_LEAD);
-            QueryOrGate query = new QueryOrGate("type", orGate);
-            List<NodeData> node = repo.read(query);
-            HashMap<String, NodeData> local = new HashMap<>();
-            for (NodeData n : node){
-                local.put(n.getType(), n);
+            NodeInformation leadNi = null;
+            NodeInformation modNi = null;
+            if (myTrustNetworks.isModerator()){
+                TrustNetwork tn = myTrustNetworks.getModerator().getTrustNetwork();
+                leadNi = tn.getNodeInformation();
+                allLeads.setModeratorUID(leadNi.getNodeUid());
+                allLeads.setThisModeratorLeadUID(leadNi.getLeadUid());
 
             }
-            NodeData mod = local.get(NodeData.TYPE_MODERATOR);
-            NodeData lead = local.get(NodeData.TYPE_LEAD);
-            if (mod!=null){
-                allLeads.setModeratorUID(mod.getNodeUid());
-                URI sourceUuid = UIDHelper.computeLeadUidFromModUid(mod.getNodeUid());
-                allLeads.setThisModeratorLeadUID(sourceUuid);
-                allLeads.setLatestRevocationInformationHash(mod.getLastRAIHash());
-
-            } if (lead!=null){
-                allLeads.setThisNodeLeadUID(lead.getNodeUid());
-                allLeads.setLatestPresentationPolicyHash(lead.getLastPPHash());
+            if (myTrustNetworks.isLeader()){
+                TrustNetwork tn = myTrustNetworks.getLead().getTrustNetwork();
+                modNi = tn.getNodeInformation();
+                allLeads.setThisNodeLeadUID(modNi.getNodeUid());
 
             }
-            if (mod!=null && lead!=null){
-                logger.debug(
-                        NetworkMapNodeOverview.LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR + " : "
-                                + lead.getNodeUid() + " " + mod.getSourceUid());
 
-                if (lead.getNodeUid().equals(mod.getSourceUid())){
+            if (myTrustNetworks.isLeader() && myTrustNetworks.isModerator()){
+                if (leadNi.getNodeUid().equals(modNi.getLeadUid())){
                     allLeads.setCurrentLocalState(
                             NetworkMapNodeOverview.LOCAL_STATE_LEAD_AND_MODERATOR);
 
@@ -199,21 +190,18 @@ public class NetworkMapWeb extends AbstractNetworkMap {
                             NetworkMapNodeOverview.LOCAL_STATE_INDEPENDENT_LEAD_AND_MODERATOR);
 
                 }
-            } else if (mod!=null){
+            } else if (myTrustNetworks.isModerator()){
                 allLeads.setCurrentLocalState(
                         NetworkMapNodeOverview.LOCAL_STATE_MODERATOR);
 
-            } else if (lead!=null){
+            } else if (myTrustNetworks.isLeader()){
                 allLeads.setCurrentLocalState(
                         NetworkMapNodeOverview.LOCAL_STATE_LEAD);
 
             } else {
-                throw new Exception("Source and Host are both Null: should have received a NoDocumentException");
+                allLeads.setCurrentLocalState(NetworkMapNodeOverview.LOCAL_STATE_UNDEFINED);
 
             }
-        } catch (NoDocumentException e) {
-            allLeads.setCurrentLocalState(NetworkMapNodeOverview.LOCAL_STATE_UNDEFINED);
-
         } catch (Exception e) {
             logger.error("Unexpected Error - Failed to Define Local State", e);
 
@@ -335,25 +323,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         }
     }
 
-    @Deprecated
-    protected void refreshPresentationPoliciesIfNecessary() throws UxException {
-        try {
-            NetworkMapNodeOverview state = openState();
-            ConcurrentHashMap<URI, NetworkMapItemLead> sources = state.getLeads();
-            if (state.isLeadRequiresUpdate()) {
-                sourceCryptoUpdate(sources.get(state.getThisNodeLeadUID()));
-
-            }
-            if (state.isSybilRequiresUpdate()){
-                sybilCryptoUpdate(sources.get(URI.create("sybil")));
-
-            }
-        } catch (Exception e) {
-            throw new UxException(ErrorMessages.NETWORK_MAP_REFRESH_FAILURE);
-
-        }
-    }
-
     private NetworkMapNodeOverview openState() throws Exception {
         try {
             QueryBasic q = QueryBasic.selectType(NetworkMapNodeOverview.TYPE_NETWORK_MAP_NODE_OVERVIEW);
@@ -365,61 +334,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         }
     }
 
-    @Deprecated
-    private void sourceCryptoUpdate(NetworkMapItem source) throws Exception {
-        if (source!=null){
-            NodeVerifier verifier = openNodeVerifier(source.getStaticURL0(), true);
-            IAuthenticator auth = IAuthenticator.getInstance();
-            IdContainer container = new IdContainer(auth.getContainerNameForNode());
-            container.saveLocalResource(verifier.getPresentationPolicy(), true);
-            container.saveLocalResource(verifier.getCredentialSpecification(), true);
-            boolean conflicted = true;
-            while (conflicted){
-                try {
-                    NetworkMapNodeOverview nm = openState();
-                    nm.setLeadRequiresUpdate(false);
-//                    mapSourceRepo.update(nm);
-                    conflicted=false;
-
-                } catch (DocumentConflictException e) {
-                    logger.debug("Document Conflicted - trying again");
-
-                }
-            }
-        } else {
-            throw new HubException("Network Map Origin must listen to updates from Sybil");
-
-        }
-
-    }
-
-    @Deprecated
-    private void sybilCryptoUpdate(NetworkMapItem sybil) throws Exception {
-        if (sybil!=null){
-            NodeVerifier verifier = NodeVerifier.openNode(sybil.getStaticURL0(),
-                    true, false);
-            IAuthenticator auth = IAuthenticator.getInstance();
-            IdContainer container = new IdContainer(auth.getContainerNameForNode());
-            container.saveLocalResource(verifier.getCredentialSpecification(), true);
-            container.saveLocalResource(verifier.getPresentationPolicy(), true);
-            boolean conflicted = true;
-            while (conflicted){
-                try {
-                    NetworkMapNodeOverview nm = openState();
-                    nm.setSybilRequiresUpdate(false);
-//                    mapSourceRepo.update(nm);
-                    conflicted=false;
-
-                } catch (DocumentConflictException e) {
-                    logger.debug("Document Conflicted - trying again");
-
-                }
-            }
-        } else {
-            throw new HubException("Network Map Origin must listen to updates from Sybil");
-
-        }
-    }
 
     private void refreshLeads(TrustNetworkWrapper tnw, NetworkMapNodeOverview allLeads) {
         logger.debug("Refreshing Leads");
@@ -479,7 +393,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         logger.info("Refreshing Nodes on Necessary Sources " + leads.size());
         CouchRepository<NetworkMapItemLead> repo = CouchDbHelper.repoNetworkMapItemSource();
 
-        MyTrustNetworks myTrustNetworks = new MyTrustNetworks();
 
         URI myLeadUrl = myTrustNetworks.isLeader() ? myTrustNetworks.getLead()
                 .getTrustNetwork().getNodeInformation().getStaticLeadUrl0() : null;

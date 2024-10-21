@@ -1,5 +1,6 @@
 package io.exonym.actor.actions;
 
+import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.sun.xml.ws.util.ByteArrayBuffer;
 import eu.abc4trust.xml.*;
 import io.exonym.abc.util.JaxbHelper;
@@ -9,9 +10,12 @@ import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.connect.UrlHelper;
 import io.exonym.helpers.XmlHelper;
+import io.exonym.lite.pojo.NetworkMapItem;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.pojo.XKey;
 import io.exonym.lite.standard.Const;
+import io.exonym.lite.standard.CryptoUtils;
+import io.exonym.lite.standard.WhiteList;
 import io.exonym.lite.time.Timing;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.lite.standard.AsymStoreKey;
@@ -22,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URL;
@@ -29,6 +34,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,236 +48,152 @@ public class NodeVerifier {
 	private  ConcurrentHashMap<String, ByteArrayBuffer> byteContent;
 	private  ConcurrentHashMap<String, ByteArrayBuffer> signatureBytes;
 	private  ConcurrentHashMap<String, Object> contents;
-	
-	private TrustNetwork targetTrustNetwork = null;
-
-	private TrustNetwork ownTrustNetwork = null;
-
 	private boolean openingOwnLead = false;
 	private boolean openingOwnMod = false;
-	private MyTrustNetworkAndKeys ownLeadTnw;
-	private MyTrustNetworkAndKeys ownModTnw;
 	private XKey nodePublicKey = null;
 	private String keyCheck = null;
 	private PresentationPolicy presentationPolicy = null;
 	private CredentialSpecification credentialSpecification = null;
 	private InspectorPublicKey inspectorPublicKey = null;
 	private Rulebook rulebook = null;
+	private final HashMap<String, IssuerParameters> issuerParameterMap = new HashMap<>();
+	private final HashMap<String, RevocationAuthorityParameters> revocationAuthorityMap = new HashMap<>();
+	private final HashMap<String, RevocationInformation> revocationInformationMap = new HashMap<>();
+	private final HashMap<String, PresentationToken> presentationTokenMap = new HashMap<>();
 
-	private final HashMap<String, IssuerParameters> issuerParameterMap = new HashMap<String, IssuerParameters>();
-	private final HashMap<String, RevocationAuthorityParameters> revocationAuthorityMap = new HashMap<String, RevocationAuthorityParameters>();
-	private final HashMap<String, RevocationInformation> revocationInformationMap = new HashMap<String, RevocationInformation>();
-	private final HashMap<String, PresentationToken> presentationTokenMap = new HashMap<String, PresentationToken>();
+	private MyTrustNetworks myTrustNetworks;
+
+	private TrustNetwork targetTrustNetwork;
 
 
 	private URI nodeUrl;
 	
 	private long touched = Timing.currentTime();
-	private final boolean amILead;
-	
+	private boolean amILead = false;
+
 	private AsymStoreKey publicKey;
 
-	/**
-	 * Verify Node Regardless of whether Local Data is Up to Date, or not
-	 *
-	 * @param primary
-	 * @param secondary
-	 * @param isTargetSource
-	 * @param amISource
-	 * @return
-	 * @throws Exception
-	 */
-	public static NodeVerifier tryNode(URI primary, URI secondary,
-									   boolean isTargetSource, boolean amISource) throws Exception {
-		try {
-			tryUrl(secondary, isTargetSource, amISource);
-			return new NodeVerifier(primary, isTargetSource, amISource);
+	public NodeVerifier(URI nodeUid) throws Exception {
+		myTrustNetworks = new MyTrustNetworks();
+		boolean shouldWrite = false;
+		if (myTrustNetworks.isMyNode(nodeUid)) {
+			logger.info("Detected verification of my own node - getting locally.");
 
-		} catch (FileNotFoundException e){
-			tryUrl(primary, isTargetSource, amISource);
-			return new NodeVerifier(secondary, isTargetSource, amISource);
-
-		} catch (UnknownHostException e){
-			tryUrl(primary, isTargetSource, amISource);
-			return new NodeVerifier(secondary, isTargetSource, amISource);
-
-		} catch (Exception e){
-			throw e;
-
-		}
-	}
-
-	/**
-	 * Verify Node Regardless of whether Local Data is Up to Data, or not
-	 *
-	 * @param primary
-	 * @param secondary
-	 * @return
-	 * @throws Exception
-	 */
-	public static void confrimPrimaryAndSecondary(URI primary, URI secondary) throws Exception {
-		try {
-			tryUrl(primary, false, false);
-			tryUrl(secondary, false, false);
-
-		} catch (Exception e){
-			throw new UxException("One or more of the publish locations is unavailable.  Check for errors and try again");
-
-		}
-	}
-
-
-
-	/**
-	 * To be used in conjunction with ping(), so the URL has already been established
-	 *
-	 * @param known
-	 * @param isTargetLead
-	 * @param amILead
-	 * @return
-	 * @throws Exception
-	 */
-	public static NodeVerifier openNode(URI known, boolean isTargetLead, boolean amILead) throws Exception {
-		return new NodeVerifier(known, isTargetLead, amILead);
-
-	}
-
-	/**
-	 * Establish which URL works
-	 * @param primary
-	 * @param secondary
-	 * @param lastUpdatedTime
-	 * @param isTargetSource
-	 * @param amISource
-	 * @return the URL that worked, or NULL if the lastUpdateTime matched that in the signatures.xml file at the URL
-	 *
-	 * @throws Exception
-	 */
-	public static URI ping(URI primary, URI secondary, String lastUpdatedTime,
-									   boolean isTargetSource, boolean amISource) throws Exception {
-		try {
-			String t = tryUrl(primary, isTargetSource, amISource);
-			if (t.equals(lastUpdatedTime)){
-				return null;
+			Path localContent = Path.of(Const.PATH_OF_HTML, Const.STATIC);
+			if (WhiteList.isLeadUid(nodeUid)){
+				keys = myTrustNetworks.getLead().getKcw();
+				localContent = localContent.resolve(Const.LEAD);
 
 			} else {
-				return primary;
+				keys = myTrustNetworks.getModerator().getKcw();
+				localContent = localContent.resolve(Const.MODERATOR);
 
 			}
-		} catch (FileNotFoundException e){
-			String t = tryUrl(secondary, isTargetSource, amISource);
-			if (t.equals(lastUpdatedTime)){
-				return null;
-
-			} else {
-				return secondary;
-
-			}
-		} catch (UnknownHostException e){
-			String t = tryUrl(secondary, isTargetSource, amISource);
-			if (t.equals(lastUpdatedTime)){
-				return null;
-
-			} else {
-				return secondary;
-
-			}
-		} catch (Exception e){
-			throw e;
-
-		}
-	}
-
-	public static NodeVerifier openLocal(URI url, KeyContainer localSourceSig, boolean amISource) throws Exception {
-		return new NodeVerifier(url, localSourceSig, amISource);
-
-
-	}
-
-	private static String tryUrl(URI url, boolean isTargetSource, boolean amISource) throws Exception {
-		try {
-			String xml = new String(UrlHelper.readXml(
-					url.resolve("signatures.xml").toURL()), "UTF8");
-			KeyContainer kc = JaxbHelper.xmlToClass(xml, KeyContainer.class);
-			return kc.getLastUpdateTime();
-
-		} catch (Exception e){
-			throw e;
-
-		}
-	}
-
-	private NodeVerifier(URI node, boolean isTargetLead, boolean amILead) throws Exception {
-		long t0 = Timing.currentTime();
-		if (node==null){
-			throw new HubException(ErrorMessages.SERVER_SIDE_PROGRAMMING_ERROR);
-
-		}
-		this.amILead = amILead;
-		this.nodeUrl = trainAtFolder(node);
-		openMyTrustNetworks(this.nodeUrl);
-
-		if (isTargetLead){
-			if (!node.toString().contains(Const.LEAD)){
-				throw new UxException("URL must be a Lead-URL " + node);
-
-			}
-		}
-		if (openingOwnMod || openingOwnLead){
-			Path localContent = Path.of(Const.PATH_OF_HTML, this.nodeUrl.getPath());
-			keys = openingOwnMod ? ownModTnw.getKcw() : ownLeadTnw.getKcw();
-			byteContent = readLocalBytes(localContent, keys);
+			byteContent = readLocalFileBytes(localContent, keys);
 
 		} else {
+			logger.info("Trying local network.");
+			AbstractNetworkMap nm = PkiExternalResourceContainer.getInstance()
+					.getNetworkMap();
+			NetworkMapItem item = nm.nmiForNode(nodeUid);
+			this.nodeUrl = item.getStaticURL0();
+
 			try {
-				logger.info("Trying URL: " + this.nodeUrl);
-				byteContent = XmlHelper.openXmlBytesAtUrl(this.nodeUrl);
+				Path localNetworkPath = computeNetworkPathToNode(nodeUid);
+				logger.info("Third-party node path=" + localNetworkPath);
+				AsymStoreKey key = AsymStoreKey.blank();
+				key.assembleKey(item.getPublicKeyB64());
+
+				byteContent = readLocalNetworkBytes(localNetworkPath);
 
 			} catch (Exception e) {
-				throw new UxException(ErrorMessages.STATIC_DATA_UNAVAILABLE);
+				logger.info("Local network failed: trying the target node");
+//				logger.debug("Caught exception to handle: ", e);
+				byteContent = XmlHelper.openXmlBytesAtUrl(this.nodeUrl);
+				shouldWrite = true;
 
 			}
 		}
 		signatureBytes = computeBytesThatWereSigned(byteContent);
 		contents = XmlHelper.deserializeOpenXml(byteContent);
+
 		if (keys==null){
-			rawKeys = (KeyContainer) contents.get("signatures.xml");
+			rawKeys = (KeyContainer) contents.get(Const.SIGNATURES_XML);
 			keys = new KeyContainerWrapper(rawKeys);
 
 		}
-		// Note that changing to network map will not function properly when
-		// establishing the node.
-		verification();
-		logger.info("Opened node static data and verified " + node + " : " + Timing.hasBeenMs(t0));
-		
+		verification(true);
+		logger.info("Finished Verification:" + nodeUid + " saving=" + shouldWrite);
+
+		if (shouldWrite){
+			saveToNetwork(this.getTargetTrustNetwork().getNodeInformation());
+		}
+	}
+	public NodeVerifier(URL newNodeUrl) throws Exception {
+		logger.warn(">>>>>>>>>>> ----------------- Using Remote ONLY Node Verifier ------------------- <<<<<<<<<<<< ");
+		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+		int i = 0;
+		for (StackTraceElement s : stackTrace){
+			logger.debug(s);
+			i++;
+			if (i>3){ break; }
+
+		}
+		logger.warn(">>>>>>>>>>> -----------------  END ------------------- <<<<<<<<<<<< ");
+
+		myTrustNetworks = new MyTrustNetworks();
+		this.nodeUrl=newNodeUrl.toURI();
+		byteContent = XmlHelper.openXmlBytesAtUrl(this.nodeUrl);
+		signatureBytes = computeBytesThatWereSigned(byteContent);
+		contents = XmlHelper.deserializeOpenXml(byteContent);
+
+		if (keys==null){
+			rawKeys = (KeyContainer) contents.get(Const.SIGNATURES_XML);
+			keys = new KeyContainerWrapper(rawKeys);
+
+		}
+		verification(false);
+		saveToNetwork(this.getTargetTrustNetwork().getNodeInformation());
+
 	}
 
-	private NodeVerifier(URI url, KeyContainer keys, boolean amILead) throws Exception {
+	public static Path computeNetworkPathToNode(URI nodeUid) {
+		boolean isTargetLead = WhiteList.isLeadUid(nodeUid);
+		String leadOrMod = isTargetLead ? Const.LEAD : Const.MODERATOR;
+		String toNode = CryptoUtils.computeSha256HashAsHex(nodeUid.toString());
+		return Path.of(Const.PATH_OF_NETWORK, toNode, leadOrMod);
+
+	}
+
+
+	private void saveToNetwork(NodeInformation nodeInformation) {
+		URI nodeUid = nodeInformation.getNodeUid();
+		Path localNetworkPath = computeNetworkPathToNode(nodeUid);
 		try {
-			openMyTrustNetworks(url);
-			this.amILead = amILead;
+			Files.createDirectories(localNetworkPath);
+			ByteArrayBuffer rulebook = byteContent.remove("description");
 
-			if (openingOwnMod || openingOwnLead){
-				Path localContent = Path.of(Const.PATH_OF_STATIC, this.nodeUrl.getPath());
-				KeyContainerWrapper kcw = openingOwnMod ? ownModTnw.getKcw() : ownLeadTnw.getKcw();
-				byteContent = readLocalBytes(localContent, kcw);
+			for (String fileName : byteContent.keySet()){
+				try {
+					Path p = localNetworkPath.resolve(fileName);
+					Files.write(p, byteContent.get(fileName).getRawData(),
+							StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-			} else {
-				byteContent = readLocalBytes(url.toURL(), keys);
+				} catch (IOException e) {
+					logger.warn("Could not write file: " + fileName);
 
+				}
 			}
-			signatureBytes = computeBytesThatWereSigned(byteContent);
-			contents = XmlHelper.deserializeOpenXml(byteContent);
-			verification();
+			Files.write(localNetworkPath.getParent().resolve(Const.RULEBOOK_JSON),
+					rulebook.getRawData(),
+					StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-		} catch (FileNotFoundException e){
-			throw new HubException("The URL was likely incorrect " + url, e);
-
-		} catch (Exception e){
-			throw e;
+		} catch (IOException e) {
+			logger.warn("Could not write file: rulebook.json");
 
 		}
 	}
+
 
 	public static ConcurrentHashMap<String, ByteArrayBuffer> computeBytesThatWereSigned(
 			ConcurrentHashMap<String, ByteArrayBuffer> byteContent) throws UnsupportedEncodingException {
@@ -286,7 +208,7 @@ public class NodeVerifier {
 
 	}
 
-	private ConcurrentHashMap<String, ByteArrayBuffer> readLocalBytes(Path root, KeyContainerWrapper kcw) throws Exception {
+	private ConcurrentHashMap<String, ByteArrayBuffer> readLocalFileBytes(Path root, KeyContainerWrapper kcw) throws Exception {
 		ConcurrentHashMap<String, ByteArrayBuffer> result = new ConcurrentHashMap<>();
 		ArrayList<XKey> keys = kcw.getKeyContainer().getKeyPairs();
 		for (XKey key : keys){
@@ -310,11 +232,39 @@ public class NodeVerifier {
 
 	}
 
+	private ConcurrentHashMap<String, ByteArrayBuffer> readLocalNetworkBytes(Path root) throws Exception {
+		ConcurrentHashMap<String, ByteArrayBuffer> result = new ConcurrentHashMap<>();
+		Path pathToSig = root.resolve(Const.SIGNATURES_XML);
+		logger.info("Path to Signature file: " + pathToSig + " " + Files.exists(pathToSig));
+		String kc = Files.readString(pathToSig);
+		KeyContainerWrapper kcw = new KeyContainerWrapper(JaxbHelper.xmlToClass(kc, KeyContainer.class));
 
-	private ConcurrentHashMap<String, ByteArrayBuffer> readLocalBytes(URL url, KeyContainer keys) throws Exception {
+		ArrayList<XKey> keys = kcw.getKeyContainer().getKeyPairs();
+		for (XKey key : keys){
+			if (key.getKeyUid().toString().startsWith(NamespaceMngt.URN_PREFIX_COLON)){
+				String fn = IdContainerJSON.uidToXmlFileName(key.getKeyUid());
+				byte[] b = Files.readAllBytes(root.resolve(fn));
+				result.put(fn, new ByteArrayBuffer(b));
+
+			} else {
+				logger.info("Opening materials and ignoring " + key.getKeyUid());
+
+			}
+		}
+		result.put(Const.SIGNATURES_XML, new ByteArrayBuffer(kc.getBytes(StandardCharsets.UTF_8)));
+		return result;
+
+	}
+	//		String fn = "rulebook.json";
+	//		Path rbpath = root.getParent().resolve(fn);
+	//		byte[] b = Files.readAllBytes(rbpath);
+	//		result.put(fn, new ByteArrayBuffer(b));
+
+
+	private ConcurrentHashMap<String, ByteArrayBuffer> readUrlBytes(URL url, KeyContainer keys) throws Exception {
 		ConcurrentHashMap<String, ByteArrayBuffer> result = new ConcurrentHashMap<>();
 		String sigXml = JaxbHelper.serializeToXml(keys, KeyContainer.class);
-		result.put("signatures.xml", new ByteArrayBuffer(sigXml.getBytes()));
+		result.put(Const.SIGNATURES_XML, new ByteArrayBuffer(sigXml.getBytes()));
 
 		for (XKey key : keys.getKeyPairs()){
 			if (key.getKeyUid().toString().startsWith(NamespaceMngt.URN_PREFIX_COLON)){
@@ -337,49 +287,7 @@ public class NodeVerifier {
 
 	}
 
-
-	private void openMyTrustNetworks(URI node) throws Exception {
-		try {
-			this.ownLeadTnw = new MyTrustNetworkAndKeys(true);
-
-		} catch (Exception e) {
-			logger.info("Did not open Own Lead Trust Network");
-
-		}
-		try {
-			this.ownModTnw = new MyTrustNetworkAndKeys(false);
-
-		} catch (Exception e) {
-			logger.info("Did not open Own Moderator Trust Network");
-
-		}
-		openingOwnLead = ownLeadTnw!=null && node.toString().equals(
-				ownLeadTnw.getTrustNetwork()
-						.getNodeInformation().getStaticNodeUrl0().toString());
-
-		openingOwnMod = ownModTnw!=null && node.toString().equals(
-				ownModTnw.getTrustNetwork().getNodeInformation()
-						.getStaticNodeUrl0().toString());
-
-		if (amILead){
-			if (ownLeadTnw!=null){
-				ownTrustNetwork = ownLeadTnw.getTrustNetwork();
-			}
-		} else {
-			if (ownModTnw!=null){
-				ownTrustNetwork = ownModTnw.getTrustNetwork();
-			}
-		}
-		logger.info("Opening Own Lead / Mod=" +openingOwnLead + "/" + openingOwnMod);
-
-	}
-
-	public static TrustNetwork openMyHostTrustNetwork(String name) throws Exception {
-		MyTrustNetworkAndKeys mtn = new MyTrustNetworkAndKeys(false);
-		return mtn.getTrustNetwork();
-	}
-
-	private void verification() throws Exception {
+	private void verification(boolean insistKeyKnown) throws Exception {
 		try {
 			logger.info("Found keys and verifying PublicKey signature.");
 			
@@ -398,8 +306,8 @@ public class NodeVerifier {
 			
 			updateObjects();
 			verifyChecksum(keys.getKeyRingUids());
-			
-			verifyPublicKey(this.targetTrustNetwork.getNodeInformation().getNodeUid());
+			TrustNetwork tn = this.getTargetTrustNetwork();
+			verifyPublicKey(tn.getNodeInformation().getNodeUid(), insistKeyKnown);
 			contents.clear();
 			
 		} catch (Exception e) {
@@ -408,34 +316,32 @@ public class NodeVerifier {
 		}
 	}
 
-	private boolean verifyPublicKey(URI nodeUid) throws Exception {
-		// if network map item exists, use that -- 9/3/23
-		// otherwise try the source, if and only if the NMIS exists
-		// otherwise build NMI
+	private boolean verifyPublicKey(URI nodeUid, boolean insistKeyKnown) throws Exception {
+		PkiExternalResourceContainer extenal = PkiExternalResourceContainer.getInstance();
+		AbstractNetworkMap networkMap = extenal.getNetworkMap();
+		try {
+			NetworkMapItem nmi = networkMap.nmiForNode(nodeUid);
+			String k = new String(nmi.getPublicKeyB64(), StandardCharsets.UTF_8);
+			return k.equals(keyCheck);
 
-		if (this.ownTrustNetwork !=null) {
-			NetworkParticipant ownRecord = new TrustNetworkWrapper(ownTrustNetwork)
-					.getParticipant(nodeUid);
+		} catch (NoDocumentException e) {
+			if (insistKeyKnown){
+				throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE, "unknown key");
 
-			if (ownRecord!=null) {
-				String k = Base64.encodeBase64String(ownRecord.getPublicKey().getPublicKey());
-				if (k.equals(keyCheck)) {
-					logger.info("Verified there was no change in Public Key");
-					return true;
-					
-				} else {
-					throw new SecurityException("Rulebook Node invalid - Public Key has changed");
-					
-				}
 			} else {
 				logger.warn("Participant is unknown - this should only be seen during the addition of Nodes to the Network");
 				return false;
-				
+
 			}
-		} else {
-			logger.info("Node is being established - no public keys are known");
-			return false; 
-			
+		} catch (UxException e) {
+			if (insistKeyKnown){
+				throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE, "unknown key");
+
+			} else {
+				logger.warn("Participant is unknown - this should only be seen during the addition of Nodes to the Network");
+				return false;
+
+			}
 		}
 	}
 
@@ -714,16 +620,6 @@ public class NodeVerifier {
 
 	public ConcurrentHashMap<String, ByteArrayBuffer> getByteContent() {
 		return byteContent;
-	}
-
-	public static void main(String[] args) throws Exception {
-
-		String uid = "urn:rulebook:sybil:the-cyber:thirty-test:2c859cff31d5889ab75027713926056323e6aeebe0fbee6bd126aae12713257c:61c3045c:i";
-		new UIDHelper(uid).out();
-
-
-
-
 	}
 
 }

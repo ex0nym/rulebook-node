@@ -12,9 +12,7 @@ public class CouchDbHelper {
 
     public static final String EXONYM_MAP = "exonym_map";
     public static final String VIOLATIONS = "violations";
-    public static final String CHECKING = "udp_in";
-    public static final String BROADCASTS = "udp_out";
-    public static final String PROOF_TOKENS = "proof_tokens";
+    public static final String APPEALS = "appeals";
     public static final String LEADS = "leads";
 
     protected static String get(String name){
@@ -72,25 +70,7 @@ public class CouchDbHelper {
         }
     }
 
-    public static String getDbHostedUsers() {
-        String prefix = RulebookNodeProperties.instance().getDbPrefix();
-        if (prefix!=null){
-            return prefix + "_hosted_users";
 
-        } else {
-            return "hosted_users";
-
-        }
-    }
-
-
-
-    protected static CouchRepository<NodeData> repoNodeData() throws Exception {
-        CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.getDbNode(), true);
-        return new CouchRepository<>(db, NodeData.class);
-
-    }
 
     protected static CouchRepository<NetworkMapItem> repoNetworkMapItem() throws Exception {
         CloudantClient client = CouchDbClient.instance();
@@ -134,32 +114,18 @@ public class CouchDbHelper {
 
     }
 
-    protected static CouchRepository<XKey> repoRootKey() throws Exception {
-        CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.getDbUsers(), true);
-        return new CouchRepository<>(db, XKey.class);
-
-    }
-
-    protected static CouchRepository<ProofToken> repoProofTokens() throws Exception {
-        CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.get(PROOF_TOKENS), true);
-        return new CouchRepository<>(db, ProofToken.class);
-
-    }
-
-    @Deprecated
-    protected static UnprotectedCouchRepository<ExoMatrix> repoUnprotectedExoMatrix() throws Exception {
-        CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.get(EXONYM_MAP), true);
-        return new UnprotectedCouchRepository<>(db, ExoMatrix.class);
-
-    }
 
     protected static CouchRepository<ExoMatrix> repoExoMatrix() throws Exception {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.get(EXONYM_MAP), true);
         return new CouchRepository<>(db, ExoMatrix.class);
+
+    }
+
+    protected static CouchRepository<Appeal> repoAppeals() throws Exception {
+        CloudantClient client = CouchDbClient.instance();
+        Database db = client.database(CouchDbHelper.get(APPEALS), true);
+        return new CouchRepository<>(db, Appeal.class);
 
     }
 
@@ -175,30 +141,13 @@ public class CouchDbHelper {
         CloudantClient client = CouchDbClient.instance();
         try {
             Database db = client.database("_users", false);
-            new CouchRepository<>(db, Vio.class).ensureFullCommit();
+            new CouchRepository<>(db, IUser.class).ensureFullCommit();
 
         } catch (CouchDbException e) {
             client.database("_users", true);
 
         }
     }
-
-    protected static CouchRepository<UdpIn> repoUdpIn() throws Exception {
-        CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.get(CHECKING), true);
-        return new CouchRepository<>(db, UdpIn.class);
-
-    }
-
-
-    protected static CouchRepository<BroadcastInProgress> repoBroadcast() throws Exception {
-        CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.get(BROADCASTS), true);
-        return new CouchRepository<>(db, BroadcastInProgress.class);
-
-    }
-
-
 
     protected static CouchRepository<IdContainerSchema> repoContainerStore() throws Exception {
         CloudantClient client = CouchDbClient.instance();
@@ -207,18 +156,11 @@ public class CouchDbHelper {
 
     }
 
-    protected static CouchRepository<Lead> repoLeads() throws Exception {
+    protected CouchRepository<IApiKey> openApiKeyRepo() throws Exception {
         CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.get(LEADS), true);
-        return new CouchRepository<>(db, Lead.class);
-
+        Database db = client.database(CouchDbHelper.getDbUsers(), true);
+        return new CouchRepository<>(db, IApiKey.class);
     }
 
-    protected static CouchRepository<MarketListItem> repoMarketingList() throws Exception {
-        CloudantClient client = CouchDbClient.instance();
-        Database db = client.database(CouchDbHelper.get("marketing-list"), true);
-        return new CouchRepository<>(db, MarketListItem.class);
-
-    }
 
 }

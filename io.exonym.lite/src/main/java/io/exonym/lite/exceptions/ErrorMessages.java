@@ -74,7 +74,7 @@ public class ErrorMessages {
     /**
      * A public key was not in the expected format.
      */
-    public static final String INVALID_KEY_SPEC = "INVALID_KEY_SPEC";
+    public static final String INVALID_KEY = "INVALID_KEY";
 
 
     /**
@@ -412,4 +412,6 @@ public class ErrorMessages {
 
     public static final String BLANK_TOKEN_DISCOVERED = "BLANK_TOKEN_DISCOVERED";
     public static final String BLANK_RULE_URI = "BLANK_RULE_URI";
+    public static final String NO_OUTSTANDING_APPEALS = "NO_OUTSTANDING_APPEALS";
+    public static final String TIME_OUT = "TIME_OUT";
 }

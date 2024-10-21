@@ -18,6 +18,7 @@ import io.exonym.utils.node.ProgressReporter;
 import io.exonym.utils.storage.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.net.URI;
@@ -49,13 +50,13 @@ public class TestNodeManager {
 
 	public void testAll(){
 		try {
-//			testPPM();
-//			testEstablishNewSource();
-//			testEstablishNewNode();
-//			testAddNodeToSource();
-//			testAddRemoveScope();
-//			testRemoveNodeFromSource();
-//			testAddNodeToSource(); //*/
+			testPPM();
+			testEstablishNewSource();
+			testEstablishNewNode();
+			testAddNodeToSource();
+			testAddRemoveScope();
+			testRemoveNodeFromSource();
+			testAddNodeToSource(); //*/
 			testOnboardToRulebook();
 
 		} catch (Exception e) {
@@ -67,9 +68,7 @@ public class TestNodeManager {
 
 	private void testPPM() {
 		try {
-			NodeVerifier verifier = NodeVerifier.openNode(
-					URI.create("https://trust.exonym.io/ccc-test/lead"),
-					true, false);
+			NodeVerifier verifier = new NodeVerifier(URI.create("https://trust.exonym.io/ccc-test/lead").toURL());
 			PresentationPolicyManager ppm = new PresentationPolicyManager(verifier.getPresentationPolicy(),
 					verifier.getCredentialSpecification(), null);
 			ppm.removeNym("Helllo");
@@ -100,7 +99,7 @@ public class TestNodeManager {
 			URI url = network.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
-			NodeVerifier nv = NodeVerifier.openNode(url, true, true);
+			NodeVerifier nv = new NodeVerifier(url.toURL());
 			// Confirm Credential Specification
 			CredentialSpecification cs = nv.getCredentialSpecification();
 			assert(cs.isRevocable());
@@ -140,7 +139,7 @@ public class TestNodeManager {
 		}
 	}
 
-	// @Test
+	 @Test
 	public void testEstablishNewNode(){
 		try {
 //			resetNode("noborder", orgName);
@@ -153,7 +152,7 @@ public class TestNodeManager {
 			URI url = network.getModUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
-			NodeVerifier v = NodeVerifier.openNode(url, false, false);
+			NodeVerifier v = new NodeVerifier(url.toURL());
 
 			TrustNetwork tn = v.getTargetTrustNetwork();
 			NodeInformation ni = tn.getNodeInformation();
@@ -171,7 +170,7 @@ public class TestNodeManager {
 		}
 	}
 	
-	// @Test
+	@Test
 	public void testAddNodeToSource(){
 		try {
 			LocalNetworkMap networkMap = new LocalNetworkMap();
@@ -180,13 +179,13 @@ public class TestNodeManager {
 			}
 			NodeManager network = new NodeManager(sourceName);
 			URI nodeUrl = URI.create("https://trust.exonym.io/ccc-test/").resolve(Const.MODERATOR);
-			network.addModeratorToLead(nodeUrl, store, networkMap, true);
+			network.addModeratorToLead(nodeUrl, store, networkMap);
 
 			RulebookNodeProperties props = RulebookNodeProperties.instance();
 			URI url = network.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
-			NodeVerifier n = NodeVerifier.openNode(url, true, false);
+			NodeVerifier n = new NodeVerifier(url.toURL());
 			PresentationPolicy pp = n.getPresentationPolicy();
 			
 			PresentationPolicyManager ppm = new PresentationPolicyManager(pp, n.getCredentialSpecification(), null);
@@ -220,7 +219,7 @@ public class TestNodeManager {
 
 			network.removeModeratorFromLead(nodeUrl, store);
 
-			NodeVerifier n = NodeVerifier.openNode(nodeUrl, true, true);
+			NodeVerifier n = new NodeVerifier(nodeUrl.toURL());
 			PresentationPolicy ppaa = n.getPresentationPolicy();
 			
 			PresentationPolicyManager ppm = new PresentationPolicyManager(ppaa, n.getCredentialSpecification());
@@ -267,7 +266,7 @@ public class TestNodeManager {
 			URI url = m.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
-			NodeVerifier v = NodeVerifier.openNode(url, true, true);
+			NodeVerifier v = new NodeVerifier(url.toURL());
 			
 			IdContainerJSON x = new IdContainerJSON(sourceName);
 			
@@ -282,7 +281,7 @@ public class TestNodeManager {
 			URI url0 = m.getLeadUrlForThisNode(props.getPrimaryDomain(),
 					props.getPrimaryStaticDataFolder());
 
-			v = NodeVerifier.openNode(url0, true, true);
+			v = new NodeVerifier(url0.toURL());
 			PresentationPolicyManager ppm = new PresentationPolicyManager(v.getPresentationPolicy(),
 					v.getCredentialSpecification());
 			x = new IdContainerJSON(sourceName);

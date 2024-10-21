@@ -1,6 +1,8 @@
 package io.exonym.lite.connect;
 
 import com.google.gson.JsonObject;
+import io.exonym.lite.exceptions.ErrorMessages;
+import io.exonym.lite.exceptions.UxException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -14,10 +16,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
+import java.net.*;
 
 public class UrlHelper {
 	
@@ -56,7 +55,7 @@ public class UrlHelper {
 		}
 	}
 
-	public static byte[] read(URL url) throws IOException {
+	public static byte[] read(URL url) throws IOException, UxException {
 		logger.info("Trying to read:" + url);
 		URLConnection connection = url.openConnection();
 		connection.setConnectTimeout(5000);
@@ -72,6 +71,9 @@ public class UrlHelper {
 			bos.close();
 			return bos.toByteArray();
 
+		} catch (ConnectException e) {
+			throw new UxException(ErrorMessages.URL_INVALID + url);
+
 		} catch (UnknownHostException e) {
 			throw e;
 
@@ -84,7 +86,7 @@ public class UrlHelper {
 		}
 	}
 
-	public static byte[] read(URL url0, URL url1) throws FileNotFoundException, IOException, UnknownHostException {
+	public static byte[] read(URL url0, URL url1) throws Exception {
 		try{
 			return read(url0);
 

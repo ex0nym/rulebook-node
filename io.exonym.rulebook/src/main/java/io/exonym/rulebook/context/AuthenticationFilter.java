@@ -4,25 +4,18 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.ibm.zurich.idmix.abc4trust.facades.RevocationInformationFacade;
-import eu.abc4trust.xml.RevocationHistory;
-import eu.abc4trust.xml.RevocationInformation;
 import io.exonym.actor.IdContainerExternal;
-import io.exonym.actor.actions.ExonymIssuer;
+import io.exonym.actor.actions.MyTrustNetworks;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
 import io.exonym.actor.actions.IdContainerJSON;
-import io.exonym.helpers.UIDHelper;
-import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.IUser;
-import io.exonym.lite.pojo.NetworkMapItemModerator;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.rulebook.schema.CacheNodeContainer;
-import io.exonym.rulebook.schema.IdContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,13 +25,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.UUID;
 
@@ -56,70 +47,53 @@ public class AuthenticationFilter implements Filter {
             // make sure the box has enough CPU;
             // each step will take a non-linear increase in computation
             // time if there aren't enough resources
-            testSecureRandom();
-
 
             setupCoreDbTables();
-
-            NetworkMapWeb map = new NetworkMapWeb();
-            map.spawn();
-
-            PkiExternalResourceContainer.getInstance()
-                    .setNetworkMapAndCache(map, CacheNodeContainer.getInstance());
 
             // Load system params
             IdContainerJSON.openSystemParameters();
             IdContainerExternal.openSystemParameters();
 
-            NetworkMapItemModerator nmim = map.nmiForMyNodesModerator();
-            UIDHelper helper = new UIDHelper(nmim.getLastIssuerUID());
-            helper.out();
-            IdContainer id = new IdContainer(helper.getModeratorName());
-            RevocationInformation ri = id.openResource(helper.getRevocationInfoFileName());
-//            RevocationInformationFacade rif = new RevocationInformationFacade(ri);
-//            RevocationHistory rh = rif.getRevocationHistory();
-//            rh.getRevocationLogEntry().clear();
+            NetworkMapWeb map = new NetworkMapWeb();
+            map.spawn();
 
-            ExonymIssuer.removeRevocationHistory(ri);
-            String xml = IdContainer.convertObjectToXml(ri);
-            logger.info(xml);
+            PkiExternalResourceContainer.getInstance()
+                    .setNetworkMapAndCache(map,
+                            CacheNodeContainer.getInstance());
 
+            MyTrustNetworks myTrustNetworks = new MyTrustNetworks();
 
-//            MqttClient client = new MqttClient("tcp://host.docker.internal:1883", "hello");
-//            client.connect();
-//            MqttMessage message = new MqttMessage("hell".getBytes());
-//            message.setQos(1);
-//            client.publish("test/topic", message);
+            if (myTrustNetworks.isDefined()){
 
+                if (myTrustNetworks.isModerator()){
+                    NotificationSubscriber.getInstance();
+                    NotificationPublisher.getInstance();
+                    logger.info("NetworkMap, Publisher, Subscriber, and System Parameters initialized successfully.");
 
-            NotificationSubscriber.getInstance();
+                } else {
+                    logger.info(">>>>>>>>>>>>>>>>>>>>>>>");
+                    logger.info(">");
+                    logger.info("> This node is being established and is not yet a Moderator.");
+                    logger.info(">");
+                    logger.info("> Restart required after node is a Moderator.");
+                    logger.info(">");
 
+                }
+            } else {
+                logger.info(">>>>>>>>>>>>>>>>>>>>>>>");
+                logger.info(">");
+                logger.info("> This node is being established and is not yet a Lead or a Moderator.");
+                logger.info(">");
+                logger.info("> Restart required after node is established.");
+                logger.info(">");
+                testSecureRandom();
 
-            NotificationPublisher.getInstance();
-
-
-            logger.info("NetworkMap, Publisher, Subscriber, and System Parameters initialized successfully.");
-
-            // Removed as it was superseded by the UDP protocols.
-            // - and then by MQTT; but if you need chron jobs
-            // this is where it is.
-
-            // new SyncNetwork();
-
+            }
         } catch (Exception e) {
             logger.error("Failed to start network synchronization", e);
 
 
         }
-        ServletContext c = filterConfig.getServletContext();
-        Enumeration<String> names = filterConfig.getInitParameterNames();
-
-        while (names.hasMoreElements()) {
-            logger.debug("Init Parameter Names " + names.nextElement());
-
-        }
-        logger.debug("Node Started --" + c.getServletContextName() + "--");
-
     }
 
     private void testFileWrite() throws IOException {

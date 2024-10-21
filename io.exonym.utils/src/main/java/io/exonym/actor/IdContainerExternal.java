@@ -168,8 +168,8 @@ public final class IdContainerExternal extends AbstractIdContainer {
                 byte[] in = new byte[stream.available()];
                 stream.read(in);
                 String systemParameters = new String(in, StandardCharsets.UTF_8);
-                logger.info(systemParameters);
-                SystemParametersWrapper systemParametersFacade = SystemParametersWrapper.deserialize(systemParameters);
+                SystemParametersWrapper systemParametersFacade = SystemParametersWrapper
+                        .deserialize(systemParameters);
                 return systemParametersFacade.getSystemParameters();
 
             } else {

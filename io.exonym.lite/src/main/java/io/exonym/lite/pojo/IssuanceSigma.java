@@ -2,6 +2,7 @@ package io.exonym.lite.pojo;
 
 import java.math.BigInteger;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
 import java.util.List;
 
@@ -10,6 +11,15 @@ public class IssuanceSigma {
     private String hello;
     private String im;
     private String imab;
+
+    public static byte[] signatureOn(IssuanceSigma sigma){
+        StringBuilder builder = new StringBuilder();
+        builder.append(sigma.getHello());
+        builder.append(sigma.getImab());
+        builder.append(sigma.getIm());
+        return builder.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
     private String presentationToken;
     private String presentationPolicy;
     private BigInteger h;
@@ -17,7 +27,7 @@ public class IssuanceSigma {
     private String error;
     private boolean testNet = false;
 
-
+    private String sigB64;
 
     private String sybilClass;
     private String[] info;
@@ -108,5 +118,13 @@ public class IssuanceSigma {
 
     public void setPresentationPolicy(String presentationPolicy) {
         this.presentationPolicy = presentationPolicy;
+    }
+
+    public String getSigB64() {
+        return sigB64;
+    }
+
+    public void setSigB64(String sigB64) {
+        this.sigB64 = sigB64;
     }
 }

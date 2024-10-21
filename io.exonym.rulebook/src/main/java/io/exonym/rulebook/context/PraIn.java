@@ -134,18 +134,15 @@ public class PraIn extends ModelCommandProcessor {
             boolean isRai = notify.getRaiB64()!=null;
             String sig = notify.getPpSigB64()!=null ? notify.getPpSigB64() : notify.getRaiSigB64();
             boolean verified = checkSignature(key, xml, sig);
-            logger.info(">>>>>>>>>>>>>>>>> ");
-            logger.info("> ");
-            logger.info("\n" + xml);
 
             if (verified){
                 if (isRai){
                     JAXBElement<?> jb = JaxbHelperClass.deserialize(xml, true);
-                    return (RevocationInformation)JAXBIntrospector.getValue(jb);
+                    return JAXBIntrospector.getValue(jb);
 
                 } else {
                     JAXBElement<?> jb = JaxbHelperClass.deserialize(xml, true);
-                    return (PresentationPolicy) JAXBIntrospector.getValue(jb);
+                    return JAXBIntrospector.getValue(jb);
 
                 }
             } else {
@@ -208,7 +205,6 @@ public class PraIn extends ModelCommandProcessor {
             logger.info("Attempting to write to path=" + pathToLocalFolder);
             UIDHelper helper = new UIDHelper(rai.getRevocationInformationUID());
             URI uid = helper.getRevocationAuthorityInfo();
-            logger.info("After Transform:" + uid);
 
             Path raiXmlToUpdate = pathToLocalFolder.resolve(
                     IdContainer.uidToXmlFileName(uid));
@@ -308,10 +304,8 @@ public class PraIn extends ModelCommandProcessor {
             try {
                 logger.info("Writing new node static data to " + folder.toString());
                 NetworkMapItem item = openNmi();
-                URI url = item.getStaticURL0();
-                boolean isLead = UIDHelper.isLeadUid(nodeUid);
-                NodeVerifier n = NodeVerifier.openNode(url, isLead, false);
-                writeFilesToLocalStore(n.getByteContent());
+                new NodeVerifier(item.getNodeUID());
+//                writeFilesToLocalStore(n.getByteContent());
 
 
             } catch (Exception e) {
@@ -334,6 +328,7 @@ public class PraIn extends ModelCommandProcessor {
             }
         }
 
+        // TODO replace with
         private NetworkMapItem openNmi() throws Exception {
             try {
                 return networkMap.nmiForNode(nodeUid);

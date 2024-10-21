@@ -44,7 +44,7 @@ public class RulebookGovernor {
             defaultPenalty  = new Penalty();
             defaultPenalty.setType(Penalty.TYPE_TIME_BAN);
             defaultPenalty.setDenomination(Penalty.DEN_TEMP_DAYS);
-            defaultPenalty.setQuantity(1);
+            defaultPenalty.setQuantity(5);
             defaultPenalty.setRepeatOffenceMultiplier(2);
 
         }

@@ -7,6 +7,7 @@ import io.exonym.abc.util.FileType;
 import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.storage.*;
 import io.exonym.lite.connect.UrlHelper;
+import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.HubException;
 import io.exonym.lite.exceptions.ProgrammingException;
 import io.exonym.lite.exceptions.UxException;
@@ -168,13 +169,6 @@ public class NodeManager {
 					writeLocal(rulebookUrl, xnd.getBytes(StandardCharsets.UTF_8),
 							"rulebook.json");
 
-//					try {
-//						primarySftp.overwrite(path + filename, xnd, false);
-//
-//					} catch (Exception e) {
-//						primarySftp.overwrite(path + filename, xnd, true);
-//
-//					}
 				} catch (Exception e) {
 					logger.warn("Failed to write model rulebook.json", e);
 
@@ -219,7 +213,13 @@ public class NodeManager {
 			throw new ProgrammingException("Expected 7 Updates");
 
 		}
-		NodeVerifier verifiedLead = NodeVerifier.openNode(leadUrl, true, false);
+
+		NodeVerifier verifiedLead = new NodeVerifier(leadUrl.toURL());
+		URI leadUid = verifiedLead.getTargetTrustNetwork().getNodeInformation().getNodeUid();
+		if (!WhiteList.isLeadUid(leadUid)){
+			throw new UxException("URL_IS_MODERATOR_USE_A_LEAD_URL");
+
+		}
 		Rulebook rulebook = verifiedLead.getRulebook();
 		if (Rulebook.isSybil(rulebook.getRulebookId())){
 			if (rulebook.getDescription().isProduction()){
@@ -332,6 +332,10 @@ public class NodeManager {
 
 			RevocationAuthorityParameters rap = modIdContainer.openResource(rapUid);
 			RevocationInformation ri = modIdContainer.openResource(raiUid);
+
+			ExonymIssuer.removeRevocationHistory(ri);
+//			modIdContainer.saveLocalResource(ri, true);
+
 			IssuerParameters i = modIdContainer.openResource(iUid);
 			InspectorPublicKey insKey = modIdContainer.openResource(insUid);
 
@@ -456,6 +460,8 @@ public class NodeManager {
 
 		RevocationAuthorityParameters rap = x.openResource(raUid);
 		RevocationInformation ri = x.openResource(raiUid);
+		ExonymIssuer.removeRevocationHistory(ri);
+
 		IssuerParameters i = x.openResource(iUid);
 		
 		tnw.getNodeInformation().getIssuerParameterUids().add(iUid);
@@ -585,7 +591,6 @@ public class NodeManager {
 
 		XKey xk = new XKey();
 		xk.setKeyUid(KeyContainerWrapper.TN_ROOT_KEY);
-		xk.setType(type);
 		xk.setPublicKey(key.getPublicKey().getEncoded());
 		xk.setPrivateKey(key.getEncryptedEncodedForm(store.getEncrypt()));
 
@@ -596,14 +601,8 @@ public class NodeManager {
 			x.saveLocalResource(wrapper.getKeyContainer());
 
 		}
-		saveKey(xk);
 		return key;
 		
-	}
-
-	protected void saveKey(XKey xk) {
-		logger.debug("saveKey must be overridden to perform an operation.");
-
 	}
 
 	/**
@@ -613,15 +612,18 @@ public class NodeManager {
 	 * @return the UID of the Node Added
 	 * @throws Exception
 	 */
-	public URI addModeratorToLead(URI nodeUrl, PassStore store, AbstractNetworkMap networkMap, boolean testnet) throws Exception{
-		NodeVerifier nodeToAdd = NodeVerifier.openNode(nodeUrl, false, true);
-		IssuerParametersUID sybilUid = defineIssuerParams(nodeToAdd, networkMap, testnet); // null if we're adding a sybil node
+	public URI addModeratorToLead(URI nodeUrl, PassStore store, AbstractNetworkMap networkMap) throws Exception{
+		NodeVerifier nodeToAdd = new NodeVerifier(nodeUrl.toURL());
+		boolean isTestNet = !nodeToAdd.getRulebook().getDescription().isProduction();
+
+		IssuerParametersUID sybilUid = defineIssuerParams(
+				nodeToAdd, networkMap, isTestNet); // null if we're adding a sybil node
 
 		TrustNetworkWrapper addingModeratorTnw = new TrustNetworkWrapper(
 				nodeToAdd.getTargetTrustNetwork());
 
 		URI addingIssuerUid = addingModeratorTnw.getMostRecentIssuerParameters();
-		logger.info("Issuer UID to Add=" + addingIssuerUid + " sybil=" + sybilUid + " (should be null if Sybil)");
+		logger.info("------------ >> Issuer UID to Add=" + addingIssuerUid + " sybil=" + sybilUid + " (should be null if Sybil)");
 
 		UIDHelper helper = new UIDHelper(addingIssuerUid);
 		helper.out();
@@ -734,88 +736,6 @@ public class NodeManager {
 
 	}
 
-	public void pollNodeForNewParameters(URI nodeUrl, URI failoverUrl,
-										 String lastUpdateTime, PassStore store,
-										 IssuerParametersUID sybilUid) throws Exception {
-		URI uri = NodeVerifier.ping(nodeUrl, failoverUrl,
-				lastUpdateTime,false, true);
-
-		if (uri!=null){
-			NodeVerifier v = NodeVerifier.openNode(nodeUrl, false, true);
-			NodeInformation targetInfo = v.getTargetTrustNetwork().getNodeInformation();
-
-			if (!isLead(targetInfo)) {
-				TrustNetworkWrapper tn = new TrustNetworkWrapper(openMyTrustNetwork(true));
-				NodeInformation myInfo = tn.getNodeInformation();
-				IdContainerJSON x = openContainer(myInfo.getNodeName(), store);
-				URI ppaUid = URI.create(myInfo.getNodeUid() + ":pp");
-				URI cUid = URI.create(myInfo.getNodeUid() + ":c");
-				PresentationPolicy pp = x.openResource(ppaUid);
-				PresentationPolicyAlternatives ppa = new PresentationPolicyAlternatives();
-				ppa.getPresentationPolicy().add(pp);
-				PresentationPolicyManager ppm = new PresentationPolicyManager(pp, x.openResource(cUid), sybilUid);
-
-				for (String uid : v.getIssuerParameterFileNames()) {
-
-					if (!ppm.hasIssuer(URI.create(uid))) {
-						CredentialInPolicy cip = ppm.getCredentialInPolicy();
-						String rootIssuer = "urn:exonym:" + IdContainerJSON.stripUidSuffix(uid, 1);
-						URI raiUid = URI.create(rootIssuer + ":rai");
-						URI iUid = URI.create(rootIssuer + ":i");
-						IssuerParametersUID ipuid = new IssuerParametersUID();
-						ipuid.setRevocationInformationUID(raiUid);
-						ipuid.setValue(iUid);
-						cip.getIssuerAlternatives().getIssuerParametersUID().add(ipuid);
-
-					} else {
-						logger.info("UID already in list " + uid);
-
-					}
-				}
-				TrustNetwork tnet = tn.finalizeTrustNetwork();
-
-				pp = ppm.build();
-
-				String ppaString = IdContainerJSON.convertObjectToXml(pp);
-				String niString = JaxbHelper.serializeToXml(tnet, TrustNetwork.class);
-
-				String ppaSign = NodeVerifier.stripStringToSign(ppaString);
-				String niSign = NodeVerifier.stripStringToSign(niString);
-
-				byte[] ppaBytes = ppaString.getBytes();
-				byte[] niBytes = niString.getBytes();
-				KeyContainer kcPrivate = x.openResource("keys.xml");
-				KeyContainerWrapper kcwPrivate = new KeyContainerWrapper(kcPrivate);
-
-				AsymStoreKey key = openKey(kcwPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
-
-				HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
-				toSign.put(pp.getPolicyUID(), new ByteArrayBuffer(ppaSign.getBytes()));
-				toSign.put(tnet.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
-
-				URI url = getLeadUrlForThisNode(props.getPrimaryDomain(),
-						props.getPrimaryStaticDataFolder());
-
-				KeyContainerWrapper kcw = openSignaturesContainer(url);
-
-				signatureUpdateXml(key, toSign, kcw, url);
-
-
-				String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
-				publish(url, xml.getBytes(), "signatures.xml");
-				publish(url, ppaBytes, IdContainerJSON.uidToXmlFileName(pp.getPolicyUID()));
-				publish(url, niBytes, IdContainerJSON.uidToXmlFileName(tnet.getNodeInformationUid()));
-
-			} else {
-				throw new Exception("To poll for new paramaters, select a Rulebook Node");
-
-			}
-		} else {
-			logger.info("Checked for params at " + nodeUrl + " and there were no updates");
-
-		}
-	}
-	
 	public static boolean isLead(NodeInformation info) {
 		if (info==null) {
 			logger.warn("Null info at isSource");
@@ -827,7 +747,7 @@ public class NodeManager {
 	}
 
 	public URI removeModeratorFromLead(URI nodeUrl, PassStore store) throws Exception {
-		NodeVerifier v = NodeVerifier.openNode(nodeUrl, false, true);
+		NodeVerifier v = new NodeVerifier(nodeUrl.toURL());
 		try {
 			TrustNetworkWrapper tnw = new TrustNetworkWrapper(v.getTargetTrustNetwork());
 			removeModeratorFromLead(tnw.getMostRecentIssuerParameters().toString(), store);
@@ -1023,66 +943,6 @@ public class NodeManager {
 
 	}
 
-	public void publishNonInteractiveProof(NodeVerifier node, NodeVerifier source,
-										   IdContainerJSON x, PassStore store) throws Exception {
-		URI iuid = node.getTargetTrustNetwork().getNodeInformation()
-				.getIssuerParameterUids().getLast();
-		String raw = IdContainer.stripUidSuffix(iuid, 1);
-		URI raUid = URI.create(raw + ":ra");
-		URI raiUid = URI.create(raw + ":rai");
-		String iFile = IdContainer.uidToXmlFileName(iuid);
-		String raFile = IdContainer.uidToXmlFileName(raUid);
-		String raiFile = IdContainer.uidToXmlFileName(raiUid);
-
-		ExonymOwner owner = new ExonymOwner(x);
-		owner.openContainer(store);
-		owner.addCredentialSpecification(source.getCredentialSpecification());
-		owner.addIssuerParameters(node.getIssuerParameters(iFile));
-		owner.addRevocationAuthorityParameters(node.getRevocationAuthorityParameters(raFile));
-		owner.addRevocationInformation(raUid, node.getRevocationInformation(raiFile));
-		owner.addInspectorParameters(node.getInspectorPublicKey());
-
-		PresentationPolicy pp = source.getPresentationPolicy();
-		URI url = getModUrlForThisNode(props.getPrimaryDomain(),
-				props.getPrimaryStaticDataFolder());
-		Message message = new Message();
-		message.setNonce(url.toString().getBytes());
-		pp.setMessage(message);
-
-		PresentationTokenDescription ptd = owner.canProveClaimFromPolicy(pp);
-		PresentationPolicyAlternatives ppa = new PresentationPolicyAlternatives();
-		ppa.getPresentationPolicy().add(source.getPresentationPolicy());
-
-		if (ptd!=null){
-			PresentationToken token = owner.proveClaim(ptd, ppa);
-			String ptXml = IdContainer.convertObjectToXml(token);
-
-			KeyContainer kcSecret = x.openResource("keys.xml");
-			KeyContainerWrapper kcwSecret = new KeyContainerWrapper(kcSecret);
-			XKey xkey = kcwSecret.getKey(KeyContainerWrapper.TN_ROOT_KEY);
-			AsymStoreKey key = openKey(xkey, store);
-
-			KeyContainerWrapper kcw = openSignaturesContainer(url);
-
-			String tSign = NodeVerifier.stripStringToSign(ptXml);
-			byte[] tBytes = tSign.getBytes();
-
-			HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
-			String tokenUid = source.getTargetTrustNetwork()
-					.getNodeInformation().getNodeUid() + ":t";
-
-			toSign.put(URI.create(tokenUid), new ByteArrayBuffer(tBytes));
-
-			signatureUpdateXml(key, toSign, kcw, url);
-			String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
-			publish(url, xml.getBytes(), "signatures.xml");
-			publish(url, ptXml.getBytes(), IdContainer.uidToXmlFileName(tokenUid));
-
-		} else {
-			throw new HubException("There was more than one possible option to fill the credential");
-
-		}
-	}
 
 	public void transferInit(URI transferUrl, PassStore store) throws Exception{
 		try {
@@ -1094,7 +954,7 @@ public class NodeManager {
 				
 			}
 			try {
-				NodeVerifier v = NodeVerifier.openNode(transferUrl, true, true);
+				NodeVerifier v = new NodeVerifier(transferUrl.toURL());
 				if (isLead(v.getTargetTrustNetwork().getNodeInformation())){
 					copyNode(v, v.getTargetTrustNetwork(), store);
 					

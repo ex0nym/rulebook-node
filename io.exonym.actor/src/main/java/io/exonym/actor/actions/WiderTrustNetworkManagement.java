@@ -77,8 +77,8 @@ public class WiderTrustNetworkManagement {
 
     }
 
-    public void addLead(URI sourceUrl, boolean production) throws Exception {
-        NodeVerifier v = NodeVerifier.openNode(sourceUrl, true, false);
+    public void addLead(URI leadUrl, boolean production) throws Exception {
+        NodeVerifier v = new NodeVerifier(leadUrl.toURL());
         boolean prod = v.getRulebook().getDescription().isProduction();
         if (prod!=production){
             throw new UxException(ErrorMessages.INCORRECT_PARAMETERS, "production=" + prod);

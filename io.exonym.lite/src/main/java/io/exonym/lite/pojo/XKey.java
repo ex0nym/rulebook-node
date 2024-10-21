@@ -11,7 +11,7 @@ import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.CryptoUtils;
 
 @XmlRootElement(name="XKey", namespace=Namespace.EX)
-public class XKey extends AbstractCouchDbObject {
+public class XKey {
 	
 	private URI keyUid;
 	private byte[] publicKey;
@@ -25,7 +25,6 @@ public class XKey extends AbstractCouchDbObject {
 	private String expiryDateUtc;
 
 	public XKey() {
-		this.setType("xkey");
 
 	}
 

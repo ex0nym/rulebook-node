@@ -22,7 +22,6 @@ var source = {
 		$("#sourceNodeInformationSourceUrl").html(network.sourceUrl);
 		source.updateDefaultPlatforms(network.defaultPlatforms);
 		source.updateAuthorizedNodes(network.authorizedNodes);
-		source.updateSecondaryNetworksLists(network.secondaryList);
 
 	},
 
@@ -76,10 +75,6 @@ var source = {
 		});		
 
 	},
-	updateSecondaryNetworksLists: function(secondary){
-		console.error("Secondary Networks Not Implemented");
-
-	}
 }
 
 var sourceNodeManagement = {

@@ -82,12 +82,10 @@ public class TestSybilRegistration {
                 map.spawn();
             }
             external.setNetworkMapAndCache(map, new Cache());
-            URI sourceURL = URI.create("https://trust.exonym.io/sybil").resolve(Const.LEAD);
-            URI advocateURL = URI.create("https://trust.exonym.io/sybil").resolve(Const.MODERATOR);
-            NodeVerifier advocate = NodeVerifier.openNode(advocateURL,
-                    false, false);
-            NodeVerifier source = NodeVerifier.openNode(sourceURL,
-                    true, false);
+            URI leadUrl = URI.create("https://trust.exonym.io/sybil").resolve(Const.LEAD);
+            URI modUrl = URI.create("https://trust.exonym.io/sybil").resolve(Const.MODERATOR);
+            NodeVerifier advocate = new NodeVerifier(modUrl.toURL());
+            NodeVerifier source = new NodeVerifier(leadUrl.toURL());
             UIDHelper helper = advocate.getUidHelperForMostRecentIssuerParameters();
 
             IdContainerJSON x = new IdContainerJSON(usernameMjh);

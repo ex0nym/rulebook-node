@@ -4,6 +4,7 @@
 
 package io.exonym.actor;
 
+import com.ibm.zurich.idmix.abc4trust.facades.IssuanceMessageFacade;
 import com.ibm.zurich.idmix.abc4trust.facades.RevocationAuthorityParametersFacade;
 import com.ibm.zurich.idmix.abc4trust.facades.RevocationInformationFacade;
 import com.ibm.zurich.idmix.abc4trust.facades.SecretKeyFacade;
@@ -219,23 +220,27 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 		if (revocationParametersUID!=null){
 			openResourceIfNotLoaded(revocationParametersUID);
 			RevocationInformation ri = cryptoEngineRaIdmx.updateRevocationInformation(revocationParametersUID, null, null);
-			URI rhUid = Namespace.extendUid(revocationParametersUID, "history");
 			this.keyManager.storeRevocationInformation(revocationParametersUID, ri);
+
+			// This doesn't appear to do anything; but it really does.
+			// Issuance pukes without it.  Needs further investigation.
+			URI rhUid = Namespace.extendUid(revocationParametersUID, "history");
 			String rhFileName = IdContainer.stripUidSuffix(revocationParametersUID, 2) + ":rh";
-			
 			try {
 				if (this.credentialManagerRa.getRevocationHistory(rhUid)==null){
-					RevocationHistory rh = (RevocationHistory) container.openResource(IdContainer.uidToXmlFileName(URI.create(rhFileName)));
+					RevocationHistory rh = container.openResource(
+							IdContainer.uidToXmlFileName(URI.create(rhFileName)));
+
 					this.credentialManagerRa.storeRevocationHistory(rh.getRevocationHistoryUID(), rh);
-					
-				} 
+
+				}
 			} catch (Exception e) {
 				logger.info("Creating new revocation history. (Handled Exception):" + e.getMessage());
 				RevocationHistory rh = of.createRevocationHistory();
 				rh.setRevocationAuthorityParametersUID(revocationParametersUID);
 				rh.setRevocationHistoryUID(rhUid);
 				this.credentialManagerRa.storeRevocationHistory(rhUid, rh);
-					
+
 			}
 		}
 		return revocationParametersUID;
@@ -268,15 +273,17 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 	 * @throws Exception
 	 */
 	public ImabAndHandle issueStep(IssuanceMessage im, Cipher enc) throws Exception{
-		String xml = IdContainer.convertObjectToXml(im);
-		logger.debug(">>>>>>>>> XML For Issuance Message");
-		logger.debug(xml);
 		if (im!=null){
-			IssuanceToken token = ExtractObject.extract(im.getContent(), IssuanceToken.class);
-			URI issuerUid = token.getIssuanceTokenDescription().getCredentialTemplate().getIssuerParametersUID();
+			IssuanceMessageFacade imf = new IssuanceMessageFacade(im, this.bigIntFactory);
+			IssuanceToken token = imf.getIssuanceToken();
+			URI issuerUid = token.getIssuanceTokenDescription()
+					.getCredentialTemplate().getIssuerParametersUID();
+
 			IssuanceTokenAndIssuancePolicy itap = cryptoEngineIssuer.extractIssuanceTokenAndPolicy(im);
 			checkTokenMatchesPolicy(im.getContext(), itap);
+
 			IssuanceMessageAndBoolean imab = cryptoEngineIssuer.issuanceProtocolStep(im);
+
 			AttributeList al = ExtractObject.extract(imab.getIssuanceMessage().getContent(), AttributeList.class);
 			List<Attribute> atts = al.getAttributes();
 			this.revocationHandle = extractHandle(atts);

@@ -2,6 +2,7 @@ package io.exonym.rulebook.context;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import io.exonym.actor.actions.MyTrustNetworks;
 import io.exonym.lite.authenticators.StandardAuthenticator;
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.UxException;
@@ -39,13 +40,6 @@ public class IAuthenticator extends StandardAuthenticator {
         return instance;
 
     }
-    /*
-     *
-     */
-
-    private String networkNameForNode = null;
-    private String containerNameForNode = null;
-    private String nodeShortName = null;
 
     private URI nodeUid = null;
 
@@ -133,80 +127,6 @@ public class IAuthenticator extends StandardAuthenticator {
     @Override
     protected void setPrimaryAdminSetup(boolean primaryAdminSetup) {
         super.setPrimaryAdminSetup(primaryAdminSetup);
-    }
-
-    public String getContainerNameForNode() throws Exception {
-        if (containerNameForNode ==null){
-            this.computeNodeNetworkName();
-
-        }
-        return containerNameForNode;
-
-    }
-
-    public URI getNodeUid() {
-        if (nodeUid==null){
-            this.computeNodeNetworkName();
-
-        }
-        return nodeUid;
-    }
-
-    protected String getNetworkNameForNode() {
-        if (networkNameForNode ==null){
-            computeNodeNetworkName();
-
-        }
-        return networkNameForNode;
-
-    }
-
-    protected String getNodeShortName() {
-        if (networkNameForNode ==null){
-            computeNodeNetworkName();
-
-        }
-        return nodeShortName;
-
-    }
-
-
-    private void computeNodeNetworkName() {
-        try {
-            NodeStore store = NodeStore.getInstance();
-            ArrayList<NodeData> local = store.findAllLocalNodes();
-            HashSet<String> sources = new HashSet<>();
-
-            for (NodeData node : local){
-                if (node.getType().equals(NodeData.TYPE_MODERATOR)){
-                    this.networkNameForNode = node.getNetworkName();
-                    this.containerNameForNode = node.getName();
-                    this.nodeUid = node.getNodeUid();
-                    String[] parts = nodeUid.toString().split(":");
-                    this.nodeShortName = parts[2] + ":" + parts[4];
-                    break;
-
-                } else if (node.getType().equals(NodeData.TYPE_LEAD)){
-                    sources.add(node.getNetworkName());
-
-                }
-            }
-            if (sources.size()==1){
-                String[] source = new String[1];
-                this.networkNameForNode = sources.toArray(source)[0];
-
-            } else if (sources.size()>1){
-                this.networkNameForNode = "Multi-Source - No Node - Indeterminate";
-
-            }
-        } catch (ItemNotFoundException e){
-            logger.warn("Node Setup incomplete");
-            this.networkNameForNode = null;
-
-        } catch (Exception e){
-            logger.error("Unexpected Error", e);
-
-        }
     }
 
     @Override

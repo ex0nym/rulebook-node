@@ -68,6 +68,7 @@ public class JoinHelper {
         }
         bpp.makeInteractive(challengeB64);
 
+
         UIDHelper helper = new UIDHelper(sybilIssuer);
 
         List<CredentialInPolicy.IssuerAlternatives.IssuerParametersUID> issuerParametersUIDS = new ArrayList<>();

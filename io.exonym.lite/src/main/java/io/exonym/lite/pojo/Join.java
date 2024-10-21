@@ -5,17 +5,17 @@ import java.util.ArrayList;
 
 public class Join {
 
-    private URI advocateUID;
+    private URI modUid;
     private ArrayList<String> rules;
     private String signature;
     private String timestamp;
 
-    public URI getAdvocateUID() {
-        return advocateUID;
+    public URI getModUid() {
+        return modUid;
     }
 
-    public void setAdvocateUID(URI advocateUID) {
-        this.advocateUID = advocateUID;
+    public void setModUid(URI modUid) {
+        this.modUid = modUid;
     }
 
     public ArrayList<String> getRules() {

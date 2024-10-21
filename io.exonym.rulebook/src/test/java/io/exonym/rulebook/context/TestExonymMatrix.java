@@ -24,58 +24,40 @@ import java.util.ArrayList;
 public class TestExonymMatrix {
     
     private static final Logger logger = LogManager.getLogger(TestExonymMatrix.class);
+
+    private static NetworkMapWeb networkMap;
+    private static RulebookNodeProperties props;
+
+    static{
+        try {
+            props = RulebookNodeProperties.instance();
+            props.getNodeRoot();
+            networkMap = new NetworkMapWeb();
+            Cache cache = new Cache();
+            PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
+            external.setNetworkMapAndCache(networkMap, cache);
+
+        } catch (Exception e) {
+            logger.info("Error", e);
+
+        }
+    }
     
 
     @BeforeAll
     static void beforeAll() throws Exception {
-        String json = "{\"type\":\"OVERRIDE\",\"modUid\":\"urn:rulebook:trustworthy-leaders:exonym:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691\",\"nibble6\":\"6aa9ab\",\"hashOfX0\":\"21af6ae0bdfc81520e665e0d2366c3b15a86f3e148e79ee19be8e3670c6aee3e\",\"timeOfViolation\":\"2024-10-14T10:35:52Z\",\"sigB64\":\"XGr/8/YONsY8i1D9JchSvNZLNJGp8Rr+392DuM0ny1w9lfa73l841rMnGatgJXD2tQFJB3Yz6dIgaoercGfdYTe14h0Evozd+vQCJxbIvEau/GyWDXwRsZ+0fJLFO5DHkp9MRE8gSKaL5fuYSYqc+dpKQ70zaXYo+p/fy/DFCBi/0gGGhVp+H8f96ayWoZjdJnCE4CE+30WfqmaVaBC5SDztxwfevycsjdPdwUOgwlTDxB8yS30jYparpy3yhSUYEc9V3pvZxX5Qw0tUmIEhbMvSdIAEI+TAfGZ8RE6K8aGhVKXHue+V7anThu+6vWd8in/CtAJuEG1/5QUK/xfR4g\\u003d\\u003d\",\"vios\":[{\"modUid\":\"urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691\",\"modUidOfRequestor\":\"urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691\",\"nibble6\":\"6aa9ab\",\"x0Hash\":\"21af6ae0bdfc81520e665e0d2366c3b15a86f3e148e79ee19be8e3670c6aee3e\",\"t\":\"2024-10-14T10:35:52Z\",\"reissued\":false,\"override\":true,\"ruleUids\":[\"urn:rule:3:protected:c8e3cb518192cf88aa11cf0d93072730c9e33c2713f187e1e2e402d8ad6f51ff:b2e4581ccbefeb1b\"]}]}";
-        ExoNotify n = JaxbHelper.gson.fromJson(json, ExoNotify.class);
-        String index = Vio.index(n);
-        logger.info(index);
-
-
-        String db = "{\n" +
-                "  \"_id\": \"11cf5fc1fa0f50ca14be8441c55fd92e\",\n" +
-                "  \"_rev\": \"1-7384ecb2e7c73963864aa2c6680d456f\",\n" +
-                "  \"modUid\": \"urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691\",\n" +
-                "  \"modUidOfRequestor\": \"urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691\",\n" +
-                "  \"nibble6\": \"6aa9ab\",\n" +
-                "  \"x0Hash\": \"21af6ae0bdfc81520e665e0d2366c3b15a86f3e148e79ee19be8e3670c6aee3e\",\n" +
-                "  \"t\": \"2024-10-14T10:35:52Z\",\n" +
-                "  \"reissued\": false,\n" +
-                "  \"override\": false,\n" +
-                "  \"ruleUids\": [\n" +
-                "    \"urn:rule:3:protected:c8e3cb518192cf88aa11cf0d93072730c9e33c2713f187e1e2e402d8ad6f51ff:b2e4581ccbefeb1b\"\n" +
-                "  ],\n" +
-                "  \"descriptionOfEvidence\": \"They complemented my mother!\",\n" +
-                "  \"historic\": {}\n" +
-                "}";
-
-        Vio vio = JaxbHelper.gson.fromJson(json, Vio.class);
-        String index0 = Vio.index(vio);
-        logger.info(index0);
-
-
-
-//        URI test = URI.create("urn:test");
-//        URI test0 = URI.create("urn:test");
-//        logger.info(DateHelper.currentIsoUtcDateTime());
-//        ExoMatrix m0 = new ExoMatrix();
-//        m0.setModUid(test);
-//        ArrayList<ExoMatrix> matrices = new ArrayList<>();
-//        ExoMatrix tmp = new ExoMatrix();
-//        tmp.setModUid(test0);
-//        matrices.add(m0);
-//        int i = matrices.indexOf(test0);
-//        logger.info(i);
-//        boolean e = m0.equals(test0);
-//        logger.info(e);
 
     }
 
     @Test
     void name() {
+        try {
+            URI modUid = URI.create("urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691");
+            new NodeVerifier(modUid);
 
+        } catch (Exception e) {
+            logger.error("Error", e);
+        }
     }
 
 
@@ -92,20 +74,12 @@ public class TestExonymMatrix {
             String p = nodeUrl.toString() + modPath;
             logger.info(p);
 
-            RulebookNodeProperties rnp = RulebookNodeProperties.instance();
-            rnp.getNodeRoot();
-            NetworkMapWeb nmw = new NetworkMapWeb();
-            Cache cache = new Cache();
-            PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
-            external.setNetworkMapAndCache(nmw, cache);
-            byte[] bytes = UrlHelper.read(
-                    new URL("https://trust.exonym.io/leads-rulebook-test.json"));
+            byte[] bytes = UrlHelper.read(new URL("https://trust.exonym.io/leads-rulebook-test.json"));
 
             Rulebook rb = JaxbHelper.gson.fromJson(new String(bytes, StandardCharsets.UTF_8), Rulebook.class);
 
-
             NetworkMapItemModerator nmim = (NetworkMapItemModerator)
-                    nmw.nmiForNode(TestTools.MOD1_UID);
+                    networkMap.nmiForNode(TestTools.MOD1_UID);
 
             IdContainer id = new IdContainer(nmim.getModeratorName());
             RevocationInformation ri = id.openResource(
@@ -113,7 +87,7 @@ public class TestExonymMatrix {
 
 
             ExonymMatrixManagerLocal local = new ExonymMatrixManagerLocal(
-                    id, rb.computeRuleUris(), nmim, rnp.getNodeRoot());
+                    id, rb.computeRuleUris(), nmim, props.getNodeRoot());
 
             String r0 = rb.getRules().get(0).getId();
             ArrayList<URI> rules = new ArrayList<>();
@@ -141,15 +115,18 @@ public class TestExonymMatrix {
 
     @Test
     void setupWiderTrustNetwork() {
-
         try {
             WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
             wtn.setupWiderTrustNetwork();
-            wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), false);
+            wtn.addLead(URI.create("http://exonym-x-03:8080/static/lead/"), false);
+//            wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), false);
+
             wtn.publish();
+
         } catch (Exception e) {
             logger.info("Error", e);
         }
 
     }
+
 }

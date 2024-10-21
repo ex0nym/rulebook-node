@@ -13,6 +13,7 @@ public class ExonymDetailedResult {
     boolean unsettled = false;
     boolean overridden = false;
     private final ArrayList<URI> unsettledRuleId = new ArrayList<>();
+    private final ArrayList<Violation> violations = new ArrayList<>();
     private int offences;
     private URI modUID;
     private DateTime lastViolationTime;
@@ -75,5 +76,9 @@ public class ExonymDetailedResult {
 
     public ArrayList<URI> getUnsettledRuleId() {
         return unsettledRuleId;
+    }
+
+    public ArrayList<Violation> getViolations() {
+        return violations;
     }
 }

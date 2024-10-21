@@ -158,14 +158,15 @@ public class ExonymSearch {
         }
     }
 
-    private ExonymResult evaluateMatches(String n6, String x0Hash, String x0, ArrayList<ExoMatrix> matches) {
+    private ExonymResult evaluateMatches(String n6, String x0Hash, String x0,
+                                         ArrayList<ExoMatrix> matches) {
         ExonymResult result = new ExonymResult();
         result.setX0Hash(x0Hash);
         result.setNibble6(n6);
         result.setX0(x0);
-        ArrayList<URI> hostUuids = result.getModUids();
+        ArrayList<URI> modUids = result.getModUids();
         for (ExoMatrix m : matches){
-            hostUuids.add(m.getModUid());
+            modUids.add(m.getModUid());
 
         }
         return result;
@@ -178,7 +179,9 @@ public class ExonymSearch {
         ArrayList<URI> hosts = input.getModUids();
         ExceptionCollection collection = new ExceptionCollection();
         ArrayList<ExonymDetailedResult> resultSet = collectDetailedReports(n6, x0, hosts, collection);
-        return analyseDetailedReports(n6, x0, resultSet, collection);
+        ApplicantReport report = analyseDetailedReports(n6, x0, resultSet, collection);
+        report.setDetailedResults(resultSet);
+        return report;
 
     }
 

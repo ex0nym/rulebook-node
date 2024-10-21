@@ -49,54 +49,6 @@ public class RulebookNodeProperties extends RootProperties {
 
     }
 
-    protected void createNewDistributionKey(){
-        try {
-            XKey k = XKey.createNew(this.getNodeRoot());
-            k.setKeyUid(URI.create(DateHelper.currentBareIsoUtcDate()));
-            CloudantClient client = CouchDbClient.instance();
-            Database dba = client.database(CouchDbHelper.getDbUsers(), false);
-            CouchRepository<XKey> repo = new CouchRepository<>(dba, XKey.class);
-            repo.create(k);
-
-        } catch (Exception e) {
-            logger.error("Error", e);
-        }
-    }
-
-
-    protected AsymStoreKey getAppDistributionKey() {
-        try {
-            if (this.appDistributionKey ==null){
-                logger.info("---Opening Key--");
-                CloudantClient client = CouchDbClient.instance();
-                Database dba = client.database(CouchDbHelper.getDbUsers(), false);
-                CouchRepository<XKey> xKeyRepo = new CouchRepository<>(dba, XKey.class);
-                QueryBasic q = QueryBasic.selectType("xkey");
-                LinkedList<XKey> keys = new LinkedList<>(xKeyRepo.read(q));
-                XKey key = keys.getLast();
-                Cipher dec = CryptoUtils.generatePasswordCipher(Cipher.DECRYPT_MODE, this.getNodeRoot(), null);
-                this.appDistributionKey = AsymStoreKey.build(key.getPublicKey(), key.getPrivateKey(), dec);
-
-            }
-        } catch (Exception e) {
-            logger.error("!! CRITICAL-- Unable to open key", e);
-
-        }
-        return appDistributionKey;
-
-    }
-
-    private static void addShippingKey() throws Exception{
-        CloudantClient client = CouchDbClient.instance();
-        Database dba = client.database(CouchDbHelper.getDbUsers(), false);
-        CouchRepository<XKey> repo = new CouchRepository<>(dba, XKey.class);
-        RulebookNodeProperties props = RulebookNodeProperties.instance();
-        XKey key = XKey.createNew(props.getNodeRoot());
-        key.setType("xkey");
-        repo.create(key);
-
-    }
-
     @Override
     protected String getDbUsername() {
         return super.getDbUsername();

@@ -16,6 +16,9 @@ public class ApplicantReport {
     private ArrayList<String> activeModsWrtRn = new ArrayList<>();
     private ExceptionCollection exceptions;
     private DateTime mostRecentOffenceTimeStamp;
+
+    private ArrayList<Violation> violations = new ArrayList<>();
+    private ArrayList<ExonymDetailedResult> detailedResults = new ArrayList<>();
     private boolean isMember = false;
 
     public int getTotalOffences() {
@@ -90,11 +93,27 @@ public class ApplicantReport {
         this.mostRecentOffenceTimeStamp = mostRecentOffenceTimeStamp;
     }
 
+    public ArrayList<Violation> getViolations() {
+        return violations;
+    }
+
+    public void setViolations(ArrayList<Violation> violations) {
+        this.violations = violations;
+    }
+
     public boolean isMember() {
         return isMember;
     }
 
     public void setMember(boolean member) {
         isMember = member;
+    }
+
+    public ArrayList<ExonymDetailedResult> getDetailedResults() {
+        return detailedResults;
+    }
+
+    public void setDetailedResults(ArrayList<ExonymDetailedResult> detailedResults) {
+        this.detailedResults = detailedResults;
     }
 }

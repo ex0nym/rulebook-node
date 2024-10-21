@@ -68,10 +68,20 @@ public class IssuanceSybilServlet extends HttpServlet {
                               HttpServletResponse resp) throws Exception {
         String tokenB64 = in.get(ATT_TOKEN);
         String context = in.get(ATT_CONTEXT);
+
         try {
             String token = new String(Base64.decodeBase64(tokenB64), StandardCharsets.UTF_8);
             IssuanceMessage im = (IssuanceMessage) JaxbHelperClass.deserialize(token).getValue();
+            logger.debug(">>>>>>>>>>>>> ------------------------------------------------ ");
+            logger.debug(">");
+            logger.debug(">");
+            logger.debug(">");
+            logger.debug(">");
             logger.debug("IssuanceMessageContent=" + im.getContent());
+            logger.debug(">");
+            logger.debug(">");
+            logger.debug(">");
+            logger.debug(">");
 
             ImabAndHandle imab = mmw.ssiIssuerStep(context, im);
 

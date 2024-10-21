@@ -3,6 +3,7 @@ package io.exonym.helpers;
 import eu.abc4trust.xml.*;
 import eu.abc4trust.xml.CredentialInPolicy.IssuerAlternatives;
 import io.exonym.lite.pojo.Rulebook;
+import io.exonym.lite.pojo.RulebookItem;
 import io.exonym.lite.standard.Const;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.utils.storage.IdContainer;
@@ -29,6 +30,7 @@ public class PresentationPolicyManager {
 
 	private final IssuerAlternatives.IssuerParametersUID sybilIpUid;
 
+	// TODO this has bugs in it.  They're not major, but it needs a rewrite.
 
 	public PresentationPolicyManager(PresentationPolicy pp, CredentialSpecification cSpec,
 									 IssuerAlternatives.IssuerParametersUID sybilIpUid) throws Exception {
@@ -61,7 +63,11 @@ public class PresentationPolicyManager {
 
 
 	private void extract() throws Exception {
-		ArrayList<PresentationPolicy> policies = (ArrayList<PresentationPolicy>) this.ppa.getPresentationPolicy();
+
+		// Insert Debug Here.
+
+		ArrayList<PresentationPolicy> policies = (ArrayList<PresentationPolicy>)
+				this.ppa.getPresentationPolicy();
 
 		for (PresentationPolicy p : policies) {
 			for (PseudonymInPolicy nym : p.getPseudonym()) {
@@ -78,27 +84,34 @@ public class PresentationPolicyManager {
 				throw new Exception();
 
 			}
-			for (CredentialInPolicy c : p.getCredential()) {
-				if (Rulebook.isSybil(c.getCredentialSpecAlternatives().getCredentialSpecUID().get(0))){
-					this.sybilCip = c;
+			for (CredentialInPolicy requiredCredential : p.getCredential()) {
+				boolean isSybilCred = false;
+				if (Rulebook.isSybil(requiredCredential.getCredentialSpecAlternatives().getCredentialSpecUID().get(0))){
+					this.sybilCip = requiredCredential;
+					isSybilCred = true;
 				} else {
-					this.cip = c;
+					this.cip = requiredCredential;
 
 				}
-				List<IssuerAlternatives.IssuerParametersUID> params = c.getIssuerAlternatives().getIssuerParametersUID();
-				for (IssuerAlternatives.IssuerParametersUID ipuid : params) {
+				List<IssuerAlternatives.IssuerParametersUID> issuersOfCredential =
+						requiredCredential.getIssuerAlternatives().getIssuerParametersUID();
+
+				for (IssuerAlternatives.IssuerParametersUID ipuid : issuersOfCredential) {
 					URI rootUid = createRootUid(ipuid.getValue());
-					List<IssuerAlternatives.IssuerParametersUID> issuers = issuerUrisByNode.remove(rootUid);
-					if (issuers==null){
-						issuers = new ArrayList<>();
+					boolean isSybilIssuer = Rulebook.isSybil(rootUid);
+					if (!(isSybilCred ^ isSybilIssuer)){
+						List<IssuerAlternatives.IssuerParametersUID> issuers = issuerUrisByNode.remove(rootUid);
+						if (issuers==null){
+							issuers = new ArrayList<>();
+
+						}
+						issuers.add(ipuid);
+						logger.info("-- Adding " + rootUid + " " + ipuid);
+						issuerUrisByNode.put(rootUid, issuers);
+						insUriByNode.putIfAbsent(rootUid, URI.create(rootUid.toString() + ":ins"));
 
 					}
-					issuers.add(ipuid);
-					issuerUrisByNode.put(rootUid, issuers);
-					insUriByNode.putIfAbsent(rootUid, URI.create(rootUid.toString() + ":ins"));
-
 				}
-
 			}
 			if (this.cip == null && this.sybilCip !=null){
 				// This presentation policy is for Sybil.
@@ -155,26 +168,30 @@ public class PresentationPolicyManager {
 		if (cip==null){
 			cip = buildCredentialInPolicy(cSpec, i, ins.getPublicKeyUID());
 
+		}
+		boolean isSybilCred = Rulebook.isSybil(cSpec.getSpecificationUID());
+		boolean isSybilIssuer = Rulebook.isSybil(i.getParametersUID());
+
+		if (!(isSybilCred ^ isSybilIssuer)){
+			if (sybilCip==null && sybilIpUid!=null){
+				sybilCip = buildSybilCip();
+
+			}
+			URI iUid = i.getParametersUID();
+			UIDHelper helper = new UIDHelper(iUid);
+
+			IssuerAlternatives.IssuerParametersUID ip = new IssuerAlternatives.IssuerParametersUID();
+			ip.setRevocationInformationUID(helper.getRevocationInfoParams());
+			ip.setValue(helper.getIssuerParameters());
+			ArrayList<IssuerAlternatives.IssuerParametersUID> issuerParamsToAdd = new ArrayList<>();
+			issuerParamsToAdd.add(ip);
+
+			URI root = createRootUid(iUid);
+
+			issuerUrisByNode.putIfAbsent(root, issuerParamsToAdd);
+			insUriByNode.putIfAbsent(root, ins.getPublicKeyUID());
 
 		}
-		if (sybilCip==null && sybilIpUid!=null){
-			sybilCip = buildSybilCip();
-
-		}
-		URI iUid = i.getParametersUID();
-		UIDHelper helper = new UIDHelper(iUid);
-
-		IssuerAlternatives.IssuerParametersUID ip = new IssuerAlternatives.IssuerParametersUID();
-		ip.setRevocationInformationUID(helper.getRevocationInfoParams());
-		ip.setValue(helper.getIssuerParameters());
-		ArrayList<IssuerAlternatives.IssuerParametersUID> l = new ArrayList<>();
-		l.add(ip);
-
-		URI root = createRootUid(iUid);
-
-		issuerUrisByNode.putIfAbsent(root, l);
-		insUriByNode.putIfAbsent(root, ins.getPublicKeyUID());
-
 	}
 
 	private CredentialInPolicy buildSybilCip() throws Exception {

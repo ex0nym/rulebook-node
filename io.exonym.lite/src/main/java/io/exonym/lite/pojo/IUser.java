@@ -12,13 +12,11 @@ public class IUser extends AbstractCouchDbObject  implements Comparable<IUser> {
     public static final String I_USER_API_KEY = "api-key";
 
     public static final String FIELD_USERNAME = "username";
-    public static final String FIELD_UUID = "uuid";
 
     private String username;
     // clientSide = sha256(password) = u;  || clientSide = sha256(password + salt) = u
     private String v; // sha256(u) = v
     private String salt;
-    private byte[] publicKey;
     private boolean requiresPassChange = false;
     private boolean inactive = false;
     private String privileges = null;
@@ -43,14 +41,6 @@ public class IUser extends AbstractCouchDbObject  implements Comparable<IUser> {
 
     public void setV(String v) {
         this.v = v;
-    }
-
-    public byte[] getPublicKey() {
-        return publicKey;
-    }
-
-    public void setPublicKey(byte[] publicKey) {
-        this.publicKey = publicKey;
     }
 
     public boolean isRequiresPassChange() {

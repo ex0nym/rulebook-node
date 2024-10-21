@@ -108,7 +108,7 @@ public class NotificationPublisher extends ModelCommandProcessor {
                     MqttMessage message = new MqttMessage(
                             json.getBytes(StandardCharsets.UTF_8));
 
-                    message.setQos(2);
+                    message.setQos(1);
                     message.setRetained(true);
 
                     String topic = uidToTopic.get(notify.getNodeUid().toString());

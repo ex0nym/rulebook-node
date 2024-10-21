@@ -195,6 +195,7 @@ public class XmlHelper {
 	
 	// TODO Tidy up
 	public static ConcurrentHashMap<String, ByteArrayBuffer> openXmlBytesAtUrl(URI nodeUrl) throws Exception {
+		logger.info(nodeUrl);
 		String root = nodeUrl.toString();
 		String descUrl = null;
 		String filename = "/rulebook.json";
@@ -228,11 +229,9 @@ public class XmlHelper {
 			}
 		}
 
-		URL url = new URL(root + "/signatures.xml");
+		URL url = new URL(root + "/" + Const.SIGNATURES_XML);
 		
-
-
-		KeyContainerWrapper kcPublic = null; 
+		KeyContainerWrapper kcPublic = null;
 		try {
 			byte[] signaturesXml = UrlHelper.read(url);
 			String xmlString = new String(signaturesXml, "UTF8");

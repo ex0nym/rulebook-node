@@ -98,7 +98,7 @@ public abstract class AbstractNetworkMap {
         buildBasisNMI(nmis, source);
         nmis.setLeadUID(source.getNodeUid());
         ArrayList<URI> advocateListForSource = new ArrayList<>();
-        ArrayList<NetworkMapItemModerator> advocatesForSource = verifySource(advocateListForSource, source);
+        ArrayList<NetworkMapItemModerator> advocatesForSource = verifyLead(advocateListForSource, source);
         nmis.setModeratorsForLead(new HashSet<>(advocateListForSource));
         String[] parts = source.getNodeUid()
                 .toString().split(":");
@@ -128,10 +128,10 @@ public abstract class AbstractNetworkMap {
     protected void cleanupExisting() {
     }
 
-    private ArrayList<NetworkMapItemModerator> verifySource(ArrayList<URI> advocateListForSource, NetworkParticipant source) throws Exception {
-        NodeVerifier verifier = openNodeVerifier(source.getStaticNodeUrl0(), true);
-
+    private ArrayList<NetworkMapItemModerator> verifyLead(ArrayList<URI> modsForLead, NetworkParticipant lead) throws Exception {
+        NodeVerifier verifier = new NodeVerifier(lead.getNodeUid());
         Rulebook rulebook = verifier.getRulebook();
+
         cache.store(rulebook);
         cache.store(verifier.getPresentationPolicy());
         cache.store(verifier.getCredentialSpecification());
@@ -140,8 +140,8 @@ public abstract class AbstractNetworkMap {
         Collection<NetworkParticipant> allAdvocates = tnw.getAllParticipants();
         ArrayList<NetworkMapItemModerator> advocatesForSource = new ArrayList<>();
         for (NetworkParticipant advocate : allAdvocates){
-            URI sourceUid = source.getNodeUid();
-            advocateListForSource.add(advocate.getNodeUid());
+            URI sourceUid = lead.getNodeUid();
+            modsForLead.add(advocate.getNodeUid());
             advocatesForSource.add(buildAdvocateNMIA(sourceUid, advocate));
 
         }
