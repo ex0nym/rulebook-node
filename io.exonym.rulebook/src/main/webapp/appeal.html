@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appeal Interface</title>
+    <link href="css/bootstrap-4.4.1.css" rel="stylesheet" type="text/css">	 
+    <style>
+        body {
+            background-color: #f8f9fa; /* Slightly greyed background */
+        }
+        span {
+            padding-left: 5px;
+        }
+        .container {
+            max-width: 650px;
+            background-color: #fff;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+        .section-divider {
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        .rule-card {
+            perspective: 1000px;
+            margin-bottom: 20px;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .rule-card:hover .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: relative;
+            width: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* For Safari */
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+            background-color: #fff; /* Make card faces opaque */
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            position: absolute; /* Stack it on top of the front */
+            top: 0;
+            left: 0;
+        }
+        .history-comment {
+            resize: vertical;
+            width: 100%;
+        }
+        .submit-btn {
+            width: 100%;
+        }
+        .media img {
+            width: 40px;
+            height: 40px;
+        }
+        .strike {
+            text-decoration: line-through;
+        }
+        @media (max-width: 576px) {
+            .history-comment {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<!-- TODO -->
+<!-- separate out into hmtl, css, javascript -->
+<!-- take join authentication from index.html -->
+<!--  hide this container until authenticated -->
+<!--  GET request + probe to authenticate -->
+
+<body>
+<div class="container">
+    <!-- Top Section -->
+    <div class="section-divider">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5><strong>Reporter:</strong><span id="reporter">exonym-leads</span></h5>
+                <p class="mb-1"><strong>Time of Revocation:</strong><span id="timeOfRevocation"></span></p>
+                <p><strong>Ban Lifted:</strong><span id="banLifted"></span></p>
+            </div>
+            <div>
+                <span class="badge badge-primary">Status: <span id="status"></span></span>
+            </div>
+        </div>
+    </div>
+    <!-- Rules Section -->
+    <div class="section-divider" id="rules">
+        <h5>Appeal Process</h5>
+        <!-- Rule Card -->
+        
+    </div>
+    <!-- History Section -->
+    <div class="section-divider">
+        <h5>Comment</h5>
+        <div class="media mb-3">
+            <!-- <img src="https://via.placeholder.com/40" -->
+             <!-- class="align-self-start mr-3" alt="Actor Icon"> -->
+            <div class="media-body">
+                <textarea class="form-control mt-2 history-comment" rows="5"></textarea>
+            </div>
+        </div>
+        <!-- Add more history items as needed -->
+    </div>
+    <!-- Submit Button -->
+    <button type="button" class="btn btn-success submit-btn">Submit Appeal</button>
+</div>
+</body>
+<script src="js/jquery-3.4.1.min.js"></script>
+<script src="js/bootstrap-4.4.1.js"></script>
+<script>
+    var response = {
+        "status": "RAISING",
+        "nibble6": "8be231",
+        "timeOfViolation": "2024-10-17T15:04:34Z",
+        "banLifted": "2024-10-22T15:04:34Z",
+        "modOfVioUid": "urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691",
+        "requestingModUid": "urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691",
+        // TODO
+        "reporter": "exonym-leads",
+        "openForAppeal": true,
+        "targetRules": [
+            {
+                "ruleUid": "urn:rule:2:protected:c8e3cb518192cf88aa11cf0d93072730c9e33c2713f187e1e2e402d8ad6f51ff:b2e4581ccbefeb1b",
+                "ruleOriginal": "First rule original",
+                "ruleInterpretation": "First rule interpretation"
+            },{
+                "ruleUid": "urn:rule:3:protected:c8e3cb518192cf88aa11cf0d93072730c9e33c2713f187e1e2e402d8ad6f51ff:b2e4581ccbefeb1b",
+                "ruleOriginal": "Second rule original",
+                "ruleInterpretation": "Second rule interpretation"
+            },
+        ],
+        "history": [
+            {
+            "timestamp": 1729177843257,
+            "dateTime": "2024-10-17T15:10:43Z",
+            "actor": "PRODUCER"
+            }
+        ]
+    }
+
+    function insertLocalDate(utcDateTime, elementId){
+        var localDate = new Date(utcDateTime);
+        var localTimeString = localDate.toLocaleString(undefined);
+        $("#" + elementId).html(localTimeString);
+
+    }
+
+    function displayRule(rule){
+        var ruleCard = "<div class='rule-card'><div class='card-inner'><div class='card-front'><h6>Rule Interpretation</h6><p class='interpretation'></p></div><div class='card-back'><h6>Rule Original</h6><p class='original'></p></div></div></div>";
+        var $ruleCardElement = $(ruleCard);        
+        $ruleCardElement.find('.interpretation').html(rule.ruleInterpretation);
+        $ruleCardElement.find('.original').html(rule.ruleOriginal);
+        $('#rules').append($ruleCardElement);
+
+    }
+
+    function displayRules(rules){
+        if (Array.isArray(rules)){
+            for (rule in rules){
+                displayRule(rules[rule]);
+
+            }
+        }
+    }
+
+    $("#reporter").html(response.reporter);
+    $("#status").html(response.status);
+    insertLocalDate(response.timeOfViolation, "timeOfRevocation");
+    insertLocalDate(response.banLifted, "banLifted");
+    displayRules(response.targetRules);
+
+</script>
+</html>
