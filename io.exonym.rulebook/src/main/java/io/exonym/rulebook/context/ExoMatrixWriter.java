@@ -115,20 +115,20 @@ public class ExoMatrixWriter extends ModelCommandProcessor {
             selector.put(ExoMatrix.FIELD_NIBBLE6, notify.getNibble6());
             List<ExoMatrix> matrix = this.exonymMap.read(queryExo, 25);
             for (ExoMatrix m : matrix){
-                logger.info("Detect myself " + m.getNibble6() + " " + m.getModUid() + " " + m.equals(myModTmpMatrix) );
-                logger.info("MyMod=" + myModTmpMatrix.getModUid());
+                logger.debug("Detect myself " + m.getNibble6() + " " + m.getModUid() + " " + m.equals(myModTmpMatrix) );
+                logger.debug("MyMod=" + myModTmpMatrix.getModUid());
             }
             if (!matrix.isEmpty()){
                 ExoMatrix sender = ExoMatrix.withModUid(notify.getNodeUid());
                 int index = matrix.indexOf(sender);
                 indexMyMod = matrix.indexOf(myModTmpMatrix);
 
-                logger.info("Found index for existing matrix at writeExo(): " + index);
-                logger.info("Found index for my node (): " + indexMyMod);
+                logger.debug("Found index for existing matrix at writeExo(): " + index);
+                logger.debug("Found index for my node (): " + indexMyMod);
 
                 if (index>-1){
                     ExoMatrix matrixMod = matrix.get(index);
-                    logger.info("Found matrix for mod = " + matrixMod.toString());
+                    logger.debug("Found matrix for mod = " + matrixMod.toString());
                     boolean joiningSameNode = matrixMod.getX0Hash()
                             .contains(notify.getHashOfX0());
 

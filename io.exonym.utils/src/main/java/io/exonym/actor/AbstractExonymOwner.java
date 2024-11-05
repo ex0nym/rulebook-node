@@ -164,8 +164,11 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 	}
 
 	protected synchronized void openContainer(PassStore store){
-		openContainer(store.getDecipher(), store.getEncrypt());
-		
+		if (store!=null){
+			openContainer(store.getDecipher(), store.getEncrypt());
+		} else {
+			openContainer(null, null);
+		}
 	}
 
 	protected synchronized void authenticate(PassStore store) throws Exception {
@@ -188,36 +191,38 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 				}
 				ArrayList<String> credentials = container.getOwnerSecretList();
 				for (String resource: credentials){
-					logger.debug(resource);;
+					logger.debug(resource);
 					
 				}
-				for (String resource: credentials){
-					Object credentialOrSecret = container.openResource(resource, dec);
-					if (credentialOrSecret instanceof Credential){
-						Credential c = (Credential)credentialOrSecret;
-						this.addCredentialToIdmx(c, enc);
-						logger.debug("Adding " + c.getCredentialDescription().getCredentialUID());
-						creds++; 
-						
-					} else if (credentialOrSecret instanceof Secret){
-						this.credentialManagerUser.storeSecret(container.getUsername(), (Secret)credentialOrSecret);
-						logger.debug("Adding secret");
+				if (dec!=null){
+					for (String resource: credentials){
+						Object credentialOrSecret = container.openResource(resource, dec);
+						if (credentialOrSecret instanceof Credential){
+							Credential c = (Credential)credentialOrSecret;
+							this.addCredentialToIdmx(c, enc);
+							logger.debug("Adding " + c.getCredentialDescription().getCredentialUID());
+							creds++;
 
-					} else if (credentialOrSecret instanceof AnonCredentialParameters){
-						logger.debug("Anon Credential Params do not get used here.");
-						
-					} else if (credentialOrSecret instanceof MintedAnonCredential){
-						logger.debug("Minted Anon Credential does not get used here.");
+						} else if (credentialOrSecret instanceof Secret){
+							this.credentialManagerUser.storeSecret(container.getUsername(), (Secret)credentialOrSecret);
+							logger.debug("Adding secret");
 
-					} else if (credentialOrSecret instanceof KeyContainer){
-						logger.debug("Key Containers not get used here.");
+						} else if (credentialOrSecret instanceof AnonCredentialParameters){
+							logger.debug("Anon Credential Params do not get used here.");
 
-					} else {
-						throw new RuntimeException("Unhandled object type " + credentialOrSecret);
-						
+						} else if (credentialOrSecret instanceof MintedAnonCredential){
+							logger.debug("Minted Anon Credential does not get used here.");
+
+						} else if (credentialOrSecret instanceof KeyContainer){
+							logger.debug("Key Containers not get used here.");
+
+						} else {
+							throw new RuntimeException("Unhandled object type " + credentialOrSecret);
+
+						}
 					}
 				}
-				this.open=true; 
+				this.open=true;
 				logger.info("Opened " + params +  " issuer parameters and " + creds + " credentials for container" + this.container.getUsername()); //*/
 			
 			}
@@ -767,6 +772,7 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 			}
 		}
 		boolean result = cryptoEngineVerifier.verifyToken(token, ppa.getVerifierParameters());
+
 		if (result){
 			return result;
 			

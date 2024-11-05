@@ -16,7 +16,7 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.utils.adapters.PresentationPolicyAlternativesAdapter;
 import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.KeyContainer;
-import io.exonym.utils.storage.IdContainerSchema;
+import io.exonym.lite.pojo.IdContainerSchema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

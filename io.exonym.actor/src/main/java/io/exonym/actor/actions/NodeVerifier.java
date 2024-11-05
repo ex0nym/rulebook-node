@@ -218,7 +218,7 @@ public class NodeVerifier {
 				result.put(fn, new ByteArrayBuffer(b));
 
 			} else {
-				logger.info("Opening materials and ignoring " + key.getKeyUid());
+				logger.debug("Opening materials and ignoring " + key.getKeyUid());
 
 			}
 		}
@@ -235,7 +235,7 @@ public class NodeVerifier {
 	private ConcurrentHashMap<String, ByteArrayBuffer> readLocalNetworkBytes(Path root) throws Exception {
 		ConcurrentHashMap<String, ByteArrayBuffer> result = new ConcurrentHashMap<>();
 		Path pathToSig = root.resolve(Const.SIGNATURES_XML);
-		logger.info("Path to Signature file: " + pathToSig + " " + Files.exists(pathToSig));
+		logger.debug("Path to Signature file: " + pathToSig + " " + Files.exists(pathToSig));
 		String kc = Files.readString(pathToSig);
 		KeyContainerWrapper kcw = new KeyContainerWrapper(JaxbHelper.xmlToClass(kc, KeyContainer.class));
 
@@ -247,7 +247,7 @@ public class NodeVerifier {
 				result.put(fn, new ByteArrayBuffer(b));
 
 			} else {
-				logger.info("Opening materials and ignoring " + key.getKeyUid());
+				logger.debug("Opening materials and ignoring " + key.getKeyUid());
 
 			}
 		}
@@ -289,7 +289,7 @@ public class NodeVerifier {
 
 	private void verification(boolean insistKeyKnown) throws Exception {
 		try {
-			logger.info("Found keys and verifying PublicKey signature.");
+			logger.debug("Found keys and verifying PublicKey signature.");
 			
 			XKey x = keys.getKey(KeyContainerWrapper.TN_ROOT_KEY);
 
@@ -360,7 +360,7 @@ public class NodeVerifier {
 		logger.debug("CHECK(VERIFY)\n\t\t " + check);
 		XKey signature = this.keys.getKey(KeyContainerWrapper.SIG_CHECKSUM);
 		if (publicKey.verifySignature(check.getBytes(), signature.getSignature())) {
-			logger.info("Checksum Verified");
+			logger.debug("Checksum Verified");
 			return true; 
 			
 		} else {
@@ -434,7 +434,7 @@ public class NodeVerifier {
 		}
 		for (XKey sig : signatures.keySet()){
 			URI uid = sig.getKeyUid();
-			logger.info("Verifying Signature of Resource " + uid);
+			logger.debug("Verifying Signature of Resource " + uid);
 			
 			if (uid==null){
 				throw new Exception("KeyUID was null");
@@ -452,7 +452,7 @@ public class NodeVerifier {
 				throw new Exception("Signature was invalid for UID " + uid);
 				
 			} else {
-				logger.info("Signature Verified for " + uid);
+				logger.debug("Signature Verified for " + uid);
 				
 			}
 		}
@@ -477,7 +477,7 @@ public class NodeVerifier {
 			
 		}
 		if (key.verifySignature(data, signature)){
-			logger.info("PublicKey Signature Verified");
+			logger.debug("PublicKey Signature Verified");
 			return true; 
 			
 		} else {

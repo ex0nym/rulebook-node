@@ -10,6 +10,9 @@ public class ImabAndHandle {
     private IssuanceMessageAndBoolean imab;
     private BigInteger handle;
 
+    private String sybilNym;
+    private String sybilScope;
+
     private URI issuerUID;
 
     public IssuanceMessageAndBoolean getImab() {
@@ -35,4 +38,22 @@ public class ImabAndHandle {
     public void setIssuerUID(URI issuerUID) {
         this.issuerUID = issuerUID;
     }
+
+    public String getSybilNym() {
+        return sybilNym;
+    }
+
+    public void setSybilNym(String sybilNym) {
+        this.sybilNym = sybilNym;
+    }
+
+    public String getSybilScope() {
+        return sybilScope;
+    }
+
+    public void setSybilScope(String sybilScope) {
+        this.sybilScope = sybilScope;
+    }
 }
+
+

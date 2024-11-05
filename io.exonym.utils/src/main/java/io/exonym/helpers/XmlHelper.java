@@ -165,7 +165,7 @@ public class XmlHelper {
 				try {
 					byte[] in = xmlBytes.get(f).getRawData();
 					XmlObjectType o = XmlHelper.computeClass(in);
-					logger.info("Reading file " + f);
+					logger.debug("Reading file " + f);
 					Object obj = null;
 					String inString = new String(in, StandardCharsets.UTF_8);
 					
@@ -195,7 +195,7 @@ public class XmlHelper {
 	
 	// TODO Tidy up
 	public static ConcurrentHashMap<String, ByteArrayBuffer> openXmlBytesAtUrl(URI nodeUrl) throws Exception {
-		logger.info(nodeUrl);
+		logger.debug(nodeUrl);
 		String root = nodeUrl.toString();
 		String descUrl = null;
 		String filename = "/rulebook.json";
@@ -309,7 +309,7 @@ public class XmlHelper {
 						if (UrlHelper.isXml(in)){
 							try {
 								XmlObjectType o = XmlHelper.computeClass(in);
-								logger.info("Reading file " + f);
+								logger.debug("Reading file " + f);
 								Object obj = null; 
 								
 								if (o.isExonym()){
@@ -323,11 +323,11 @@ public class XmlHelper {
 								result.put(f.getName(), obj);
 								
 							} catch (Exception e) {
-								logger.info("Ignoring an unrecognized object at URL " + sourceUrl + f.getName());
+								logger.warn("Ignoring an unrecognized object at URL " + sourceUrl + f.getName());
 								
 							}
 						} else {
-							logger.info("The File " + f.getPath() + " was masquerading as an XML file");		
+							logger.warn("The File " + f.getPath() + " was masquerading as an XML file");
 							
 						}
 					} catch (Exception e) {
@@ -335,7 +335,7 @@ public class XmlHelper {
 						
 					}
 				} else {
-					logger.info("The File " + f.getPath() + " was not an XML file");
+					logger.warn("The File " + f.getPath() + " was not an XML file");
 					
 				}
 			}

@@ -119,17 +119,17 @@ public abstract class AbstractBaseActor {
 			return this.container.openResource(uid);
 			
 		} catch (Exception e) {
-			logger.info("Public Parameter Opener: Failed to find parameters in local container " + uid);
+			logger.debug("Public Parameter Opener: Failed to find parameters in local container " + uid);
 
 			
 		}
 		String fn = IdContainer.uidToXmlFileName(uid);
 		try {
-			logger.info("Looking in external resources " + fn);
+			logger.debug("Looking in external resources " + fn);
 			return this.externalResource.openResource(fn);
 			
 		} catch (Exception e) {
-			logger.info("Failed to find parameters on network " + uid);
+			logger.warn("Failed to find parameters on network " + uid);
 			throw e; 
 			
 		}
@@ -148,7 +148,7 @@ public abstract class AbstractBaseActor {
 			CredentialSpecification credentialSpecification = publicParameterOpener(uid);
 			keyManager.storeCredentialSpecification(uid, credentialSpecification);
 			this.credentialSpecificationList.add(uid);
-			logger.info("Add Credential Spec - " + uid + " " + this.keyManager);
+			logger.debug("Add Credential Spec - " + uid + " " + this.keyManager);
 			
 		} else {
 			logger.debug("The Credential Spec was already on the key manager " + uid);
@@ -160,7 +160,7 @@ public abstract class AbstractBaseActor {
 		if (keyManager.getRevocationAuthorityParameters(uid)==null){
 			RevocationAuthorityParameters rap = publicParameterOpener(uid);
 			keyManager.storeRevocationAuthorityParameters(uid, rap);
-			logger.info("Added Revocation Authority Parameters " + uid + " to " + this.keyManager);
+			logger.debug("Added Revocation Authority Parameters " + uid + " to " + this.keyManager);
 			
 //		} else {
 //			logger.debug("The Revocation Authority Parameters were already on the key manager " + uid);
@@ -183,7 +183,7 @@ public abstract class AbstractBaseActor {
 		if (keyManager.getInspectorPublicKey(uid)==null) {
 			InspectorPublicKey k = publicParameterOpener(uid);
 			this.keyManager.storeInspectorPublicKey(uid, k);
-			logger.info("Added Inspector Parameters " + uid + " to " + this.keyManager);
+			logger.debug("Added Inspector Parameters " + uid + " to " + this.keyManager);
 			
 		}
 	}
@@ -304,7 +304,7 @@ public abstract class AbstractBaseActor {
 			if (keyManager.getCredentialSpecification(uid)==null){
 				keyManager.storeCredentialSpecification(uid, credentialSpecification);
 				this.credentialSpecificationList.add(uid);
-				logger.info("Add Credential Spec - " + uid + " " + this.keyManager);
+				logger.debug("Add Credential Spec - " + uid + " " + this.keyManager);
 				
 			}
 		} catch (Exception e) {
@@ -335,7 +335,7 @@ public abstract class AbstractBaseActor {
 			if (keyManager.getIssuerParameters(issuerUid)==null){
 			    keyManager.storeIssuerParameters(issuerUid, issuerParams);
 			    issuerList.add(issuerUid);
-			    logger.info("Add Issuer Parameters - " + issuerUid + " " + this.keyManager);
+			    logger.debug("Add Issuer Parameters - " + issuerUid + " " + this.keyManager);
 				
 			}
 			return raUid;
@@ -358,7 +358,7 @@ public abstract class AbstractBaseActor {
 		URI uid = rap.getParametersUID();
 		if (keyManager.getRevocationAuthorityParameters(uid)==null){
 			keyManager.storeRevocationAuthorityParameters(uid, rap);
-			logger.info("Added Revocation Authority Parameters " + uid + " to " + this.keyManager);
+			logger.debug("Added Revocation Authority Parameters " + uid + " to " + this.keyManager);
 			
 		}
 	} 
@@ -385,7 +385,7 @@ public abstract class AbstractBaseActor {
 				keyManager.storeRevocationInformation(ri.getRevocationAuthorityParametersUID(), ri);	
 				
 			}
-			logger.info("Added revocation information " + ri.getRevocationInformationUID());
+			logger.debug("Added revocation information " + ri.getRevocationInformationUID());
 
 		}
 	}	

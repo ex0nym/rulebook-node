@@ -23,13 +23,19 @@ public class ExonymOwner extends AbstractExonymOwner {
 	
 
 	private static final Logger logger = LogManager.getLogger(ExonymOwner.class);
-	protected ExonymOwner(AbstractIdContainer container) {
+
+	private static ExonymOwner VERIFIER = null;
+
+	public ExonymOwner(AbstractIdContainer container) {
 		super(container);
 	}
 
 	@Override
-	protected synchronized void openContainer(PassStore store) {
+	public synchronized void openContainer(PassStore store) {
 		super.openContainer(store);
+	}
+	public synchronized void openContainer() {
+		super.openContainer(null);
 	}
 
 	@Override
@@ -90,7 +96,7 @@ public class ExonymOwner extends AbstractExonymOwner {
 	}
 
 	@Override
-	protected boolean verifyClaim(PresentationPolicyAlternatives ppa, PresentationToken token) throws Exception {
+	public boolean verifyClaim(PresentationPolicyAlternatives ppa, PresentationToken token) throws Exception {
 		return super.verifyClaim(ppa, token);
 	}
 
@@ -140,7 +146,7 @@ public class ExonymOwner extends AbstractExonymOwner {
 	}
 
 	@Override
-	protected boolean openResourceIfNotLoaded(URI uid) throws Exception {
+	public boolean openResourceIfNotLoaded(URI uid) throws Exception {
 		return super.openResourceIfNotLoaded(uid);
 	}
 

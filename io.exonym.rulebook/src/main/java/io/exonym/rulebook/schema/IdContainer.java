@@ -1,6 +1,7 @@
 package io.exonym.rulebook.schema;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import io.exonym.actor.actions.IdContainerJSON;
+import io.exonym.lite.pojo.IdContainerSchema;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.rulebook.context.NodeContainerStore;
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +47,7 @@ public class IdContainer extends IdContainerJSON {
 	}
 
 	@Override
-	protected io.exonym.utils.storage.IdContainerSchema init(boolean create) throws Exception {
+	protected IdContainerSchema init(boolean create) throws Exception {
 		if (this.store==null) {
 			store = NodeContainerStore.getInstance();
 			
@@ -75,7 +76,7 @@ public class IdContainer extends IdContainerJSON {
 				logger.debug("Store is " + store);
 				logger.debug("Username is " + getUsername());
 				
-				IdContainerSchema schema0 = store.getContainer(this.getUsername());
+				io.exonym.lite.pojo.IdContainerSchema schema0 = store.getContainer(this.getUsername());
 				return schema0;
 				
 			} catch (NoDocumentException e) {
@@ -89,7 +90,7 @@ public class IdContainer extends IdContainerJSON {
 	protected void commitSchema() throws Exception {
 		logger.debug("Store is " + store);
 		logger.debug("Schema is " + getSchema());
-		store.update((IdContainerSchema) getSchema());
+		store.update( getSchema());
 		updateLists();
 		
 	}
@@ -97,7 +98,7 @@ public class IdContainer extends IdContainerJSON {
 	@Override
 	public void delete() {
 		try {
-			store.delete((IdContainerSchema)getSchema());
+			store.delete(getSchema());
 
 		} catch (Exception e) {
 			logger.error("Error", e);

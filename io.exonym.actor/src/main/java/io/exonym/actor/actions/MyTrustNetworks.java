@@ -1,18 +1,37 @@
 package io.exonym.actor.actions;
 
+import io.exonym.abc.util.JaxbHelper;
+import io.exonym.lite.pojo.Rulebook;
+import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.WhiteList;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class MyTrustNetworks {
 
     private final MyTrustNetworkAndKeys lead;
     private final MyTrustNetworkAndKeys moderator;
 
+    private Rulebook rulebook;
+
+    private static final Logger logger = LogManager.getLogger(MyTrustNetworks.class);
+
 
     public MyTrustNetworks() {
         lead = openTrustNetwork(true);
         moderator = openTrustNetwork(false);
+        Path toRb = Path.of(Const.PATH_OF_STATIC, Const.RULEBOOK_JSON);
+        try {
+            this.rulebook = JaxbHelper.jsonToClass(Files.readString(toRb), Rulebook.class);
+
+        } catch (Exception e) {
+            logger.warn("---------------- Unable to open rulebook ----------------");
+
+        }
     }
 
     private MyTrustNetworkAndKeys openTrustNetwork(boolean isLead) {
@@ -78,6 +97,8 @@ public class MyTrustNetworks {
         }
     }
 
-
+    public Rulebook getRulebook() {
+        return rulebook;
+    }
 
 }

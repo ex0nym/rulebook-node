@@ -1,22 +1,13 @@
 package io.exonym.rulebook.context;
 
-import com.cloudant.client.api.CloudantClient;
-import com.cloudant.client.api.Database;
 import io.exonym.actor.storage.RootProperties;
 import io.exonym.actor.storage.SFTPLogonData;
-import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.UxException;
-import io.exonym.lite.pojo.XKey;
 import io.exonym.lite.standard.AsymStoreKey;
-import io.exonym.lite.standard.CryptoUtils;
-import io.exonym.lite.time.DateHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.crypto.Cipher;
-import java.net.URI;
 import java.net.URL;
-import java.util.LinkedList;
 
 public class RulebookNodeProperties extends RootProperties {
     
@@ -159,5 +150,10 @@ public class RulebookNodeProperties extends RootProperties {
     @Override
     protected String mandatory(String env) throws UxException {
         return super.mandatory(env);
+    }
+
+    @Override
+    public String getRulebookToVerifyUrn() {
+        return super.getRulebookToVerifyUrn();
     }
 }

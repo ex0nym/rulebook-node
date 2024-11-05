@@ -23,7 +23,7 @@ public class IndexBasic implements CouchIndex {
     }
 
     public IndexBasic(String[] fields, String name) {
-        index= JsonIndex.builder()
+        index = JsonIndex.builder()
                 .name(name)
                 .asc(fields).definition();
 

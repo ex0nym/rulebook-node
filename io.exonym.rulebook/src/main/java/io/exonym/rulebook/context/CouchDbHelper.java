@@ -3,9 +3,8 @@ package io.exonym.rulebook.context;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
-import io.exonym.lite.couchdb.UnprotectedCouchRepository;
 import io.exonym.lite.pojo.*;
-import io.exonym.lite.pojo.XKey;
+import io.exonym.lite.pojo.IdContainerSchema;
 import io.exonym.rulebook.schema.*;
 
 public class CouchDbHelper {
@@ -13,6 +12,7 @@ public class CouchDbHelper {
     public static final String EXONYM_MAP = "exonym_map";
     public static final String VIOLATIONS = "violations";
     public static final String APPEALS = "appeals";
+    public static final String PROOFS = "proofs";
     public static final String LEADS = "leads";
 
     protected static String get(String name){
@@ -126,6 +126,13 @@ public class CouchDbHelper {
         CloudantClient client = CouchDbClient.instance();
         Database db = client.database(CouchDbHelper.get(APPEALS), true);
         return new CouchRepository<>(db, Appeal.class);
+
+    }
+
+    protected static CouchRepository<ProofStore> repoProofs() throws Exception {
+        CloudantClient client = CouchDbClient.instance();
+        Database db = client.database(CouchDbHelper.get(PROOFS), true);
+        return new CouchRepository<>(db, ProofStore.class);
 
     }
 

@@ -3,9 +3,9 @@ package io.exonym.rulebook.context;
 
 import io.exonym.lite.couchdb.QueryBasic;
 import io.exonym.lite.exceptions.ProgrammingException;
+import io.exonym.lite.pojo.IdContainerSchema;
 import io.exonym.rulebook.exceptions.ItemNotFoundException;
 import io.exonym.lite.pojo.TypeNames;
-import io.exonym.rulebook.schema.IdContainerSchema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

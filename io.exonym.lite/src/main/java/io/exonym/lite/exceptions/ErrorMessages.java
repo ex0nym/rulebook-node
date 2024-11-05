@@ -16,6 +16,10 @@ public class ErrorMessages {
     public static final String HEXADECIMAL_REQUIRED= "HEXADECIMAL_REQUIRED";
     public static final String CONTEXT_NOT_FOUND= "CONTEXT_NOT_FOUND";
 
+    public static final String BLACKLISTED_MODERATOR = "BLACKLISTED_MODERATOR";
+    public static final String BLACKLISTED_LEAD = "BLACKLISTED_LEAD";
+
+
     /**
      * Generic error, when we reset a cors condition
      * Check required[]

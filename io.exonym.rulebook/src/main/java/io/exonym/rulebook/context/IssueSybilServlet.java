@@ -1,14 +1,19 @@
 package io.exonym.rulebook.context;
 
 import com.google.gson.JsonObject;
+import com.ibm.zurich.idmix.abc4trust.facades.IssuanceMessageFacade;
 import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
+import com.ibm.zurich.idmx.util.bigInt.BigIntFactoryImpl;
 import eu.abc4trust.xml.IssuanceMessage;
 import eu.abc4trust.xml.IssuanceMessageAndBoolean;
+import eu.abc4trust.xml.PseudonymInToken;
 import io.exonym.actor.actions.IdContainerJSON;
 import io.exonym.lite.connect.WebUtils;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
+import io.exonym.lite.standard.Form;
 import io.exonym.lite.standard.PassStore;
+import io.exonym.utils.storage.IdContainer;
 import io.exonym.utils.storage.ImabAndHandle;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
@@ -23,14 +28,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.UnmarshalException;
 import java.util.HashMap;
+import java.util.List;
 
 @WebServlet("/issue")
-public class IssuanceSybilServlet extends HttpServlet {
+public class IssueSybilServlet extends HttpServlet {
 
     public static final String ATT_CONTEXT = "context";
     public static final String ATT_TOKEN = "token";
     
-    private static final Logger logger = LogManager.getLogger(IssuanceSybilServlet.class);
+    private static final Logger logger = LogManager.getLogger(IssueSybilServlet.class);
     
 
     // ISSUER - INIT (Step 1)
@@ -72,20 +78,41 @@ public class IssuanceSybilServlet extends HttpServlet {
         try {
             String token = new String(Base64.decodeBase64(tokenB64), StandardCharsets.UTF_8);
             IssuanceMessage im = (IssuanceMessage) JaxbHelperClass.deserialize(token).getValue();
+            IssuanceMessageFacade imf = new IssuanceMessageFacade(im, new BigIntFactoryImpl());
+
+            List<PseudonymInToken> nyms = imf.getIssuanceToken()
+                    .getIssuanceTokenDescription()
+                    .getPresentationTokenDescription()
+                    .getPseudonym();
+
+            String sybilScope = null;
+            String sybilNym = null;
+
+            for (PseudonymInToken nym : nyms){
+                if (nym.isExclusive()){
+                    sybilScope = nym.getScope();
+                    sybilNym = Form.toHex(nym.getPseudonymValue());
+                }
+            }
+
             logger.debug(">>>>>>>>>>>>> ------------------------------------------------ ");
             logger.debug(">");
             logger.debug(">");
             logger.debug(">");
             logger.debug(">");
-            logger.debug("IssuanceMessageContent=" + im.getContent());
+            logger.debug("> IssuanceMessageContent=" + token);
             logger.debug(">");
             logger.debug(">");
             logger.debug(">");
             logger.debug(">");
 
             ImabAndHandle imab = mmw.ssiIssuerStep(context, im);
+            imab.setSybilScope(sybilScope);
+            imab.setSybilNym(sybilNym);
 
             logger.debug("handle @ sybil = "+ imab.getHandle());
+            logger.debug("nym @ sybil = "+ imab.getSybilNym());
+            logger.debug("scope @ sybil = "+ imab.getSybilScope());
             respond(imab, resp);
 
         } catch (UnmarshalException e) {
@@ -121,6 +148,8 @@ public class IssuanceSybilServlet extends HttpServlet {
         JsonObject o = new JsonObject();
         o.addProperty("imab", issue0);
         o.addProperty("h", imab.getHandle());
+        o.addProperty("nym", imab.getSybilNym());
+        o.addProperty("scope", imab.getSybilScope());
         o.addProperty("issuerUid", imab.getIssuerUID().toString());
         WebUtils.respond(resp, o);
 

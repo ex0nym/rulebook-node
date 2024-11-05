@@ -28,6 +28,8 @@ public class RootProperties extends RootPropertyFeatures {
 	private final boolean openSubscription;
 	private final boolean openSourcePublication;
 
+	private final String rulebookUrn;
+
 	/*
 	 * 
 	 */
@@ -60,6 +62,9 @@ public class RootProperties extends RootPropertyFeatures {
 			this.authorizedDomain = optional("AUTHORIZED_DOMAIN", null);
 
 			String tokenHost=optional("TOKEN_TRANSFER_HOST", null);
+
+			this.rulebookUrn=optional("RULEBOOK_URN", null);
+
 			if (tokenHost!=null){
 				int tSftpPort = Integer.parseInt(mandatory("TOKEN_TRANSFER_PORT"));
 				String tSftpUsername = mandatory("TOKEN_TRANSFER_USERNAME");
@@ -173,5 +178,9 @@ public class RootProperties extends RootPropertyFeatures {
 
 	public boolean isOpenSourcePublication() {
 		return openSourcePublication;
+	}
+
+	public String getRulebookToVerifyUrn() {
+		return rulebookUrn;
 	}
 }

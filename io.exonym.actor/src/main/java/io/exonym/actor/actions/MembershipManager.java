@@ -370,9 +370,10 @@ public class MembershipManager {
 
 			BuildIssuancePolicy bip = new BuildIssuancePolicy(null, helper.getCredentialSpec(), iUid);
 			String sybil = Namespace.URN_PREFIX_COLON + "sybil";
+
 			if ("c30".equals(sybilClass)){
-				bip.addPseudonym(sybil, true, sybil,
-						"urn:rule:protected:---cyber30-r0---");
+				bip.addPseudonym("urn:rule:protected:---cyber30-r0---", true, sybil,
+						sybil);
 				sybilClass = Rulebook.SYBIL_CLASS_ROBOT;
 
 			} else {
