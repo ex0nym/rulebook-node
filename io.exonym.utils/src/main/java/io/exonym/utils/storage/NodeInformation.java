@@ -20,7 +20,6 @@ public class NodeInformation {
 	private URI staticLeadUrl0;
 	private URI nodeUid;
 	private URI rulebookNodeUrl;
-	private URI broadcastAddress;
 	private URI leadUid;
 	private String region;
 	private String lastUpdateReceived;
@@ -51,15 +50,6 @@ public class NodeInformation {
 
 	public void setStaticNodeUrl0(URI staticNodeUrl0) {
 		this.staticNodeUrl0 = staticNodeUrl0;
-	}
-
-	@XmlElement(name = "BroadcastAddress", namespace = Namespace.EX)
-	public URI getBroadcastAddress() {
-		return broadcastAddress;
-	}
-
-	public void setBroadcastAddress(URI broadcastAddress) {
-		this.broadcastAddress = broadcastAddress;
 	}
 
 	@XmlElement(name = "NodeUID", namespace = Namespace.EX)

@@ -165,7 +165,6 @@ public abstract class AbstractNetworkMap {
         nmi.setPublicKeyB64(participant.getPublicKey().getPublicKey());
         nmi.setStaticURL0(participant.getStaticNodeUrl0());
         nmi.setLastUpdated(participant.getLastUpdateTime());
-        nmi.setBroadcastAddress(participant.getBroadcastAddress());
         nmi.setRulebookNodeURL(participant.getRulebookNodeUrl());
         nmi.setRegion(participant.getRegion());
         URI lastUid = participant.getLastIssuerUID();
@@ -275,6 +274,9 @@ public abstract class AbstractNetworkMap {
 
     public NetworkMapItemLead nmiForSybilLeadTestNet() throws Exception {
         return (NetworkMapItemLead) nmiForNode(Rulebook.SYBIL_LEAD_UID_TEST);
+    }
+    public NetworkMapItemLead nmiForSybilLeadMainNet() throws Exception {
+        return (NetworkMapItemLead) nmiForNode(Rulebook.SYBIL_LEAD_UID_MAIN);
     }
 
     public NetworkMapItemModerator nmiForSybilModTest() throws Exception {

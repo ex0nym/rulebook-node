@@ -10,6 +10,8 @@ public class RevocationRequest {
 	private ArrayList<URI> ruleUri;
 	private URI moderatorUid;
 
+	private String index;
+
 	public static final int MAX_LENGTH_OF_DESCRIPTION_BYTES = 190;
 
 	private String descriptionOfEvidence = "The requesting moderator has no evidence on file.";
@@ -55,6 +57,14 @@ public class RevocationRequest {
 
 	public void setDescriptionOfEvidence(String descriptionOfEvidence) {
 		this.descriptionOfEvidence = descriptionOfEvidence;
+	}
+
+	public String getIndex() {
+		return index;
+	}
+
+	public void setIndex(String index) {
+		this.index = index;
 	}
 }
 

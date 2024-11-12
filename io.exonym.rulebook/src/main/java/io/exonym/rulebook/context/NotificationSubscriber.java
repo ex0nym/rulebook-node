@@ -9,6 +9,7 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.parallel.Msg;
 import io.exonym.lite.pojo.NetworkMapItem;
 import io.exonym.lite.standard.CryptoUtils;
+import io.exonym.lite.time.Timing;
 import io.exonym.rulebook.schema.BroadcastStringIn;
 import io.exonym.utils.storage.NodeInformation;
 import org.apache.logging.log4j.LogManager;
@@ -24,11 +25,13 @@ public class NotificationSubscriber {
     
     private static final Logger logger = LogManager.getLogger(NotificationSubscriber.class);
     private static NotificationSubscriber instance;
+
+    private MqttClient mqttClient;
     private NetworkPublicKeyManager publicKeyManager;
     private OverrideResolver overrideResolver;
     private ExoMatrixWriter writer;
     private JoinIn joinIn0;
-    private JoinIn joinIn1;
+//    private JoinIn joinIn1;
     private ViolationIn violationIn;
     private PraIn praIn;
     private BlobManager blobManager;
@@ -49,7 +52,8 @@ public class NotificationSubscriber {
             subscribeToMosquittoTopics();
 
         } catch (UxException e) {
-            logger.info(">>>>>>>>>>>>>>>>>>>>");
+
+            logger.info(">>>>>>>>>>>>>>>>>>>>", e);
             logger.info("> NOT SUBSCRIBED");
             logger.info("> ");
             logger.info("> No error, but the node needs to be defined to subscribe.");
@@ -79,11 +83,11 @@ public class NotificationSubscriber {
         writer = new ExoMatrixWriter(mtn);
 
         joinIn0 = new JoinIn(0, writer.getPipe(), publicKeyManager);
-        joinIn1 = new JoinIn(1, writer.getPipe(), publicKeyManager);
 
         ArrayList<ArrayBlockingQueue<Msg>> pipesToJoin = new ArrayList<>();
         pipesToJoin.add(joinIn0.getPipe());
-        pipesToJoin.add(joinIn1.getPipe());
+        // joinIn1 = new JoinIn(1, writer.getPipe(), publicKeyManager);
+        // pipesToJoin.add(joinIn1.getPipe());
 
         praIn = new PraIn();
         violationIn = new ViolationIn(publicKeyManager, mtn);
@@ -100,12 +104,18 @@ public class NotificationSubscriber {
 
     private void subscribeToMosquittoTopics() throws Exception {
         try {
-            PkiExternalResourceContainer ext = PkiExternalResourceContainer.getInstance();
-            NetworkMapItem nmi = ext.getNetworkMap().nmiForSybilLeadTestNet();
-
-            UIDHelper helper = new UIDHelper(nmi.getNodeUID());
-            topics[0] = helper.getRulebookTopic() + UIDHelper.MQTT_WILDCARD;
             MyTrustNetworks mine = new MyTrustNetworks();
+            PkiExternalResourceContainer ext = PkiExternalResourceContainer.getInstance();
+            NetworkMapItem nmi = null;
+
+            if (mine.getRulebook().getDescription().isProduction()){
+                nmi = ext.getNetworkMap().nmiForSybilLeadMainNet();
+            } else {
+                nmi = ext.getNetworkMap().nmiForSybilLeadTestNet();
+            }
+            UIDHelper helper = new UIDHelper(nmi.getNodeUID());
+
+            topics[0] = helper.getRulebookTopic() + UIDHelper.MQTT_WILDCARD;
 
             if (mine.isModerator()){
                 NodeInformation info = mine.getModerator()
@@ -120,19 +130,19 @@ public class NotificationSubscriber {
                 RulebookNodeProperties props = RulebookNodeProperties.instance();
                 String id = CryptoUtils.computeSha256HashAsHex(info.getNodeUid().toString());
 
-                MqttClient client = new MqttClient(props.getMqttBroker(), id);
+                mqttClient = new MqttClient(props.getMqttBroker(), id);
 
                 MqttConnectOptions options = new MqttConnectOptions();
                 options.setCleanSession(false);
 
-                client.setCallback(new SubscriberCallback());
-                client.connect(options);
+                mqttClient.setCallback(new SubscriberCallback());
+                mqttClient.connect(options);
 
-                if (client.isConnected()){
-                    client.subscribe(topics[0]);
+                if (mqttClient.isConnected()){
+                    mqttClient.subscribe(topics[0]);
 
                     if (topics[1]!=null){
-                        client.subscribe(topics[1]);
+                        mqttClient.subscribe(topics[1]);
                     }
                     logger.info(">>>>>>>>>>>>>>>>>>>>");
                     logger.info("> SUBSCRIBER ");
@@ -147,10 +157,9 @@ public class NotificationSubscriber {
                 throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED);
 
             }
-
         } catch (NoDocumentException e) {
             logger.debug("Still setting up node");
-            throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED);
+            throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED, e);
 
         }
     }
@@ -187,8 +196,32 @@ public class NotificationSubscriber {
 
         @Override
         public void connectionLost(Throwable cause) {
-            logger.error("Connection Lost: ", cause);
+            long coeff = 2;
+            long max = 30000;
+            long wait = Timing.randomWait(1000);
+            int count = 1;
 
+            while (!mqttClient.isConnected()){
+                try {
+                    wait = wait < max ? (wait * coeff * (long)count) : wait;
+                    logger.info(">>>>>>>>>> ");
+                    logger.info("> ");
+                    logger.info("> Connection to Mosquitto lost");
+                    logger.info("> ");
+                    logger.info("> ");
+                    logger.info("> " + cause.getMessage());
+                    logger.info("> ");
+                    logger.info("> Attempting to reconnect in " + wait + "ms");
+                    logger.info("> ");
+                    Thread.sleep(wait);
+                    subscribeToMosquittoTopics();
+                    count++;
+
+                } catch (Exception e) {
+                    logger.info("Error", e);
+
+                }
+            }
         }
 
         @Override
@@ -196,5 +229,4 @@ public class NotificationSubscriber {
 
         }
     }
-
 }

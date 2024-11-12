@@ -99,7 +99,6 @@ public class NodeManager {
 				nodeInfo.setLeadUid(trustNetworkUid);
 				nodeInfo.setRulebookNodeUrl(
 						UIDHelper.ensureTrailingSlash(props.getRulebookNodeURL()));
-				nodeInfo.setBroadcastAddress(URI.create(props.getBroadcastUrl()));
 
 				nodeInfo.setNodeUid(trustNetworkUid);
 				URI staticUrl = computeStaticURL(nodeInfo.getRulebookNodeUrl(), true);
@@ -261,7 +260,6 @@ public class NodeManager {
 			NodeInformation nodeInfo = new NodeInformation();
 			nodeInfo.setNodeName(nodeName);
 			nodeInfo.setRulebookNodeUrl(rulebookNodeUrl);
-			nodeInfo.setBroadcastAddress(URI.create(props.getBroadcastUrl()));
 			nodeInfo.setNodeUid(URI.create(root));
 
 			nodeInfo.setStaticNodeUrl0(computeStaticURL(rulebookNodeUrl, false));
@@ -277,7 +275,6 @@ public class NodeManager {
 			leadParticipant.setNodeUid(lead.getNodeUid());
 			leadParticipant.setLastUpdateTime(DateHelper.currentIsoUtcDateTime());
 			leadParticipant.setPublicKey(verifiedLead.getPublicKey());
-			leadParticipant.setBroadcastAddress(nodeInfo.getBroadcastAddress());
 			leadParticipant.setAvailableOnMostRecentRequest(true);
 			leadParticipant.setStaticNodeUrl0(lead.getStaticLeadUrl0());
 
@@ -640,7 +637,7 @@ public class NodeManager {
 		currentIssuerParams.remove(addingIssuerUid);
 
 		myNetworkWrapper.addParticipant(addingNi.getNodeUid(),
-				nodeUrl, addingNi.getRulebookNodeUrl(), addingNi.getBroadcastAddress(),
+				nodeUrl, addingNi.getRulebookNodeUrl(),
 				nodeToAdd.getPublicKey(), addingNi.getRegion(),
 				addingModeratorTnw.getMostRecentIssuerParameters());
 
@@ -941,161 +938,6 @@ public class NodeManager {
 		publish(url, xml.getBytes(), "signatures.xml");
 		publish(url, ppaBytes, IdContainerJSON.uidToXmlFileName(ppa0.getPolicyUID()));
 
-	}
-
-
-	public void transferInit(URI transferUrl, PassStore store) throws Exception{
-		try {
-			try {
-				transferUrl = NodeVerifier.trainAtFolder(transferUrl);
-				
-			} catch (UxException e1) {
-				throw e1;
-				
-			}
-			try {
-				NodeVerifier v = new NodeVerifier(transferUrl.toURL());
-				if (isLead(v.getTargetTrustNetwork().getNodeInformation())){
-					copyNode(v, v.getTargetTrustNetwork(), store);
-					
-				} else {
-					throw new UxException("Only Source Nodes can be transferred");
-					
-				}
-			} catch (HubException e2) { // In
-				defineTransferXml(transferUrl, store);
-				
-			}
-		} catch (HubException e) {
-			throw new UnexpectedException("Node was corrupt!", e);
-			
-		}
-	}	
-
-	private static void copyNode(NodeVerifier v, TrustNetwork trustNetwork, PassStore store) throws Exception {
-		TrustNetworkWrapper tnw = new TrustNetworkWrapper(v.getTargetTrustNetwork());
-		NodeInformation info = tnw.getNodeInformation();
-		logger.info("Copying published data from source " + info.getStaticNodeUrl0());
-		String name = info.getNodeName() + "test";
-		NodeManager nm = new NodeManager(name);
-		RulebookNodeProperties props = RulebookNodeProperties.instance();
-		URI sourceUrl = nm.getLeadUrlForThisNode(props.getPrimaryDomain(),
-				props.getPrimaryStaticDataFolder());
-		logger.info("To " + sourceUrl);
-		info.setStaticLeadUrl0(sourceUrl);
-
-		if (!info.getNodeName().equals("adasda")){
-			throw new Exception("You need to establish the failover");
-
-		}
-		// info.setFailOverSourceUrl(URI.create(failover));
-
-		IdContainerJSON x = nm.establishNewContainer(name, store);
-		AsymStoreKey key = nm.establishKey(store, x, Const.MODERATOR);
-
-		CredentialSpecification cs = v.getCredentialSpecification();
-		PresentationPolicy ppa = v.getPresentationPolicy();
-
-		x.saveLocalResource(cs);
-		x.saveLocalResource(ppa);
-
-		KeyContainerWrapper kcw = new KeyContainerWrapper(new KeyContainer());
-
-		XKey xk = new XKey();
-		xk.setKeyUid(KeyContainerWrapper.TN_ROOT_KEY);
-		xk.setPublicKey(key.getPublicKey().getEncoded());
-		xk.setSignature(nm.signData(xk.getPublicKey(), key, null));
-		kcw.addKey(xk);
-
-		TrustNetwork tn = tnw.finalizeTrustNetwork();
-
-		String csString = IdContainerJSON.convertObjectToXml(cs);
-		String ppString = IdContainerJSON.convertObjectToXml(ppa);
-		String niString = JaxbHelper.serializeToXml(tn, TrustNetwork.class);
-
-		String csSign = NodeVerifier.stripStringToSign(csString);
-		String ppSign = NodeVerifier.stripStringToSign(ppString);
-		String niSign = NodeVerifier.stripStringToSign(niString);
-
-		byte[] csBytes = csString.getBytes();
-		byte[] ppaBytes = ppString.getBytes();
-		byte[] niBytes = niString.getBytes();
-
-		// Sign all files
-		HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
-		toSign.put(cs.getSpecificationUID(), new ByteArrayBuffer(csSign.getBytes()));
-		toSign.put(ppa.getPolicyUID(), new ByteArrayBuffer(ppSign.getBytes()));
-		toSign.put(tn.getNodeInformationUid(), new ByteArrayBuffer(niSign.getBytes()));
-
-		nm.signatureUpdateXml(key, toSign, kcw, sourceUrl);
-
-		String xml = JaxbHelper.serializeToXml(kcw.getKeyContainer(), KeyContainer.class);
-
-		nm.publish(sourceUrl, xml.getBytes(), "signatures.xml");
-		nm.publish(sourceUrl, csBytes, IdContainerJSON.uidToXmlFileName(cs.getSpecificationUID()));
-		nm.publish(sourceUrl, ppaBytes, IdContainerJSON.uidToXmlFileName(ppa.getPolicyUID()));
-		nm.publish(sourceUrl, niBytes, IdContainerJSON.uidToXmlFileName(tn.getNodeInformationUid()));
-
-	}
-
-	private void defineTransferXml(URI destinationUrl, PassStore store) throws Exception {
-		Transfer t = new Transfer();
-		DateTime dt = new DateTime(DateTimeZone.UTC);
-		dt = dt.plusDays(1);
-		t.setStatus("This Source is Active.  Destination Setup Required Before Transfer.");
-		t.setTransferRequestTime(DateHelper.currentIsoUtcDateTime());
-		t.setTransferToBeCompletedBy(DateHelper.isoUtcDateTime(dt));
-		t.setDestinationUrl(destinationUrl);
-
-		URI sourceUrl = getLeadUrlForThisNode(props.getPrimaryDomain(),
-				props.getPrimaryStaticDataFolder());
-
-		KeyContainerWrapper kcwPublic = openSignaturesContainer(sourceUrl);
-		IdContainerJSON x = openContainer(leadName, store);
-		KeyContainer kcPrivate = x.openResource("keys.xml");
-		KeyContainerWrapper kcwPrivate = new KeyContainerWrapper(kcPrivate);
-		AsymStoreKey key = openKey(kcwPrivate.getKey(KeyContainerWrapper.TN_ROOT_KEY), store);
-
-		String tString = JaxbHelper.serializeToXml(t, Transfer.class);
-
-		String tSign = NodeVerifier.stripStringToSign(tString);
-		
-		byte[] tBytes = tString.getBytes();
-
-		HashMap<URI, ByteArrayBuffer> toSign = new HashMap<>();
-		toSign.put(t.getTransferUid(), new ByteArrayBuffer(tSign.getBytes()));
-
-		signatureUpdateXml(key, toSign, kcwPublic, sourceUrl);
-		String xml = JaxbHelper.serializeToXml(kcwPublic.getKeyContainer(), KeyContainer.class);
-
-		publish(sourceUrl, xml.getBytes(), "signatures.xml");
-		publish(sourceUrl, tBytes, IdContainerJSON.uidToXmlFileName(t.getTransferUid()));
-		
-	}
-
-	public void transferOutComplete(URI transferUrl) throws HubException{
-		try {
-			// TODO
-			//NodeVerifier v = new NodeVerifier(transferUrl);
-			// rename all files except signature.xml and transfer.xml with a 'trans-' prefix
-			// This needs doing after the proper publishing protocols are in place.
-			
-		} catch (Exception e) {
-			throw new HubException("The node has not yet been copied", e);
-			
-		}
-	}
-	
-	public ArrayList<String> computeAllNetworks(){
-		// TODO 
-		return null;
-		
-	}
-
-	public ArrayList<String> computeAllAcceptedNodes(){
-		// TODO
-		return null;
-		
 	}
 
 	public static AsymStoreKey openKey(XKey x, PassStore store) throws Exception {

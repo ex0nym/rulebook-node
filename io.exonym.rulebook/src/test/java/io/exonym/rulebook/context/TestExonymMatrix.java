@@ -6,12 +6,15 @@ import io.exonym.actor.actions.*;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.pojo.*;
+import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.WhiteList;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.rulebook.schema.IdContainer;
+import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.paho.client.mqttv3.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +23,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class TestExonymMatrix {
     
@@ -28,35 +32,116 @@ public class TestExonymMatrix {
     private static NetworkMapWeb networkMap;
     private static RulebookNodeProperties props;
 
-    static{
-        try {
-            props = RulebookNodeProperties.instance();
-            props.getNodeRoot();
-            networkMap = new NetworkMapWeb();
-            Cache cache = new Cache();
-            PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
-            external.setNetworkMapAndCache(networkMap, cache);
+    public static final String PASSWORD = "dmsdfwsfgjfjgdfTdg";
 
-        } catch (Exception e) {
-            logger.info("Error", e);
+    public static final String KEY_DO_NOT_USE = "{\n" +
+            "  \"publicKey\": \"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt+vufZajumJ2CV+ZSfeVRxH5z4JkcapwCGAxsFzvVuFUWqpPS8ruqOF9EQAXA4ho0S41QHAevq0RwWlB2ODLr7l6pDqtfQ1DR3EtJ5rnVTXN7h6qrs53YGfvSgpFf+PawfpYDw3xEwMeHpjZw0N/LwjoSUzWUGH1dhf/nCFyrAmQw1SB/Qbz8TnjwIpxfqMXFLB9Vn9OhJWEbs62BUSP815vaaRBsrBmAFYo/UV/s6mHGNFF3IheXyNZqHwgpsdyRSC3BxVEoDerE1rHI+V9nhGjhm3uPd04omB3l2yg/I9N09NRYcfCqyoBeGQa5SKMEGUSUwV41pFybvaT/XopEwIDAQAB\",\n" +
+            "  \"privateKey\": \"es5cV3YGQL1Dv/7UJYg/MUOrAwLJdBMukvVSmGFwQH15Fox3d0py22FnLVWWS7E1yqW9p8bAbzCoOUYluVJdEAo8KoyuocuPHiBYeAkBJaUCinygcesz1cwvXiiQpluwIxV1xeHZRHoDxNJveGOez4LW5X2WtXXBffG2LEXG3qHxGqPeu1VwyQ5fBj+oUaoERGzIojX1TJioqEwSMCMk10rJ17YUgOw0hOmO0soPGaUcxcILuIQnNsu6d9W8wYzjkYJSIrHzsKL2H445TLpe6EfllM6y3PQEQScYkz/oQfAJHgTQlGwZe/o6zAjk4n/mmC+OfK+fjKOvbIF92idKZAj0+JZP7eqt8eHCEXuj5BL55RUZelHPDbVi/1BYo9TN8BbxMoeYJjieFWMVNCwB6zggLXYVeFRKov3hpk27lXCutr/bsBNiF/2442eGZ/1/AfodTvaKpImHvFsElRT7pWgN1Xs7SzKW21kCuwLluUHjfCN2zsP7VZlft0y2LXulUEEmL+10tmYqj8mlpAe81fXGtbSdUYeSV/B4VHqkUvxKdzAcZQBi/yV7qkVfVjqAxEfv/aN5vxTRNQsCXlUjgquxXg9fa5j+1/UMXnGRNUvB5Pda2H4jLzGPNDZhE7VlMNNBAubOwELZedIZHEAOY4UQQUk4dphtLncClzaEH7wNzXFd0dZMVv3bt31gacIzjne7ofQxT3hKr1P3z8b2i2gF6MTLnw4FF5kklqsfz1DvX0AIMhoWnR+6oFHidTM2KFB+PRflPupCdPht9XTxSiJtG7RO6m4gILCP8wBqGDjpRQopDhXR1J1WaTFxGIh4sgW37WJMO5TLh7JcOt6reKAWvVRW8baRbr2deWbDNq8/NjTUNI1k3bn/agfKfrJGctXaCX0v7ENZGfLnH6dm7kopcp8/RAxiQXgnEc8GlNSvCx/DUOvjc6utfxz4qUbX1Gb44iEqGMaGVozywsIALXz70qLtx3nmKRxq9XricMIG1Ai2OyvKLYEL6Dt+3IwK5UHs2NcbU+lhEH0ZTVrJkdIJU38zkAcs8GApktGrCLi2VXR8y3miX+sx7bH+bdLBfJe/+b5J5i/rAXUPubWsmY+dQxP9qYjnH/ncQW8/eMepKRGv4s29VFkySp3TbO1D/Uvrpb3S1pIGDW3qc1SVbFb08OSPnVumcNvlTtpuNtrzTN5HjjXoI63Ru5HsL6IrGoIzWGQFiPG8123DXpSRdhxFYKBYyDWLDYF096xlnSAEKpLMw4UZDr2vR2CxS/8x5+Y+rnsCNyMSJER/bOwwpIYgFRaqga8vWdrNm/irw+A987I3OdW6zijW2w0+N6OU2r3MkCoamxhweQOgkaVrEN/TzEoStSBThVH0ZsgqGgPBIh6I17FvYRxePBTrmgzOx+53ZSNXcbN22qALBqpBuk+19Nk2JQvf6TmK9766DdAmFSpkEjATTNUdEA3dHXRbbCr2v9a3ElQvGWA9XvovrJqiQtp5EXFCdWMnEPvjIlgk2Cj91/V6oh6nYYdzYUsoBlovvQiWbKhuwBEQ+44ORhLDuTpLZIdqJBcMg47DOEF7iL3UL/nwmlSvREiPEVaYEsxU7myhRCXzelMgMfel1daTdhUjjFUzndSl2qhnAP0\\u003d\"\n" +
+            "}";
 
-        }
-    }
+    private static AsymStoreKey doNotUse;
+
+//    static{
+//        try {
+//            props = RulebookNodeProperties.instance();
+//            props.getNodeRoot();
+//            networkMap = new NetworkMapWeb();
+//            Cache cache = new Cache();
+//            PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
+//            external.setNetworkMapAndCache(networkMap, cache);
+//
+//        } catch (Exception e) {
+//            logger.info("Error", e);
+//
+//        }
+//    }
     
 
     @BeforeAll
     static void beforeAll() throws Exception {
+//        try {
+//            XKey k = XKey.createNew(PASSWORD);
+//            logger.info(JaxbHelper.gson.toJson(k));
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+
+        XKey x = JaxbHelper.gson.fromJson(KEY_DO_NOT_USE, XKey.class);
+        doNotUse = XKey.assembleAsym(PASSWORD, x);
+
 
     }
 
+
+
+
     @Test
     void name() {
+//        String uid = UUID.randomUUID().toString()
+//                .replaceAll("-", "");
+
+        String uid = "c50296aaec9a493397a706153a7ba9b6";
+
+        String target = "wss://ps.cyber30.io:";
+
+        DummySubscriber ds = new DummySubscriber("/hello/#", "wss://ps.cyber30.io:9000", uid);
+//        try {
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        System.exit(1);
+
+
+        MqttClient mqttClient = null;
         try {
-            URI modUid = URI.create("urn:rulebook:trustworthy-leaders:exonym:exonym-leads:9f87ae0387e1ac0c1c6633a90ad674f9564035624f490fe92aba28c911487691");
-            new NodeVerifier(modUid);
+            String username = "testuser";
+            mqttClient = new MqttClient(target  + "9001", username);
+
+            mqttClient.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable throwable) {
+                    logger.info("Lost");
+                }
+
+                @Override
+                public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
+
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
+                    logger.info("Delivery complete");
+                }
+            });
+
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(true);
+            options.setPassword("helloworld".toCharArray());
+            String jwt = doNotUse.generateJwt(username, 1);
+            options.setUserName(username);
+            mqttClient.connect(options);
+
+            MqttMessage m = new MqttMessage("message from publisher".getBytes(StandardCharsets.UTF_8));
+            m.setQos(2);
+            m.setRetained(true);
+
+            mqttClient.publish("/hello", m);
 
         } catch (Exception e) {
-            logger.error("Error", e);
+            logger.info("Error", e);
+
+        } finally {
+            if (mqttClient!=null){
+                try {
+                    if (mqttClient.isConnected()){
+                        mqttClient.disconnect();
+                    }
+                } catch (MqttException e) {
+                    logger.info("Error", e);
+                }
+            }
         }
     }
 
@@ -118,7 +203,7 @@ public class TestExonymMatrix {
         try {
             WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
             wtn.setupWiderTrustNetwork();
-            wtn.addLead(URI.create("http://exonym-x-03:8080/static/lead/"), false);
+            wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), true);
 //            wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), false);
 
             wtn.publish();

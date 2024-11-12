@@ -90,7 +90,7 @@ public class WiderTrustNetworkManagement {
         NetworkParticipant participant = this.tnw.addParticipant(
                 lead.getNodeUid(),
                 lead.getStaticLeadUrl0(),
-                lead.getRulebookNodeUrl(), lead.getBroadcastAddress(),
+                lead.getRulebookNodeUrl(),
                 v.getPublicKey(),
                 lead.getRegion(),
                 tnw.getMostRecentIssuerParameters());

@@ -13,7 +13,6 @@ public class OverrideRequest implements VioIndexable {
 
     public static final String TYPE_PLAIN = "PLAIN";
 
-    private String kid, key;
     private String type;
     private String nibble6;
     private String x0Hash;
@@ -24,10 +23,7 @@ public class OverrideRequest implements VioIndexable {
         StringBuilder builder = new StringBuilder();
         builder.append(": The following attributes were required and null: ");
 
-        if (kid==null || key==null){
-            throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE);
-
-        } if (type==null){
+        if (type==null){
             builder.append("type: ");
 
         } else {
@@ -53,22 +49,6 @@ public class OverrideRequest implements VioIndexable {
             throw new UxException(ErrorMessages.INCORRECT_PARAMETERS + builder);
 
         }
-    }
-
-    public String getKid() {
-        return kid;
-    }
-
-    public void setKid(String kid) {
-        this.kid = kid;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
     }
 
     public String getType() {

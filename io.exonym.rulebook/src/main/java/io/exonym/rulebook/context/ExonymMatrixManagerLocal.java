@@ -294,6 +294,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
                         ArrayList<Violation> violations = row.getViolations();
 
                         for (Violation violation : violations){
+                            logger.info("Violation on settlement: override(" + isOverride + ")" + JaxbHelper.gson.toJson(violation));
                             if (violation.getTimestamp().equals(vio.getTimeOfViolation())){
                                 if (isOverride){
                                     violation.setOverride(true);
@@ -332,6 +333,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
      * An existing user has been revoked and a violation needs adding
      */
     protected void addViolation(String x0, Violation violation) throws Exception {
+        logger.debug("Adding violation - for x0=" + x0);
         String nodeUrl = this.myNmim.getStaticURL0().toString();
         openExonymMatrix(nodeUrl, x0, this.xList, this.root);
         ExonymMatrixRow row = this.matrix.findExonymRow(x0);
@@ -348,6 +350,7 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
                     if (!xN.equals("null")){
                         violation.blankForStorage();
                         row.getViolations().add(violation);
+
                         publish(this.xList);
 
                     } else {
@@ -426,9 +429,9 @@ public class ExonymMatrixManagerLocal extends ExonymMatrixManagerAbstract {
         Path n6Path0 = Path.of(fileSystemPath.toString(), Const.MODERATOR,
                 computeN6PathToFile(matrix.getNibble3(), matrix.getNibble6(), xOrYList));
 
-        logger.debug(pokePath0);
-        logger.debug(n3Path0);
-        logger.debug(n6Path0);
+        logger.debug("writing exonym matrix file=" + pokePath0);
+        logger.debug("writing exonym matrix file=" + n3Path0);
+        logger.debug("writing exonym matrix file=" + n6Path0);
 
         writeLocal(pokePath0, pokeString);
         writeLocal(n3Path0, n3);

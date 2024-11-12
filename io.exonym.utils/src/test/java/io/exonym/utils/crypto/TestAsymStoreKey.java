@@ -11,12 +11,61 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class TestAsymStoreKey {
     
     private static final Logger logger = LogManager.getLogger(TestAsymStoreKey.class);
     private static byte[] bytes = "test".getBytes(StandardCharsets.UTF_8);
+
+    @Test
+    void testPem() {
+        try {
+            AsymStoreKey key = new AsymStoreKey();
+            String k = key.getPublicKeyAsPem();
+            System.out.println(k);
+
+        } catch (IOException e) {
+            logger.error("Error", e);
+            assert false;
+
+
+        }
+    }
+
+    @Test
+    void generateJwt() {
+        AsymStoreKey key = new AsymStoreKey();
+        String jwt = key.generateJwt("mqtt-client", 60);
+        System.out.println(jwt);
+        try {
+            key.verifyJwt(jwt, null);
+            assert true;
+
+        } catch (Exception e) {
+            logger.error("Error", e);
+            assert false;
+        }
+        try {
+            key.verifyJwt(jwt, "test");
+            assert false;
+
+        } catch (Exception e) {
+            logger.error("Error", e);
+            assert true;
+        }
+        try {
+            key.verifyJwt(jwt, "mqtt-client");
+            assert true;
+
+        } catch (Exception e) {
+            logger.error("Error", e);
+            assert false;
+        }
+
+
+    }
 
     @Test
     void serializeReadUsePublicKeyThenPrivate() {

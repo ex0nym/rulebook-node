@@ -12,7 +12,6 @@ public class NetworkParticipant {
 	private String trustNetworkName;
 	private URI staticNodeUrl0;
 	private URI rulebookNodeUrl;
-	private URI broadcastAddress;
 	private URI nodeUid;
 	private URI lastIssuerUID;
 	private String lastUpdateTime;
@@ -54,15 +53,6 @@ public class NetworkParticipant {
 
 	public void setStaticNodeUrl0(URI staticNodeUrl0) {
 		this.staticNodeUrl0 = staticNodeUrl0;
-	}
-
-	@XmlElement(name = "BroadcastAddress", namespace = Namespace.EX)
-	public URI getBroadcastAddress() {
-		return broadcastAddress;
-	}
-
-	public void setBroadcastAddress(URI broadcastAddress) {
-		this.broadcastAddress = broadcastAddress;
 	}
 
 	@XmlElement(name = "LastUpdateTime", namespace = Namespace.EX)

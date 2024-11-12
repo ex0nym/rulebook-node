@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.abc4trust.xml.*;
 import io.exonym.actor.actions.*;
+import io.exonym.exceptions.PolicyNotSatisfiedException;
 import io.exonym.helpers.Parser;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.exceptions.ErrorMessages;
@@ -15,7 +16,6 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.NetworkMapItemModerator;
 import io.exonym.lite.pojo.ProofStore;
 import io.exonym.lite.pojo.Rulebook;
-import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.rulebook.schema.EndonymToken;
 import io.exonym.rulebook.schema.IdContainer;
@@ -27,7 +27,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -101,27 +100,33 @@ public class VerifySupportSingleton {
 
     protected String verifyToken(SsoChallenge challengeAndToken) throws Exception {
 
-        PresentationToken token = Parser.parsePresentationToken(
-                challengeAndToken.getToken());
+        try {
+            logger.info("Token is " + challengeAndToken.getToken());;
+            PresentationToken token = Parser.parsePresentationToken(
+                    challengeAndToken.getToken());
 
-        PresentationPolicyAlternatives ppa = juxtaposeTokenAndSsoChallenge(
-                challengeAndToken, token);
-        owner.verifyClaim(ppa, token);
+            PresentationPolicyAlternatives ppa = juxtaposeTokenAndSsoChallenge(
+                    challengeAndToken, token);
+            owner.verifyClaim(ppa, token);
 
-        JsonObject result = new JsonObject();
-        byte[] compressedToken = produceEndonym(token, result);
+            JsonObject result = new JsonObject();
+            byte[] compressedToken = produceEndonym(token, result);
 
-        if (challengeAndToken.getIndex()!=null){
-            logger.info("Proof verified... compressing token and producing identifiers and storing");
-            storeToken(challengeAndToken.getIndex(), compressedToken, result);
+            if (challengeAndToken.getIndex()!=null){
+                logger.info("Proof verified... compressing token and producing identifiers and storing");
+                storeToken(challengeAndToken.getIndex(), compressedToken, result);
 
-        } else {
-            logger.info("Proof verified... compressing token and producing identifiers and responding with token for storage");
-            result.addProperty("tokenCompressedB64", Base64.encodeBase64String(compressedToken));
+            } else {
+                logger.info("Proof verified... compressing token and producing identifiers and responding with token for storage");
+                result.addProperty("tokenCompressedB64", Base64.encodeBase64String(compressedToken));
+
+            }
+            return result.toString();
+
+        } catch (PolicyNotSatisfiedException e) {
+            throw new UxException(ErrorMessages.REVOKED_OR_MOD_NOT_ACCEPTED_TRY_JOIN, e);
 
         }
-        return result.toString();
-
     }
 
     private byte[] produceEndonym(PresentationToken token, JsonObject result) {

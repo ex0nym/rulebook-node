@@ -37,7 +37,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-        - io.exonym.rulebook/conf/e-vanilla-s.env
+        - io.exonym.rulebook/conf/sybil-lead0-mod0.env
     volumes:
       - ~/github/rulebook-node/io.exonym.rulebook/static/sybil-exonym:/var/www/html/static
     networks:
@@ -60,7 +60,7 @@ services:
     ports:
       - "8081:8080"
     env_file:
-      - io.exonym.rulebook/conf/e-vanilla-sx.env
+      - io.exonym.rulebook/conf/c30-lead0-mod0.env
     volumes:
       - ~/github/rulebook-node/io.exonym.rulebook/static/rulebook-node0:/var/www/html/static
     networks:
@@ -83,7 +83,7 @@ services:
     ports:
       - "8082:8080"
     env_file:
-      - io.exonym.rulebook/conf/e-vanilla-x.env
+      - io.exonym.rulebook/conf/c30-mod01.env
     volumes:
       - ~/github/rulebook-node/io.exonym.rulebook/static/rulebook-node1:/var/www/html/static
     networks:

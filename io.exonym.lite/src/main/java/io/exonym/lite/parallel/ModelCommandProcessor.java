@@ -35,6 +35,7 @@ public abstract class ModelCommandProcessor implements Runnable {
 
 	@Override
 	public void run() {
+		onStart();
 		Thread currentThread = Thread.currentThread();
 		logger.info("Started " + currentThread.getName());
 		
@@ -79,7 +80,8 @@ public abstract class ModelCommandProcessor implements Runnable {
 		
 	}
 
-	protected abstract void periodOfInactivityProcesses(); 
+	protected abstract void periodOfInactivityProcesses();
+	protected void onStart() {}
 
 	protected abstract void receivedMessage(Msg msg);
 	

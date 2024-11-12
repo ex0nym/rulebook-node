@@ -281,10 +281,12 @@ public abstract class StandardAuthenticator {
 
                         }
                     } else {
+                        logger.info("kid=" + kid);
                         throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE, "kid or key was unknown");
 
                     }
                 } catch (NoDocumentException e) {
+                    logger.info("kid=" + kid);
                     throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE, "kid or key was incorrect");
 
                 }

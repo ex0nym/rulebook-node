@@ -1,9 +1,20 @@
 package io.exonym.lite.standard;
 
 import io.exonym.lite.exceptions.ErrorMessages;
+import io.exonym.lite.time.DateHelper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -11,14 +22,11 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.MGF1ParameterSpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.util.Date;
 
 public class AsymStoreKey implements Serializable{
 
@@ -322,6 +330,15 @@ public class AsymStoreKey implements Serializable{
 
 		}
 	}
+
+	public String getPublicKeyAsPem() throws IOException {
+		StringWriter writer = new StringWriter();
+		try (JcaPEMWriter pemWriter = new JcaPEMWriter(writer)){
+			logger.info(publicKey);
+			pemWriter.writeObject(publicKey);
+		}
+		return writer.toString();
+	}
 	
 	public boolean isKeyPair(){
 		return this.privateKey!=null;
@@ -333,9 +350,31 @@ public class AsymStoreKey implements Serializable{
 		
 	}
 
-	public static void main(String[] args) throws Exception {
-		logger.debug("Hello");
-
+	public String generateJwt(String subject, long expiryMins){
+		long ms = expiryMins * 60l * 1000l;
+		long now = DateHelper.getCurrentUtcMillis();
+		Date t0 = new Date(now);
+		Date t1 = new Date(now + ms);
+		return Jwts.builder()
+				.setSubject(subject)
+				.setIssuedAt(t0)
+				.setExpiration(t1)
+				.signWith(privateKey, SignatureAlgorithm.RS256)
+				.compact();
 
 	}
+
+
+	public boolean verifyJwt(String token, String requireSubject) throws Exception {
+		Jws<Claims> claims = Jwts.parserBuilder()
+				.setSigningKey(this.publicKey)
+				.requireSubject(requireSubject)
+				.build()
+				.parseClaimsJws(token);
+		System.out.println(claims.toString());
+
+		return true;
+
+	}
+
 }

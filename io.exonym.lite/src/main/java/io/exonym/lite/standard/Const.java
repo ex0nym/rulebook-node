@@ -21,7 +21,7 @@ public class Const {
 	public static final String RULEBOOK_JSON = "rulebook.json";
 
 	public static final String SIGNATURES_XML = "signatures.xml";
-	public static final String LEADS_XML = "leads.xml";
+	public static final String LEADS_XML = "leads-local.xml";
 
 	public static final URI TRUST_NETWORK_UID = URI.create("urn:rulebook:trust-network:ni");
 

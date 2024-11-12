@@ -47,6 +47,8 @@ public class MembershipManager {
 
 	private CredentialSpecification sybilC = null;
 
+	private boolean production = false;
+
 	//
 	// This appears to only be used for Sybil onboarding.
 	// I'm somewhat confused and it appears to be an artifact
@@ -54,8 +56,11 @@ public class MembershipManager {
 	//
 	public MembershipManager(String networkName) throws Exception {
 		nodeManager = new NodeManager(networkName);
-		trustNetwork = nodeManager.openMyTrustNetwork(false);
+		MyTrustNetworks mtn = new MyTrustNetworks();
+		this.production = mtn.getRulebook().getDescription().isProduction();
+		trustNetwork = mtn.getModerator().getTrustNetwork();
 		info = trustNetwork.getNodeInformation();
+
 		if (info.getNodeName()==null) {
 			throw new NullPointerException("Node Name");
 			
@@ -86,8 +91,11 @@ public class MembershipManager {
 			logger.debug("Calling ssiIssuerInit - it was null");
 			issuer = new ExonymIssuer(xIssuer);
 			issuer.openContainer(store.getDecipher());
-			sybilC = xIssuer.openResource(URI.create(Rulebook.SYBIL_RULEBOOK_UID_TEST + ":c"));
-
+			if (production){
+				sybilC = xIssuer.openResource(URI.create(Rulebook.SYBIL_RULEBOOK_UID_MAIN + ":c"));
+			} else {
+				sybilC = xIssuer.openResource(URI.create(Rulebook.SYBIL_RULEBOOK_UID_TEST + ":c"));
+			}
 		}
 		issuanceData = new SybilIssuanceData(context, sybilClass, sybilC);
 		issuanceData.setStore(store);

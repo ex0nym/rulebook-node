@@ -27,4 +27,11 @@ public class Timing {
 		return (System.currentTimeMillis() - start); 
 		
 	}
+
+	public static long randomWait(int maxMs){
+		double rnd = Math.random() * 10E6;
+		rnd = rnd % maxMs;
+		return (long) rnd;
+
+	}
 }

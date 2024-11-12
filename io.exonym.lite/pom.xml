@@ -17,13 +17,31 @@
 	<name>io.exonym.lite</name>
 	<packaging>jar</packaging>
 	<description>Lightweight Classes</description>
-  <build>
 
-	<resources>
-		<resource>
-		  <directory>src/main/resources</directory>
-		</resource>
-	</resources>
+	<dependencies>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<resources>
+			<resource>
+			  <directory>src/main/resources</directory>
+			</resource>
+		</resources>
     </build>
   
 </project>

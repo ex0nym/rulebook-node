@@ -47,7 +47,7 @@ public class ErrorMessages {
     /**
      *
      */
-    public static final String REVOKED = "REVOKED";
+    public static final String REVOKED_OR_MOD_NOT_ACCEPTED_TRY_JOIN = "REVOKED_OR_MOD_NOT_ACCEPTED_TRY_JOIN";
     public static final String REVOCATION_EVIDENCE_DESCRIPTION_MUST_BE_190_BYTES_OR_LESS = "REVOCATION_EVIDENCE_DESCRIPTION_MUST_BE_190_BYTES_OR_LESS";
 
     /**
@@ -418,4 +418,5 @@ public class ErrorMessages {
     public static final String BLANK_RULE_URI = "BLANK_RULE_URI";
     public static final String NO_OUTSTANDING_APPEALS = "NO_OUTSTANDING_APPEALS";
     public static final String TIME_OUT = "TIME_OUT";
+    public static final String OVERRIDDEN_CAN_REISSUE = "OVERRIDDEN_CAN_REISSUE";
 }

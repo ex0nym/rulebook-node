@@ -94,11 +94,6 @@ public class RulebookNodeProperties extends RootProperties {
         return super.getNodeRoot();
     }
 
-    @Override
-    protected String getBroadcastUrl() {
-        return super.getBroadcastUrl();
-    }
-
 
     @Override
     public String getRulebookNodeURL() {
@@ -126,8 +121,8 @@ public class RulebookNodeProperties extends RootProperties {
     }
 
     @Override
-    public boolean isOpenSourcePublication() {
-        return super.isOpenSourcePublication();
+    public boolean isAllowLeadPublication() {
+        return super.isAllowLeadPublication();
     }
 
 

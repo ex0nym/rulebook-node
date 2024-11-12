@@ -27,7 +27,7 @@ public class RegisterLeadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            if (RulebookNodeProperties.instance().isOpenSourcePublication()){
+            if (RulebookNodeProperties.instance().isAllowLeadPublication()){
                 HashMap<String, String> in = WebUtils.buildParams(req, resp);
                 if (in.containsKey("test")){
                     addToLeadList(in, resp);

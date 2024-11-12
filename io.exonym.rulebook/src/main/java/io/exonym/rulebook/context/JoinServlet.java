@@ -128,7 +128,9 @@ public class JoinServlet extends HttpServlet {
 
             }
         } catch (PenaltyException e) {
-            penalty(e.getReport(), join, message, issuanceToken, resp);
+            penalty(e.getReport(), join, message,
+                    ErrorMessages.OVERRIDDEN_CAN_REISSUE.equals(e.getMessage()),
+                    issuanceToken, resp);
 
         } catch (UxException e) {
             WebUtils.processError(e, resp);
@@ -141,10 +143,14 @@ public class JoinServlet extends HttpServlet {
         }
     }
 
-    private void penalty(ApplicantReport report, JoinProcessor join, IssuanceMessage message, IssuanceToken issuanceToken, HttpServletResponse resp) {
+    private void penalty(ApplicantReport report, JoinProcessor join,
+                         IssuanceMessage message, boolean isOverride,
+                         IssuanceToken issuanceToken,
+                         HttpServletResponse resp) {
         try {
-            RejoinCriteria rejoinCriteria = join.evalPenaltyReport(report, message, issuanceToken);
+            RejoinCriteria rejoinCriteria = join.evalPenaltyReport(report, message, issuanceToken, isOverride);
             String json = JaxbHelper.gson.toJson(rejoinCriteria);
+            logger.info(json);
             resp.getWriter().write(json);
 
         } catch (UxException e) {

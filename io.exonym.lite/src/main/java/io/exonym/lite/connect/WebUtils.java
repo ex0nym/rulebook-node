@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.JAXBElement;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -397,4 +398,9 @@ public class WebUtils {
 
     }
 
+    public static void logDebugProtect(String message, Object obj){
+        if (logger.isDebugEnabled()){
+            logger.debug(message + " " + GSON.toJson(obj));
+        }
+    }
 }

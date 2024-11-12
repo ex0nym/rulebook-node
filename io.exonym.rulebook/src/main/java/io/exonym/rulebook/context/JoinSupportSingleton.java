@@ -54,6 +54,8 @@ public class JoinSupportSingleton {
 
     private JoinSupportSingleton() throws Exception {
 
+        MyTrustNetworks mtn = new MyTrustNetworks();
+        boolean prod = mtn.getRulebook().getDescription().isProduction();
         this.networkMap = new NetworkMapWeb();
         this.cache = new Cache();
         this.external.setNetworkMapAndCache(this.networkMap, this.cache);
@@ -65,8 +67,11 @@ public class JoinSupportSingleton {
 
         this.myModeratorHelper = new UIDHelper(this.myModerator.getLastIssuerUID());
 
-        this.sybilHelper = new UIDHelper(this.networkMap
-                .nmiForSybilModTest().getLastIssuerUID());
+        NetworkMapItemModerator nmiSybilMod = (prod ?
+                this.networkMap.nmiForSybilMainNet() :
+                this.networkMap.nmiForSybilModTest());
+
+        this.sybilHelper = new UIDHelper(nmiSybilMod.getLastIssuerUID());
 
         this.myModContainer = new IdContainer(myModerator.getModeratorName());
 

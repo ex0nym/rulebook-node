@@ -22,7 +22,6 @@ public class NetworkMapItem extends AbstractCouchDbObject {
     private URI leadUID;
     private URI nodeUID;
     private URI rulebookNodeURL;
-    private URI broadcastAddress;
     private URI staticURL0;
     private byte[] publicKeyB64;
     private URI lastIssuerUID;
@@ -49,15 +48,6 @@ public class NetworkMapItem extends AbstractCouchDbObject {
 
     public void setNodeUID(URI nodeUID) {
         this.nodeUID = nodeUID;
-    }
-
-
-    public URI getBroadcastAddress() {
-        return broadcastAddress;
-    }
-
-    public void setBroadcastAddress(URI broadcastAddress) {
-        this.broadcastAddress = broadcastAddress;
     }
 
     public byte[] getPublicKeyB64() {

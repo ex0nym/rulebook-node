@@ -62,7 +62,6 @@ public class JoinProcessor {
                     "Please be patient while the administrator sets up this node");
 
         }
-
     }
 
     protected String joinChallenge(boolean qr, boolean isAppeal) throws Exception {
@@ -123,21 +122,28 @@ public class JoinProcessor {
 
     protected RejoinCriteria evalPenaltyReport(ApplicantReport report,
                                      IssuanceMessage message,
-                                     IssuanceToken token) throws UxException {
+                                     IssuanceToken token, boolean isOverride) throws UxException {
 
+        logger.info("Evaluating the penalty report: isOverride=" + isOverride);
+        String x0Hash = CryptoUtils.computeSha256HashAsHex(report.getX0());
+        DateTime tOffence = report.getMostRecentOffenceTimeStamp();
+        String t0 = DateHelper.isoUtcDateTime(tOffence);
+        Vio vio = targetWithHistory(x0Hash, report.getN6(), t0);
         JoinSupportSingleton joinSupport = JoinSupportSingleton.getInstance();
         RulebookGovernor governor = joinSupport.getGovernor();
 
-        DateTime tOffence = report.getMostRecentOffenceTimeStamp();
-        String t0 = DateHelper.isoUtcDateTime(tOffence);
-        String x0Hash = CryptoUtils.computeSha256HashAsHex(report.getX0());
-
-        Vio vio = targetWithHistory(x0Hash, report.getN6(), t0);
         ArrayList<Penalty> penalties = governor.getPenaltiesMaxIndex0(
                 vio.getHistoric());
 
         RejoinCriteria rejoin = applyPenalty(penalties.get(0), t0, vio);
 
+        if (isOverride){
+            rejoin.setCanRejoin(true);
+            rejoin.setPenaltyType(null);
+            rejoin.setBannedLiftedUTC("Overridden");
+            rejoin.setAppealUrl(null);
+
+        }
         if (rejoin.isCanRejoin()){
             return settlePenalty(rejoin, message, token, vio);
 
@@ -169,7 +175,11 @@ public class JoinProcessor {
         String type = penalty.getType();
         result.setPenaltyType(type);
         // N.B: this will need to be modified when cascading revocation is implemented.
+        logger.debug("Vio@Penalty" + vio);
         result.getRevokedModerators().add(vio.getModOfVioUid());
+        result.setTovutc(vio.getTimeOfViolation());
+        result.setX0Hash(vio.getX0Hash());
+        result.setNibble6(vio.getNibble6());
 
         if (Penalty.TYPE_TIME_BAN.equals(type)){
             return applyTimeban(result, penalty, t0);
@@ -194,6 +204,7 @@ public class JoinProcessor {
         } else {
             ZonedDateTime timeOfBan = ZonedDateTime.parse(t0,
                     DateTimeFormatter.ISO_ZONED_DATE_TIME);
+
 
             ChronoUnit timeUnit = ChronoUnit.valueOf(
                     penalty.getDenomination().toUpperCase());
@@ -323,6 +334,14 @@ public class JoinProcessor {
 
             RejoinCriteria rejoin = applyPenalty(appliedPenalty, result.getTimeOfViolation(), vio);
             result.setBanLifted(rejoin.getBannedLiftedUTC());
+            String tov = DateHelper.isoUtcDateTime(report.getMostRecentOffenceTimeStamp().getMillis());
+            String x0Hash = CryptoUtils.computeSha256HashAsHex(report.getX0());
+            rejoin.setTovutc(tov);
+            result.setX0Hash(x0Hash);
+            rejoin.setX0Hash(x0Hash);
+
+            rejoin.setNibble6(report.getN6());
+            result.setNibble6(report.getN6());
 
             AppealTransaction history0 = new AppealTransaction();
             history0.setActor(AppealTransaction.ACTOR_PRODUCER);
@@ -510,7 +529,7 @@ public class JoinProcessor {
             throw new UxException(ErrorMessages.NO_OUTSTANDING_APPEALS);
 
         } else {
-            logger.debug("generateApplicantReport(): " + JaxbHelper.gson.toJson(applicantReport));
+            WebUtils.logDebugProtect("generateApplicantReport(): ", applicantReport);
 
         }
         return applicantReport;
@@ -521,8 +540,7 @@ public class JoinProcessor {
         ArrayList<String> result = new ArrayList<>();
         ApplicantReport applicantReport = performSearch(token, support.getMyRules());
 
-        logger.debug("verifyConditionsToJoin(applicantReport)",
-                () -> JaxbHelper.gson.toJson(applicantReport));
+        WebUtils.logDebugProtect("verifyConditionsToJoin(applicantReport) ", applicantReport);
 
         if (applicantReport!=null){
             if (!applicantReport.getExceptions().isEmpty()){
@@ -542,8 +560,14 @@ public class JoinProcessor {
 
             }
             if (applicantReport.isUnresolvedOffences()){
-                logger.info(JaxbHelper.gson.toJson(applicantReport));
                 PenaltyException e = new PenaltyException(ErrorMessages.BANNED_UNTIL);
+                e.setReport(applicantReport);
+                throw e;
+
+            }
+            ExonymDetailedResult mostRecent = applicantReport.getDetailedResults().get(0);
+            if (mostRecent.isOverridden()){
+                PenaltyException e = new PenaltyException(ErrorMessages.OVERRIDDEN_CAN_REISSUE);
                 e.setReport(applicantReport);
                 throw e;
 
@@ -560,8 +584,8 @@ public class JoinProcessor {
                 this.props.getNodeRoot());
 
         ExonymResult result = network.search();
-        logger.debug("Will expand results if not null: ",
-                ()-> JaxbHelper.gson.toJson(result));
+
+        WebUtils.logDebugProtect("Will expand results if not null: ", result);
 
         if (result!=null){
             return network.expandResults(result);

@@ -7,7 +7,6 @@ import java.net.URL;
 
 public class RootProperties extends RootPropertyFeatures {
 	
-	private final String broadcastUrl;
 	private final SFTPLogonData primarySftpCredentials;
 
 	private final String mqttBroker;
@@ -26,7 +25,7 @@ public class RootProperties extends RootPropertyFeatures {
 	private final String authorizedDomain;
 
 	private final boolean openSubscription;
-	private final boolean openSourcePublication;
+	private final boolean allowLeadPublication;
 
 	private final String rulebookUrn;
 
@@ -38,26 +37,30 @@ public class RootProperties extends RootPropertyFeatures {
 		try {
 			this.primaryDomain =mandatory("ROOT_DOMAIN");
 			this.primaryStaticDataFolder =optional("STATIC_DATA_FOLDER", "");
-			this.broadcastUrl =mandatory("BROADCAST_URL");
 			this.rulebookNodeURL = mandatory("RULEBOOK_NODE_URL");
 			this.mqttBroker = mandatory("MESSAGE_BROKER");
 
-			String sftp = "SFTP data is needed to publish static data.";
 
-			String sftpHost=messageOnFail("SFTP_HOST", sftp);
-			int sftpPort = Integer.parseInt(mandatory("SFTP_PORT"));
-			String sftpUsername = mandatory("SFTP_USERNAME");
-			String sftpPassword=mandatory("SFTP_PASSWORD");
-			String knownHost0=mandatory("KNOWN_HOST0");
-			String knownHost1=mandatory("KNOWN_HOST1");
-			String knownHost2=mandatory("KNOWN_HOST2");
+			String sftpHost=optional("SFTP_HOST", null);
+			int sftpPort = Integer.parseInt(optional("SFTP_PORT", "-1"));
+			String sftpUsername = optional("SFTP_USERNAME", null);
+			String sftpPassword=optional("SFTP_PASSWORD", null);
+			String knownHost0=optional("KNOWN_HOST0", null);
+			String knownHost1=optional("KNOWN_HOST1", null);
+			String knownHost2=optional("KNOWN_HOST2", null);
 
-			this.primarySftpCredentials = new SFTPLogonData();
-			this.primarySftpCredentials.setPort(sftpPort);
-			this.primarySftpCredentials.setHost(sftpHost);
+			if (sftpHost!=null){
+				this.primarySftpCredentials = new SFTPLogonData();
+				this.primarySftpCredentials.setPort(sftpPort);
+				this.primarySftpCredentials.setHost(sftpHost);
 
-			this.primarySftpCredentials.setUsernameAndPassword(sftpUsername, sftpPassword);
-			this.primarySftpCredentials.setKnownHosts(knownHost0, knownHost1, knownHost2);
+				this.primarySftpCredentials.setUsernameAndPassword(sftpUsername, sftpPassword);
+				this.primarySftpCredentials.setKnownHosts(knownHost0, knownHost1, knownHost2);
+
+			} else {
+				this.primarySftpCredentials = null;
+
+			}
 
 			this.authorizedDomain = optional("AUTHORIZED_DOMAIN", null);
 
@@ -87,7 +90,7 @@ public class RootProperties extends RootPropertyFeatures {
 			this.nodeSupportNumber=optional("NODE_SUPPORT_NUMBER", "No contact number for this Host");
 			this.isoCountryCode =  mandatory("ISO_COUNTRY_CODE");
 			this.openSubscription = Boolean.parseBoolean(optional("OPEN_SUBSCRIPTION", "true"));
-			this.openSourcePublication = Boolean.parseBoolean(optional("OPEN_SOURCE_PUBLICATION", "false"));
+			this.allowLeadPublication = Boolean.parseBoolean(optional("ALLOW_LEAD_PUBLICATION", "false"));
 
 		} catch (NumberFormatException e) {
 			throw new UxException("Fatal Error - Bad Configuration - Required Attribute Missing", e);
@@ -97,8 +100,6 @@ public class RootProperties extends RootPropertyFeatures {
 
 		}
 	}
-
-
 
 	protected String getPrimaryDomain() {
 		return primaryDomain;
@@ -120,10 +121,6 @@ public class RootProperties extends RootPropertyFeatures {
 
 	protected SFTPLogonData getPrimarySftpCredentials() {
 		return primarySftpCredentials;
-	}
-
-	protected String getBroadcastUrl() {
-		return broadcastUrl;
 	}
 
 	protected String getAuthorizedDomain() {
@@ -176,8 +173,8 @@ public class RootProperties extends RootPropertyFeatures {
 		return tokenTransfer;
 	}
 
-	public boolean isOpenSourcePublication() {
-		return openSourcePublication;
+	public boolean isAllowLeadPublication() {
+		return allowLeadPublication;
 	}
 
 	public String getRulebookToVerifyUrn() {

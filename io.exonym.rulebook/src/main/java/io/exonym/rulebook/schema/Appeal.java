@@ -42,12 +42,31 @@ public class Appeal implements VioIndexable {
     // When the appellant withdraws the appeal
     public static final String STATUS_WITHDRAWN = "WITHDRAWN";
     private String status;
-    private String nibble6;
     private String timeOfViolation;
     private String banLifted = "N/A";
     private URI modOfVioUid;
     private URI requestingModUid;
     private boolean openForAppeal = false;
+
+    private String nibble6;
+    private String x0Hash;
+    private URI hostMod;
+
+    public String getX0Hash() {
+        return x0Hash;
+    }
+
+    public void setX0Hash(String x0Hash) {
+        this.x0Hash = x0Hash;
+    }
+
+    public URI getHostMod() {
+        return hostMod;
+    }
+
+    public void setHostMod(URI hostMod) {
+        this.hostMod = hostMod;
+    }
 
     private ArrayList<RuleForAppeal> targetRules = new ArrayList<>();
     private ArrayList<AppealTransaction> history = new ArrayList<>();

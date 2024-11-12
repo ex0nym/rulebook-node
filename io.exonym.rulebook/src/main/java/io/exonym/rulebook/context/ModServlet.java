@@ -38,13 +38,16 @@ public class ModServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            initLead();
-            OverrideRequest override = parseInput(req);
-            IAuthenticator.getInstance()
-                    .authenticateApiKey(override.getKid(), override.getKey());
-            override.validate();
+            String kid = req.getHeader("kid");
+            String key = req.getHeader("key");
+            IAuthenticator.getInstance().authenticateApiKey(kid, key);
 
+            initLead();
+
+            OverrideRequest override = parseInput(req);
+            override.validate();
             verifyRequest(override);
+            WebUtils.success(resp);
 
         } catch (UxException e) {
             logger.debug("error", e);

@@ -15,9 +15,9 @@ import io.exonym.rulebook.schema.SsoChallenge;
 import io.exonym.rulebook.schema.SsoConfigWrapper;
 import io.exonym.rulebook.schema.SsoConfiguration;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -76,6 +76,7 @@ public class AuthStatusServlet extends HttpServlet {
 
             if (path.length>1){
                 String in = WebUtils.buildParamsAsString(req);
+                logger.info("Should be an xml token= " + in);
                 SsoChallenge challenge = challenges.get(path[1]);
 
                 if (challenge!=null){
@@ -112,7 +113,9 @@ public class AuthStatusServlet extends HttpServlet {
                 ProofStore proof = repo.read(epsilon);
                 AsymStoreKey k = AsymStoreKey.blank();
                 k.assembleKey(proof.getPublicKey());
-                byte[] deciphered = k.decipherWithPublicKey(Hex.decode(sig));
+                logger.info("Received Sig:" + sig);
+                byte[] decoded = Hex.decodeHex(sig);
+                byte[] deciphered = k.decipherWithPublicKey(decoded);
                 long t0 = Long.parseLong(new String(deciphered, StandardCharsets.UTF_8));
                 boolean expired = Timing.hasBeen(t0, timeoutSig);
 
@@ -177,6 +180,7 @@ public class AuthStatusServlet extends HttpServlet {
 
         } else {
             outputError();
+
         }
     }
 

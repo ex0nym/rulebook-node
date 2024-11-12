@@ -585,7 +585,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         NodeInformation ni = tn.getNodeInformation();
         i.setLastUpdated(tn.getLastUpdated());
         i.setNodeUID(ni.getNodeUid());
-        i.setBroadcastAddress(ni.getBroadcastAddress());
         i.setStaticURL0(ni.getStaticNodeUrl0());
         i.setPublicKeyB64(sourcePk);
         i.setRulebookNodeURL(ni.getRulebookNodeUrl());
@@ -612,7 +611,6 @@ public class NetworkMapWeb extends AbstractNetworkMap {
         nmi.setLastUpdated(participant.getLastUpdateTime());
         nmi.setLeadUID(sourceUuid);
         nmi.setNodeUID(participant.getNodeUid());
-        nmi.setBroadcastAddress(participant.getBroadcastAddress());
         nmi.setStaticURL0(participant.getStaticNodeUrl0());
         nmi.setPublicKeyB64(participant.getPublicKey().getPublicKey());
         nmi.setRulebookNodeURL(participant.getRulebookNodeUrl());
@@ -652,7 +650,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
             populateNodeFields();
 
         } if (myNodesLeadUID ==null){
-            throw new HubException("THIS_NODE_IS_NOT_A_SOURCE");
+            throw new HubException("THIS_NODE_IS_NOT_A_LEAD");
 
         }
         return (NetworkMapItemLead) nmiForNode(myNodesLeadUID);
@@ -664,7 +662,7 @@ public class NetworkMapWeb extends AbstractNetworkMap {
             populateNodeFields();
 
         } if (myModeratorsLeadUID ==null){
-            throw new HubException("THIS_NODE_IS_NOT_A_SOURCE");
+            throw new HubException("THIS_NODE_IS_NOT_A_LEAD");
 
         }
         return (NetworkMapItemLead) nmiForNode(myModeratorsLeadUID);
@@ -677,16 +675,10 @@ public class NetworkMapWeb extends AbstractNetworkMap {
             populateNodeFields();
 
         } if (myModeratorUID ==null){
-            throw new HubException("THIS_NODE_IS_NOT_AN_ADVOCATE");
+            throw new HubException("THIS_NODE_IS_NOT_AN_MODERATOR");
 
         }
         return (NetworkMapItemModerator) nmiForNode(myModeratorUID);
 
     }
-
-    public static void main(String[] args) {
-        logger.info(UIDHelper.transformMaterialUid(URI.create("urn:rulebook:asdasds:asdasd:asda:asda:i"), "rai"));
-
-    }
-
 }

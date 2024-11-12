@@ -3,6 +3,7 @@ package io.exonym.rulebook.context;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.google.gson.JsonObject;
+import com.ibm.zurich.idmx.exception.SerializationException;
 import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import com.sun.xml.ws.util.ByteArrayBuffer;
 import eu.abc4trust.cryptoEngine.CryptoEngineException;
@@ -28,6 +29,7 @@ import io.exonym.utils.storage.IdContainer;
 import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.KeyContainerWrapper;
 import io.exonym.utils.storage.TrustNetwork;
+import org.apache.commons.codec.BinaryDecoder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,23 +45,42 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
-@WebServlet("/revoke")
+@WebServlet("/revoke/*")
 public class RevokeServlet extends HttpServlet {
 
     private static final Logger logger = LogManager.getLogger(RevokeServlet.class);
 
+    private CouchRepository<ProofStore> proofRepo;
+
+    @Override
+    public void init() throws ServletException {
+        try {
+            proofRepo = CouchDbHelper.repoProofs();
+
+        } catch (Exception e) {
+            logger.info("Error", e);
+
+        }
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            String kid = req.getHeader("kid");
+            String key = req.getHeader("key");
+
             String in = WebUtils.buildParamsAsString(req);
-            RevocationRequestWrapper revocationReq = JaxbHelper.gson.fromJson(in, RevocationRequestWrapper.class);
-            if (revocationReq.getKid()!=null){
+            RevocationRequestWrapper revocationReq = JaxbHelper.gson.fromJson(
+                    in, RevocationRequestWrapper.class);
+
+            if (kid!=null){
                 IAuthenticator auth = IAuthenticator.getInstance();
-                auth.authenticateApiKey(
-                        revocationReq.getKid(), revocationReq.getKey());
+                auth.authenticateApiKey(kid, key);
                 logger.debug("Completed Authentication");
+                logger.info("Revoke by Token and not by Index");
                 verifyRequests(revocationReq);
                 revoke(revocationReq, resp);
 
@@ -89,7 +110,7 @@ public class RevokeServlet extends HttpServlet {
                 throw new UxException(ErrorMessages.REVOCATION_EVIDENCE_DESCRIPTION_MUST_BE_190_BYTES_OR_LESS, "index=" + i);
 
             }
-            if (r.getEndonymToken()==null){
+            if (r.getEndonymToken()==null && r.getIndex()==null){
                 throw new UxException(ErrorMessages.BLANK_TOKEN_DISCOVERED, "index=" + i);
 
             }
@@ -142,17 +163,18 @@ public class RevokeServlet extends HttpServlet {
 
         URI myModUid = join.getMyModeratorHelper().getModeratorUid();
 
-        for (RevocationRequest r : requests){
-            PresentationToken pt = decompressToken(r.getEndonymToken());
+        for (RevocationRequest revocationRequest : requests){
+            PresentationToken pt = decompressToken(revocationRequest);
+
             if (targetModAndRai==null){
                 targetModAndRai = computeTargetModAndRai(pt);
             }
             if (targetModAndRai[0].equals(myModUid)){
-                Violation v = computeViolation(requestingMod, r);
+                Violation v = computeViolation(requestingMod, revocationRequest);
                 RevocationAndViolation rav = new RevocationAndViolation();
                 rav.setViolation(v);
                 rav.setPresentationToken(pt);
-                rav.setRevocationRequest(r);
+                rav.setRevocationRequest(revocationRequest);
                 rav.setRaUid(targetModAndRai[1]);
                 ravs.add(rav);
 
@@ -199,7 +221,7 @@ public class RevokeServlet extends HttpServlet {
         int thisModTokens = 0;
 
         for (RevocationRequest request : requests){
-            PresentationToken pt = decompressToken(request.getEndonymToken());
+            PresentationToken pt = decompressToken(request);
             Violation violation = computeViolation(myModUid, request);
             URI[] targetModAndRai = computeTargetModAndRai(pt);
             AsymStoreKey modPk = publicKeys.getKey(targetModAndRai[0]);
@@ -237,6 +259,7 @@ public class RevokeServlet extends HttpServlet {
         for (URI targetMod : toProcess.keySet()){
             ArrayList<RevocationAndViolation> ravs = toProcess.get(targetMod);
             if (targetMod.equals(myModUid)){
+
                 revokeThisModeratorsTokens(myModUid, ravs, store, key, props);
                 thisModTokens = ravs.size();
 
@@ -258,6 +281,7 @@ public class RevokeServlet extends HttpServlet {
         resp.getWriter().write(JaxbHelper.gson.toJson(revocationResponse));
 
     }
+
 
 
     private URI[] computeTargetModAndRai(PresentationToken pt) {
@@ -283,11 +307,27 @@ public class RevokeServlet extends HttpServlet {
         return null;
     }
 
-    private PresentationToken decompressToken(String endonymToken) throws Exception {
-        byte[] compressed = Base64.decodeBase64(
-                endonymToken.getBytes(StandardCharsets.UTF_8));
-        String xml = new String(WebUtils.decompress(compressed), StandardCharsets.UTF_8);
-        return (PresentationToken) JaxbHelperClass.deserialize(xml).getValue();
+    private PresentationToken decompressToken(RevocationRequest request) throws Exception {
+        try {
+            byte[] compressed;
+            if (request.getEndonymToken()==null){
+                String id = CryptoUtils.computeMd5HashAsHex(request.getIndex());
+                ProofStore proof = proofRepo.read(id);
+                compressed = proof.getTokenCompressed();
+
+            } else {
+                compressed = Base64.decodeBase64(
+                        request.getEndonymToken()
+                                .getBytes(StandardCharsets.UTF_8));
+
+            }
+            String xml = new String(WebUtils.decompress(compressed), StandardCharsets.UTF_8);
+            return (PresentationToken) JaxbHelperClass.deserialize(xml).getValue();
+
+        } catch (NoDocumentException e) {
+            throw new UxException(ErrorMessages.INVALID_UUID + ":" + request.getIndex());
+
+        }
 
     }
 
@@ -495,25 +535,6 @@ public class RevokeServlet extends HttpServlet {
         return raiHash;
 
     }
-
-//    private void publishPrai(String raiB64, String sigB64, URI myModeratorUid) {
-//        ExoNotify notify = new ExoNotify();
-//        notify.setT(DateHelper.currentIsoUtcDateTime());
-//        notify.setNodeUID(myModeratorUid);
-//        notify.setRaiSigB64(sigB64);
-//        notify.setRaiB64(raiB64);
-//        notify.setType(ExoNotify.TYPE_MOD);
-//
-//        try {
-//            NotificationPublisher publisher = NotificationPublisher.getInstance();
-//            publisher.getPipe().put(notify);
-//
-//        } catch (InterruptedException e) {
-//            logger.debug("Interrupted", e);
-//
-//        }
-//    }
-
 
     private void updateLocalExonymMap(JoinSupportSingleton join, RulebookNodeProperties props,
                                       ArrayList<Violation> violations) throws Exception {

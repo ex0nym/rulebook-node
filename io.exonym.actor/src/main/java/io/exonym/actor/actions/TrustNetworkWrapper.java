@@ -67,8 +67,8 @@ public class TrustNetworkWrapper {
 	 * @return
 	 */
 	public NetworkParticipant addParticipant(URI nodeUid, URI nodeUrl,
-											 URI xNodeUrl, URI multicastUrl,
-											 XKey publicKey, String region, URI lastIssuerUID) {
+											 URI xNodeUrl, XKey publicKey,
+											 String region, URI lastIssuerUID) {
 		logger.info("Adding Participant " + nodeUid);
 		if (nodeUid== null) {
 			throw new NullPointerException("Node UID");
@@ -90,7 +90,6 @@ public class TrustNetworkWrapper {
 		p.setNodeUid(nodeUid);
 		p.setStaticNodeUrl0(nodeUrl);
 		p.setRulebookNodeUrl(xNodeUrl);
-		p.setBroadcastAddress(multicastUrl);
 		p.setPublicKey(publicKey);
 		p.setRegion(region);
 		p.setLastIssuerUID(lastIssuerUID);
