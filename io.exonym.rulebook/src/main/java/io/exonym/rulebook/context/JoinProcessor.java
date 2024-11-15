@@ -404,6 +404,10 @@ public class JoinProcessor {
             String[] nibbles = ExonymMatrix.extractNibbles(x0);
             String hashOfH = CryptoUtils.computeSha256HashAsHex(
                     imab.getHandle().toByteArray());
+
+            // TODO
+            logger.info("REMOVE ------------- > New Member Handle=" + imab.getHandle());
+
             IUser user = new IUser();
             user.setType(IUser.I_USER_MEMBER);
             user.setX0(x0);

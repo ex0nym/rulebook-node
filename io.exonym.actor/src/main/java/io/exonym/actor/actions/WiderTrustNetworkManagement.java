@@ -19,6 +19,7 @@ import javax.crypto.Cipher;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.rmi.UnmarshalException;
 
 public class WiderTrustNetworkManagement {
     
@@ -52,6 +53,9 @@ public class WiderTrustNetworkManagement {
             byte[] raw = UrlHelper.read(URI.create(props.getSpawnWiderNetworkFrom()).toURL());
             String xml = new String(raw, StandardCharsets.UTF_8);
             return JaxbHelper.xmlToClass(xml, TrustNetwork.class);
+
+        } catch (UnmarshalException e) {
+            return new TrustNetwork();
 
         } catch (FileNotFoundException e) {
             return new TrustNetwork();

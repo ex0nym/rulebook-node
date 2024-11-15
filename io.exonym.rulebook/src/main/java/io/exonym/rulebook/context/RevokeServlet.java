@@ -3,7 +3,6 @@ package io.exonym.rulebook.context;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
 import com.google.gson.JsonObject;
-import com.ibm.zurich.idmx.exception.SerializationException;
 import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
 import com.sun.xml.ws.util.ByteArrayBuffer;
 import eu.abc4trust.cryptoEngine.CryptoEngineException;
@@ -29,7 +28,6 @@ import io.exonym.utils.storage.IdContainer;
 import io.exonym.utils.storage.KeyContainer;
 import io.exonym.utils.storage.KeyContainerWrapper;
 import io.exonym.utils.storage.TrustNetwork;
-import org.apache.commons.codec.BinaryDecoder;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,7 +43,6 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 
 @WebServlet("/revoke/*")
@@ -77,14 +74,14 @@ public class RevokeServlet extends HttpServlet {
                     in, RevocationRequestWrapper.class);
 
             if (kid!=null){
+                logger.info("Owner revocation request");
                 IAuthenticator auth = IAuthenticator.getInstance();
                 auth.authenticateApiKey(kid, key);
-                logger.debug("Completed Authentication");
-                logger.info("Revoke by Token and not by Index");
                 verifyRequests(revocationReq);
                 revoke(revocationReq, resp);
 
             } else {
+                logger.info("In network revocation request.");
                 inNetworkModRevocationRequest(revocationReq, req, resp);
 
             }
@@ -163,24 +160,35 @@ public class RevokeServlet extends HttpServlet {
 
         URI myModUid = join.getMyModeratorHelper().getModeratorUid();
 
-        for (RevocationRequest revocationRequest : requests){
-            PresentationToken pt = decompressToken(revocationRequest);
+        for (RevocationRequest revocationRequestRevoking : requests){
+            PresentationToken pt = decompressToken(revocationRequestRevoking);
 
             if (targetModAndRai==null){
                 targetModAndRai = computeTargetModAndRai(pt);
+
             }
-            if (targetModAndRai[0].equals(myModUid)){
-                Violation v = computeViolation(requestingMod, revocationRequest);
-                RevocationAndViolation rav = new RevocationAndViolation();
-                rav.setViolation(v);
-                rav.setPresentationToken(pt);
-                rav.setRevocationRequest(revocationRequest);
-                rav.setRaUid(targetModAndRai[1]);
-                ravs.add(rav);
+            if (targetModAndRai!=null){
+                if (targetModAndRai[0].equals(myModUid)){
+                    Violation v = computeViolation(requestingMod, revocationRequestRevoking);
+                    logger.info("Violation at in network: " + v);
+                    RevocationAndViolation rav = new RevocationAndViolation();
+                    rav.setViolation(v);
+                    rav.setPresentationToken(pt);
+                    rav.setRevocationRequest(revocationRequestRevoking);
+                    rav.setRaUid(targetModAndRai[1]);
+                    logger.info("RAI=" +targetModAndRai[1]);
+                    ravs.add(rav);
 
+                } else {
+                    logger.warn("Incorrect mod " + targetModAndRai[0]);
+
+                }
             } else {
-                logger.warn("Incorrect mod " + targetModAndRai[0]);
-
+                logger.warn(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                logger.warn("> Incorrect token index=" + revocationRequestRevoking.getIndex());
+                logger.warn(">");
+                logger.warn("> Requesting Mod:" + revocationRequestRevoking.getModeratorUid());
+                logger.warn(">");
             }
         }
         RulebookNodeProperties props = RulebookNodeProperties.instance();
@@ -202,7 +210,7 @@ public class RevokeServlet extends HttpServlet {
      *
      */
     private void revoke(RevocationRequestWrapper rr, HttpServletResponse resp) throws Exception {
-
+        logger.info("Sorting revocation requests");
         RulebookNodeProperties props = RulebookNodeProperties.instance();
         PassStore store = new PassStore(props.getNodeRoot(), false);
         NetworkPublicKeyManager publicKeys = NetworkPublicKeyManager.getInstance();
@@ -220,22 +228,25 @@ public class RevokeServlet extends HttpServlet {
         int invalidTokens = 0;
         int thisModTokens = 0;
 
-        for (RevocationRequest request : requests){
-            PresentationToken pt = decompressToken(request);
-            Violation violation = computeViolation(myModUid, request);
-            URI[] targetModAndRai = computeTargetModAndRai(pt);
-            AsymStoreKey modPk = publicKeys.getKey(targetModAndRai[0]);
-            String b64Enc = Base64.encodeBase64String(
-                    modPk.encrypt(request.getDescriptionOfEvidence()
-                        .getBytes(StandardCharsets.UTF_8)));
+        for (RevocationRequest requestSorting : requests){
+            PresentationToken pt = decompressToken(requestSorting);
+            Violation violation = computeViolation(myModUid, requestSorting);
+            logger.info("Violation:" + violation);
 
-            request.setDescriptionOfEvidence(b64Enc);
+            URI[] targetModAndRai = computeTargetModAndRai(pt);
 
             if (targetModAndRai!=null){
+                AsymStoreKey modPk = publicKeys.getKey(targetModAndRai[0]);
+                logger.info("Target Mod:" + targetModAndRai[0] + " got key (not null) " + modPk);
+                String b64Enc = Base64.encodeBase64String(
+                        modPk.encrypt(requestSorting.getDescriptionOfEvidence()
+                            .getBytes(StandardCharsets.UTF_8)));
+                requestSorting.setDescriptionOfEvidence(b64Enc);
+
                 ArrayList<RevocationAndViolation> ravs = toProcess.get(targetModAndRai[0]);
 
                 RevocationAndViolation rav = new RevocationAndViolation();
-                rav.setRevocationRequest(request);
+                rav.setRevocationRequest(requestSorting);
                 rav.setViolation(violation);
                 rav.setPresentationToken(pt);
                 rav.setRaUid(targetModAndRai[1]);
@@ -259,12 +270,13 @@ public class RevokeServlet extends HttpServlet {
         for (URI targetMod : toProcess.keySet()){
             ArrayList<RevocationAndViolation> ravs = toProcess.get(targetMod);
             if (targetMod.equals(myModUid)){
-
+                logger.info("Revoking own tokens");
                 revokeThisModeratorsTokens(myModUid, ravs, store, key, props);
                 thisModTokens = ravs.size();
 
             } else {
                 try {
+                    logger.info("Wrapping to send: " + targetMod);
                     wrapSignAndSend(targetMod, myModUid, ravs, key);
 
                 } catch (Exception e) {
@@ -314,6 +326,7 @@ public class RevokeServlet extends HttpServlet {
                 String id = CryptoUtils.computeMd5HashAsHex(request.getIndex());
                 ProofStore proof = proofRepo.read(id);
                 compressed = proof.getTokenCompressed();
+                request.setEndonymToken(Base64.encodeBase64String(compressed));
 
             } else {
                 compressed = Base64.decodeBase64(
@@ -362,6 +375,7 @@ public class RevokeServlet extends HttpServlet {
 
         for (RevocationAndViolation rav : ravs){
             BigInteger handle = discoverHandle(ins, rav.getPresentationToken());
+            logger.info("--------------- > REMOVE Discovered handle @ Revoke=" + handle);
             String hh = CryptoUtils.computeSha256HashAsHex(handle.toByteArray());
 
             try {
@@ -370,6 +384,7 @@ public class RevokeServlet extends HttpServlet {
 
                 Violation violation = rav.getViolation();
                 String x0 = user.getX0();
+                logger.info("x0_len("+x0.length()+") Found Member Based on Handle + Violation: " + violation);
                 violation.setX0(x0);
                 violations.add(violation);
 
@@ -402,7 +417,9 @@ public class RevokeServlet extends HttpServlet {
             handles.add(handle);
 
         }
+        logger.info("handleSize=" + handles.size() + " viosSize=" + vios.size());
         RevocationInformation ri = issuer.revocationBulkValidHandles(ra, handles, store.getDecipher());
+
         ExonymIssuer.removeRevocationHistory(ri);
 
         NodeManagerWeb nodeManager = new NodeManagerWeb(myNode.getLeadName());
@@ -419,14 +436,14 @@ public class RevokeServlet extends HttpServlet {
 
         // TODO update local map /network on receipt.
         //        publishPrai(raiB64AndSigB64[0], raiB64AndSigB64[1], myNode.getModeratorUid());
-        handleViosForBroadcast(vios);
+        cleanViosForBroadcast(vios);
         publishPraiResign(ri, myKey, myNode.getModeratorUid());
         publishViolations(vios, myNode.getModeratorUid(), myKey);
         deleteRevokedMembers(userRepo, tidy);
 
     }
 
-    private void handleViosForBroadcast(ArrayList<Vio> vios) {
+    private void cleanViosForBroadcast(ArrayList<Vio> vios) {
         try {
             CouchRepository<Vio> repo = CouchDbHelper.repoVio();
 
@@ -629,7 +646,7 @@ public class RevokeServlet extends HttpServlet {
         logger.info("sending revocation request to " + target);
         Http http = new Http();
         String responseFromMod = http.basicPost(target.toString(), JaxbHelper.gson.toJson(rrw));
-        logger.info(responseFromMod);
+        logger.info("Response from mod:" + responseFromMod);
         http.close();
 
     }

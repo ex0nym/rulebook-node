@@ -10,6 +10,7 @@ public class RootProperties extends RootPropertyFeatures {
 	private final SFTPLogonData primarySftpCredentials;
 
 	private final String mqttBroker;
+	private final String mqttPassword;
 
 	private final SFTPLogonData tokenTransfer;
 
@@ -39,6 +40,7 @@ public class RootProperties extends RootPropertyFeatures {
 			this.primaryStaticDataFolder =optional("STATIC_DATA_FOLDER", "");
 			this.rulebookNodeURL = mandatory("RULEBOOK_NODE_URL");
 			this.mqttBroker = mandatory("MESSAGE_BROKER");
+			this.mqttPassword = mandatory("PUBLISHER_PASSWORD");
 
 
 			String sftpHost=optional("SFTP_HOST", null);
@@ -178,6 +180,14 @@ public class RootProperties extends RootPropertyFeatures {
 	}
 
 	public String getRulebookToVerifyUrn() {
+		return rulebookUrn;
+	}
+
+	protected String getMqttPassword() {
+		return mqttPassword;
+	}
+
+	public String getRulebookUrn() {
 		return rulebookUrn;
 	}
 }

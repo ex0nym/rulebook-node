@@ -101,7 +101,6 @@ public class VerifySupportSingleton {
     protected String verifyToken(SsoChallenge challengeAndToken) throws Exception {
 
         try {
-            logger.info("Token is " + challengeAndToken.getToken());;
             PresentationToken token = Parser.parsePresentationToken(
                     challengeAndToken.getToken());
 

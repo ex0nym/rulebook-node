@@ -20,7 +20,7 @@ public class ExpiringHashMap<T, U> extends ModelCommandProcessor {
     }
 
     public void put(T t, U u){
-        logger.info(t + "---t,u---" +u);
+        logger.debug(t + "---t,u---" +u);
         this.map.put(t, u);
         this.time.put(t, Timing.currentTime());
 

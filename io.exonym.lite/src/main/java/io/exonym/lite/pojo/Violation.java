@@ -80,4 +80,9 @@ public class Violation {
         this.x0 = null;
 
     }
+
+    @Override
+    public String toString() {
+        return nibble6 + " " + this.x0 + " " + this.timestamp;
+    }
 }

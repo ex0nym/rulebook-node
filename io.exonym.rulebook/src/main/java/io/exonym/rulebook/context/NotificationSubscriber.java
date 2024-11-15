@@ -52,11 +52,11 @@ public class NotificationSubscriber {
             subscribeToMosquittoTopics();
 
         } catch (UxException e) {
-
             logger.info(">>>>>>>>>>>>>>>>>>>>", e);
             logger.info("> NOT SUBSCRIBED");
             logger.info("> ");
-            logger.info("> No error, but the node needs to be defined to subscribe.");
+            logger.info("> There doesn't appear to be an issue with the set-up,");
+            logger.info("> but the node needs to be defined to subscribe.");
             logger.info("> ");
             logger.info("> Restart after node is a moderator or lead.");
             logger.info("> ");
@@ -128,24 +128,28 @@ public class NotificationSubscriber {
 
                 }
                 RulebookNodeProperties props = RulebookNodeProperties.instance();
-                String id = CryptoUtils.computeSha256HashAsHex(info.getNodeUid().toString());
+                String id = mine.mosquittoId(true);
 
-                mqttClient = new MqttClient(props.getMqttBroker(), id);
+                String broker = props.getMqttBroker() + ":9000";
+                mqttClient = new MqttClient(broker, id);
 
                 MqttConnectOptions options = new MqttConnectOptions();
                 options.setCleanSession(false);
+//                options.setUserName(id);
 
                 mqttClient.setCallback(new SubscriberCallback());
                 mqttClient.connect(options);
 
                 if (mqttClient.isConnected()){
-                    mqttClient.subscribe(topics[0]);
+                    mqttClient.subscribe(topics[0], 1);
 
                     if (topics[1]!=null){
-                        mqttClient.subscribe(topics[1]);
+                        mqttClient.subscribe(topics[1], 1);
                     }
                     logger.info(">>>>>>>>>>>>>>>>>>>>");
                     logger.info("> SUBSCRIBER ");
+                    logger.info("> ");
+                    logger.info("> Broker=" + broker);
                     logger.info("> ");
                     logger.info("> " + topics[0]);
                     logger.info("> " + topics[1]);

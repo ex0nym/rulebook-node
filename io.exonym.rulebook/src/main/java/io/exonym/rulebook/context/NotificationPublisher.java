@@ -17,7 +17,6 @@ import org.eclipse.paho.client.mqttv3.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class NotificationPublisher extends ModelCommandProcessor {
@@ -57,25 +56,31 @@ public class NotificationPublisher extends ModelCommandProcessor {
     private void connectToMosquitto() throws Exception {
         MyTrustNetworks myTrustNetworks = new MyTrustNetworks();
         if (myTrustNetworks.isDefined()){
-            String uid = UUID.randomUUID().toString()
-                    .replaceAll("-", "");
-
+            String id = myTrustNetworks.mosquittoId(false);
+            String mqt = props.getMqttBroker() + ":9001";
             logger.info(">>>>>>>>>>>>>> PUBLISHER");
             logger.info("> " );
-            logger.info("> " + props.getMqttBroker());
-            logger.info("> " + uid);
+            logger.info("> " + mqt);
+            logger.info("> " + id);
+            logger.info("> " );
+            logger.info("> pwSet=" + (props.getMqttPassword()!=null) );
             logger.info("> " );
             logger.info(">>>>>>>>>>>>>> ");
 
-            mqttClient = new MqttClient(props.getMqttBroker(), uid);
+            mqttClient = new MqttClient(mqt, id);
+            mqttClient.setCallback(new PublisherCallback());
 
             MqttConnectOptions options = new MqttConnectOptions();
             options.setCleanSession(false);
-            mqttClient.setCallback(new PublisherCallback());
+            options.setUserName(id);
+            options.setPassword(props.getMqttPassword().toCharArray());
+
             mqttClient.connect(options);
+
 
             NodeInformation ni = myTrustNetworks.getOnePrioritizeModerator()
                     .getTrustNetwork().getNodeInformation();
+
             if (myTrustNetworks.isModerator()){
                 URI mod = ni.getNodeUid();
                 URI lead = ni.getLeadUid();
@@ -83,11 +88,13 @@ public class NotificationPublisher extends ModelCommandProcessor {
                 uidToTopic.put(mod.toString(), helper.getRulebookModTopic());
                 uidToTopic.put(lead.toString(), helper.getRulebookLeadTopic());
                 uidToTopic.put(TOPIC_RULEBOOK, helper.getRulebookTopic());
+                outputTopics();
 
             } else if (myTrustNetworks.isLeader()){
                 URI lead = ni.getLeadUid();
                 String topic = UIDHelper.computeRulebookTopicFromUid(lead);
                 uidToTopic.put(TOPIC_RULEBOOK, topic);
+                outputTopics();
 
             }
         } else {
@@ -98,6 +105,13 @@ public class NotificationPublisher extends ModelCommandProcessor {
             logger.info("> " );
             logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>  ");
             throw new UxException(ErrorMessages.RULEBOOK_NODE_NOT_INITIALIZED);
+
+        }
+    }
+
+    private void outputTopics() {
+        for (String uid : uidToTopic.keySet()){
+            logger.info(uid + "-->" + uidToTopic.get(uid));
 
         }
     }

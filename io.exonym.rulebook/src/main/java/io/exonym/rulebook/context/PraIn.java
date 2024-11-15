@@ -9,6 +9,7 @@ import io.exonym.abc.util.JaxbHelper;
 import io.exonym.actor.actions.AbstractNetworkMap;
 import io.exonym.actor.actions.NodeVerifier;
 import io.exonym.actor.actions.PkiExternalResourceContainer;
+import io.exonym.actor.actions.TrustNetworkWrapper;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.ModelSingleSequence;
@@ -73,17 +74,20 @@ public class PraIn extends ModelCommandProcessor {
             try {
                 ExoNotify notify = (ExoNotify) msg;
                 Path pathToLocalFolder = computeLocalFolderPath(notify);
+                logger.info("Path to local folder @ PRAIN= " + pathToLocalFolder);
 
                 if (isUpdateToExistingStaticData(pathToLocalFolder)){
                     String xml = deserializeB64(notify);
                     Object obj = checkSignature(xml, notify);
 
                     if (obj instanceof PresentationPolicy){
+                        logger.info("Updating PresentationPolicy @ Subscribe");
                         updateLocalLeadData((PresentationPolicy)obj, xml,
                                 pathToLocalFolder, notify.getPpSigB64());
                         cache.store(obj);
 
                     } else if (obj instanceof RevocationInformation){
+                        logger.info("Updating RevocationInformation @ Subscribe");
                         RevocationInformation rai = (RevocationInformation)obj;
                         updateModLeadData(rai, xml,
                                 pathToLocalFolder, notify.getRaiSigB64());
@@ -91,10 +95,11 @@ public class PraIn extends ModelCommandProcessor {
                         cache.store(obj);
 
                     } else {
-                        logger.debug("Ignoring object (if null, could be that sig failed.) " + obj);
+                        logger.info("Ignoring object (if null, could be that sig failed.) " + obj);
 
                     }
                 } else {
+                    logger.info("Scheduling new static data");
                     scheduleAddNewStaticData(notify.getNodeUid(), pathToLocalFolder);
 
                 }
@@ -238,12 +243,14 @@ public class PraIn extends ModelCommandProcessor {
 
     }
 
-    private void updateKeyManager(RevocationInformation rai) throws KeyManagerException {
+    private static void updateKeyManager(RevocationInformation rai) throws KeyManagerException {
+        logger.info("Updating Key Manager");
         URI raiUid = rai.getRevocationInformationUID();
         URI rapUid = rai.getRevocationInformationUID();
         logger.info("RAI=" + raiUid);
         logger.info("RAP=" + rapUid);
-        keyManagerSingleton.storeRevocationInformation(raiUid, rai);
+        KeyManagerSingleton km = KeyManagerSingleton.getInstance();
+        km.storeRevocationInformation(raiUid, rai);
 
     }
 
@@ -304,9 +311,12 @@ public class PraIn extends ModelCommandProcessor {
             try {
                 logger.info("Writing new node static data to " + folder.toString());
                 NetworkMapItem item = openNmi();
-                new NodeVerifier(item.getNodeUID());
-//                writeFilesToLocalStore(n.getByteContent());
-
+                NodeVerifier v = new NodeVerifier(item.getNodeUID(), true);
+                URI issuer = new TrustNetworkWrapper(v.getTargetTrustNetwork())
+                        .getMostRecentIssuerParameters();
+                UIDHelper helper = new UIDHelper(issuer);
+                RevocationInformation rai = v.getRevocationInformation(helper.getRevocationInfoFileName());
+                updateKeyManager(rai);
 
             } catch (Exception e) {
                 logger.info("Failed to add new node", e);
@@ -314,19 +324,6 @@ public class PraIn extends ModelCommandProcessor {
             }
         }
 
-        private void writeFilesToLocalStore(ConcurrentHashMap<String, ByteArrayBuffer> byteContent) throws IOException {
-            // both are verifier artifacts
-            byteContent.remove("rulebook.json");
-            byteContent.remove("description");
-
-            Files.createDirectories(folder);
-            for (String file : byteContent.keySet()){
-                ByteArrayBuffer bytes = byteContent.get(file);
-                Files.write(folder.resolve(file), bytes.getRawData(),
-                        StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-            }
-        }
 
         // TODO replace with
         private NetworkMapItem openNmi() throws Exception {

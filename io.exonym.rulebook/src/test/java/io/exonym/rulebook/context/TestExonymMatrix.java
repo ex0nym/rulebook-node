@@ -8,10 +8,10 @@ import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.pojo.*;
 import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.Const;
+import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.WhiteList;
 import io.exonym.lite.time.DateHelper;
 import io.exonym.rulebook.schema.IdContainer;
-import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.*;
@@ -23,7 +23,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class TestExonymMatrix {
     
@@ -59,6 +58,11 @@ public class TestExonymMatrix {
 
     @BeforeAll
     static void beforeAll() throws Exception {
+        String md5 = CryptoUtils.computeMd5HashAsHex("7e98cf1bbbc84009a2e543d5690c4b7b180bba5e813e8aeb63bbfb8a9a3b62ca29b0370955cb998b50425ff5e8263e50a18675775f9ac668dd0bcdecaa7369cb129cc9054047e0d4453430f73b85cf5b800bba88c0e775b44e84202eb7b91b123e4ea5ee48891a29290c63bdaf0a2b34e4cf0f2867f9ece2aadc9db7a672f0b8a4f399962642ec30d2ba505f656547abbe9cd3d05494743cf6b0e6c69e179c249c5bf89b750eb76f9298e124da39dba4f4ddba5a0ab5306f2deb9cdd69312ee80a95b5beb4cd75a151691d8731b9fa48d53b1fa31099427efaafd7ed90d38af14e2eb4ffb8c52f3c24fade090b3fa7379b2f8820591c87d96ae98005329b86ad");
+        String sha = CryptoUtils.computeSha256HashAsHex("7e98cf1bbbc84009a2e543d5690c4b7b180bba5e813e8aeb63bbfb8a9a3b62ca29b0370955cb998b50425ff5e8263e50a18675775f9ac668dd0bcdecaa7369cb129cc9054047e0d4453430f73b85cf5b800bba88c0e775b44e84202eb7b91b123e4ea5ee48891a29290c63bdaf0a2b34e4cf0f2867f9ece2aadc9db7a672f0b8a4f399962642ec30d2ba505f656547abbe9cd3d05494743cf6b0e6c69e179c249c5bf89b750eb76f9298e124da39dba4f4ddba5a0ab5306f2deb9cdd69312ee80a95b5beb4cd75a151691d8731b9fa48d53b1fa31099427efaafd7ed90d38af14e2eb4ffb8c52f3c24fade090b3fa7379b2f8820591c87d96ae98005329b86ad");
+        logger.info(md5);
+        logger.info(sha);
+        System.exit(1);
 //        try {
 //            XKey k = XKey.createNew(PASSWORD);
 //            logger.info(JaxbHelper.gson.toJson(k));
@@ -78,25 +82,26 @@ public class TestExonymMatrix {
 
     @Test
     void name() {
+
 //        String uid = UUID.randomUUID().toString()
 //                .replaceAll("-", "");
 
-        String uid = "c50296aaec9a493397a706153a7ba9b6";
+        String uid = "ttt";
 
         String target = "wss://ps.cyber30.io:";
 
-        DummySubscriber ds = new DummySubscriber("/hello/#", "wss://ps.cyber30.io:9000", uid);
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        System.exit(1);
+        DummySubscriber ds = new DummySubscriber("rulebook/mmo/4ccbdf03787d137fc360a193ba950eb77d6b150f99b69280a11dc084f29a2f72/#", "wss://ps.cyber30.io:9000", uid);
+        try {
+            Thread.sleep(60000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.exit(1);
 
 
         MqttClient mqttClient = null;
         try {
-            String username = "testuser";
+            String username = "653d42b6f7e0f00432fcad834b293571";
             mqttClient = new MqttClient(target  + "9001", username);
 
             mqttClient.setCallback(new MqttCallback() {
@@ -118,7 +123,7 @@ public class TestExonymMatrix {
 
             MqttConnectOptions options = new MqttConnectOptions();
             options.setCleanSession(true);
-            options.setPassword("helloworld".toCharArray());
+            options.setPassword("mhWSVIMm4Y4Tbzd7z0Xn9PO525DZtWcYLLCqBeLa6Do=".toCharArray());
             String jwt = doNotUse.generateJwt(username, 1);
             options.setUserName(username);
             mqttClient.connect(options);
@@ -201,10 +206,15 @@ public class TestExonymMatrix {
     @Test
     void setupWiderTrustNetwork() {
         try {
+            PkiExternalResourceContainer external = PkiExternalResourceContainer.getInstance();
+            NetworkMapWeb mnw = new NetworkMapWeb();
+            Cache cache = new Cache();
+            external.setNetworkMapAndCache(mnw, cache);
+
             WiderTrustNetworkManagement wtn = new WiderTrustNetworkManagement();
             wtn.setupWiderTrustNetwork();
-            wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), true);
-//            wtn.addLead(URI.create("http://exonym-x-03:8081/static/lead/"), false);
+            wtn.addLead(URI.create("https://t1.node.sybil.cyber30.io/static/lead/"), true);
+            wtn.addLead(URI.create("https://t1.cyber30.io/static/lead/"), true);
 
             wtn.publish();
 

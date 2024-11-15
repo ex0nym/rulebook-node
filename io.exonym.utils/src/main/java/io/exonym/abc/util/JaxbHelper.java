@@ -99,7 +99,6 @@ public class JaxbHelper {
 		
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static <T> T xmlToClass(XMLStreamReader stream, Class<T> clazz) throws Exception{
 		try {
 			JAXBContext context = JAXBContext.newInstance(clazz);

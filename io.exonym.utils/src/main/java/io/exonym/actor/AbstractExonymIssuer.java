@@ -617,6 +617,7 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 	 */
 	protected void openContainer(Cipher dec) throws Exception {
 		if (!open){
+			logger.info("------------ Opening Container-("+ this.container.getUsername()+")------");
 			try {
 				container.updateLists();
 				ArrayList<String> issuerParams = container.getIssuerParameterList();

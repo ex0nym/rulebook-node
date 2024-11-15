@@ -1,6 +1,7 @@
 FROM tomcat:9.0.73-jdk17-temurin-focal
 
-ENV CATALINA_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
+ENV CATALINA_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED"
+
 
 
 # COPY conf/logging.properties /usr/local/tomcat/conf/

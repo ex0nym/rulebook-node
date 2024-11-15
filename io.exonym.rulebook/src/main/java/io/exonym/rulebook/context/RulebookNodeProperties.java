@@ -150,4 +150,9 @@ public class RulebookNodeProperties extends RootProperties {
     public String getRulebookToVerifyUrn() {
         return super.getRulebookToVerifyUrn();
     }
+
+    @Override
+    protected String getMqttPassword() {
+        return super.getMqttPassword();
+    }
 }

@@ -75,7 +75,7 @@ public class UIDHelper {
 
         this.rulebookTopic = computeTopicFromRulebook(rulebookUID);
 
-        this.rulebookLeadTopic = this.rulebookTopic  + "/" + leadName;
+        this.rulebookLeadTopic = this.rulebookTopic  + "/" + leadName + "/";
 
         String lead = null;
 
@@ -111,7 +111,7 @@ public class UIDHelper {
                 inspectorParamsFileName = IdContainer.uidToXmlFileName(inspectorParams);
 
             }
-            this.rulebookModTopic = this.rulebookLeadTopic + "/" + moderatorName;
+            this.rulebookModTopic = this.rulebookLeadTopic + moderatorName + "/";
 
         } else {
             lead = issuerParamsOrLead;

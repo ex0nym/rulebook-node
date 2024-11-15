@@ -3,11 +3,13 @@ package io.exonym.actor.actions;
 import io.exonym.abc.util.JaxbHelper;
 import io.exonym.lite.pojo.Rulebook;
 import io.exonym.lite.standard.Const;
+import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.WhiteList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -101,4 +103,34 @@ public class MyTrustNetworks {
         return rulebook;
     }
 
+    public String mosquittoId(boolean isSubscriber) {
+        // Extension so that username is not the same.
+        // The publisher is authenticated the subscriber is not.
+        String extend = isSubscriber ? "0" : "";
+
+        if (this.isModerator()){
+            String modUid = this
+                    .getModerator()
+                    .getTrustNetwork()
+                    .getNodeInformation()
+                    .getNodeUid().toString();
+            modUid += extend;
+            return CryptoUtils.computeMd5HashAsHex(modUid
+                    .getBytes(StandardCharsets.UTF_8));
+
+        } else if (this.isLeader()){
+            String modUid = this
+                    .getModerator()
+                    .getTrustNetwork()
+                    .getNodeInformation()
+                    .getNodeUid().toString();
+            modUid += extend;
+            return  CryptoUtils.computeMd5HashAsHex(
+                    modUid.getBytes(StandardCharsets.UTF_8));
+
+        } else {
+            return null;
+
+        }
+    }
 }

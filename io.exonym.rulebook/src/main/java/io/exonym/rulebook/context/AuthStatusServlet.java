@@ -31,8 +31,8 @@ import java.nio.charset.StandardCharsets;
 @WebServlet("/auth-status/*")
 public class AuthStatusServlet extends HttpServlet {
     private static final Logger logger = LogManager.getLogger(AuthStatusServlet.class);
-    private static long timeoutChallenge = 2500;
-    private static long timeoutSig = 1000;
+    private static long timeoutChallenge = 4000;
+    private static long timeoutSig = 2500;
 
     private VerifySupportSingleton verify;
 
@@ -76,7 +76,7 @@ public class AuthStatusServlet extends HttpServlet {
 
             if (path.length>1){
                 String in = WebUtils.buildParamsAsString(req);
-                logger.info("Should be an xml token= " + in);
+                logger.debug("Should be an xml token= " + in);
                 SsoChallenge challenge = challenges.get(path[1]);
 
                 if (challenge!=null){

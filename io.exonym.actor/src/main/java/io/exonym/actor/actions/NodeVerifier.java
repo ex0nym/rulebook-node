@@ -73,10 +73,19 @@ public class NodeVerifier {
 
 	private AsymStoreKey publicKey;
 
+
 	public NodeVerifier(URI nodeUid) throws Exception {
+		verifyFromUid(nodeUid, false);
+	}
+
+	public NodeVerifier(URI nodeUid, boolean ignoreSelf) throws Exception {
+		verifyFromUid(nodeUid, ignoreSelf);
+	}
+
+	private void verifyFromUid(URI nodeUid, boolean ignoreSelf) throws Exception {
 		myTrustNetworks = new MyTrustNetworks();
 		boolean shouldWrite = false;
-		if (myTrustNetworks.isMyNode(nodeUid)) {
+		if (myTrustNetworks.isMyNode(nodeUid) && !ignoreSelf) {
 			logger.info("Detected verification of my own node - getting locally.");
 
 			Path localContent = Path.of(Const.PATH_OF_HTML, Const.STATIC);
@@ -129,6 +138,8 @@ public class NodeVerifier {
 			saveToNetwork(this.getTargetTrustNetwork().getNodeInformation());
 		}
 	}
+
+
 	public NodeVerifier(URL newNodeUrl) throws Exception {
 		logger.warn(">>>>>>>>>>> ----------------- Using Remote ONLY Node Verifier ------------------- <<<<<<<<<<<< ");
 		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();

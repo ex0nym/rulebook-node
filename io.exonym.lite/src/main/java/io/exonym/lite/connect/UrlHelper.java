@@ -60,6 +60,7 @@ public class UrlHelper {
 		URLConnection connection = url.openConnection();
 		connection.setConnectTimeout(5000);
 		connection.setReadTimeout(500);
+
 		try (BufferedInputStream br = new BufferedInputStream(connection.getInputStream())){
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			byte[] buffer = new byte[1024];

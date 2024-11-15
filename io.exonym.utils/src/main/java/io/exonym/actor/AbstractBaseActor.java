@@ -15,10 +15,10 @@ import eu.abc4trust.xml.*;
 import io.exonym.abc.util.UidType;
 import io.exonym.idmx.dagger.DaggerExonymComponent;
 import io.exonym.idmx.dagger.ExonymComponent;
-import io.exonym.idmx.managers.KeyManagerExonym;
 import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
+import io.exonym.managers.KeyManagerSingleton;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
@@ -31,7 +31,6 @@ import java.net.URI;
 import java.util.ArrayList;
 
 public abstract class AbstractBaseActor {
-
 
 	private static final Logger logger = LogManager.getLogger(AbstractBaseActor.class);
 
@@ -160,8 +159,15 @@ public abstract class AbstractBaseActor {
 		if (keyManager.getRevocationAuthorityParameters(uid)==null){
 			RevocationAuthorityParameters rap = publicParameterOpener(uid);
 			keyManager.storeRevocationAuthorityParameters(uid, rap);
-			logger.debug("Added Revocation Authority Parameters " + uid + " to " + this.keyManager);
-			
+			KeyManagerSingleton s = KeyManagerSingleton.getInstance();
+			logger.info("Added Revocation Authority Parameters " + uid + " to " + this.keyManager + " " + s);
+			if (this.keyManager!=s){
+				logger.info(">\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n");
+				logger.info("> Legendary error!");
+				logger.info(">\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n");
+
+			}
+
 //		} else {
 //			logger.debug("The Revocation Authority Parameters were already on the key manager " + uid);
 			
@@ -169,13 +175,17 @@ public abstract class AbstractBaseActor {
 	}
 	
 	private void loadRevocationInformationIf(URI uid) throws Exception {
+		logger.info("--------------Loading revocation information-------------- " + uid);
+		// TODO UIDHelper
 		URI raUid = URI.create(NamespaceMngt.URN_PREFIX_COLON + IdContainer.stripUidSuffix(uid, 1) + "a");
+		logger.info("--" + raUid);
+
 		if (this.keyManager.getRevocationInformation(raUid, uid)==null){
-			openResourceIfNotLoaded(raUid);
+			openResourceIfNotLoaded(raUid);  // Make sure the RAP is loaded before loading the RAI.
 			RevocationAuthorityParameters rap = this.keyManager.getRevocationAuthorityParameters(raUid);
 			RevocationInformation ri = publicParameterOpener(uid);
 			this.addRevocationInformation(rap.getParametersUID(), ri);
-			
+
 		}
 	}
 	
