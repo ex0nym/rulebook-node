@@ -36,7 +36,7 @@ public class LocalNetworkMap extends AbstractNetworkMap {
                 .resolve(toNmiFilename(nmis.getLeadUID()));
 
         try (BufferedWriter bw = Files.newBufferedWriter(pathSourceNMI)) {
-            bw.write(JaxbHelper.serializeToJson(nmis, NetworkMapItemLead.class));
+            bw.write(JaxbHelper.gson.toJson(nmis, NetworkMapItemLead.class));
             bw.flush();
 
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class LocalNetworkMap extends AbstractNetworkMap {
             String advocateFileName = toNmiFilename(advocate.getNodeUID());
             Path path = pathSource.resolve(advocateFileName);
             try (BufferedWriter bw = Files.newBufferedWriter(path)) {
-                bw.write(JaxbHelper.serializeToJson(advocate, NetworkMapItemModerator.class));
+                bw.write(JaxbHelper.gson.toJson(advocate, NetworkMapItemModerator.class));
                 bw.flush();
 
             } catch (Exception e) {

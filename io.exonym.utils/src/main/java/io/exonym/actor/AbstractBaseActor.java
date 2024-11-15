@@ -15,10 +15,10 @@ import eu.abc4trust.xml.*;
 import io.exonym.abc.util.UidType;
 import io.exonym.idmx.dagger.DaggerExonymComponent;
 import io.exonym.idmx.dagger.ExonymComponent;
+import io.exonym.idmx.managers.KeyManagerExonym;
 import io.exonym.lite.connect.UrlHelper;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
-import io.exonym.managers.KeyManagerSingleton;
 import io.exonym.uri.NamespaceMngt;
 import io.exonym.utils.storage.AbstractIdContainer;
 import io.exonym.utils.storage.ExternalResourceContainer;
@@ -159,18 +159,8 @@ public abstract class AbstractBaseActor {
 		if (keyManager.getRevocationAuthorityParameters(uid)==null){
 			RevocationAuthorityParameters rap = publicParameterOpener(uid);
 			keyManager.storeRevocationAuthorityParameters(uid, rap);
-			KeyManagerSingleton s = KeyManagerSingleton.getInstance();
-			logger.info("Added Revocation Authority Parameters " + uid + " to " + this.keyManager + " " + s);
-			if (this.keyManager!=s){
-				logger.info(">\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n");
-				logger.info("> Legendary error!");
-				logger.info(">\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n>\n");
+			logger.info("Added Revocation Authority Parameters " + uid + " to " + this.keyManager);
 
-			}
-
-//		} else {
-//			logger.debug("The Revocation Authority Parameters were already on the key manager " + uid);
-			
 		}
 	}
 	
@@ -373,11 +363,12 @@ public abstract class AbstractBaseActor {
 		}
 	} 
 	
-	protected void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
+	public void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
 		if (ri==null || rapUid ==null){
-			throw new Exception("ri=" + ri + " pkuid=" + null);
+			throw new Exception("ri=" + ri + " rapUid=" + rapUid);
 
 		}
+		((KeyManagerExonym)this.keyManager).clearRevocationInfoForUid(ri.getRevocationInformationUID());
 		/*
 		 * The duplication is a result of IDMX.  Under normal circumstances it is
 		 * fine to search for the revocation information using revocationAuthorityUid [sic]  
@@ -387,19 +378,19 @@ public abstract class AbstractBaseActor {
 		 * to update their witness.  Without the raUid the credential will fail to issue.
 		 * 
 		 */
-		if (this.keyManager.getRevocationInformation(ri.getRevocationAuthorityParametersUID(),
-				ri.getRevocationInformationUID())==null){
-			keyManager.storeRevocationInformation(rapUid, ri);
-			
-			if (!rapUid.toString().endsWith(":ra")){
-				keyManager.storeRevocationInformation(ri.getRevocationAuthorityParametersUID(), ri);	
-				
-			}
-			logger.debug("Added revocation information " + ri.getRevocationInformationUID());
+		keyManager.storeRevocationInformation(rapUid, ri);
+
+		if (!rapUid.toString().endsWith(":ra")){
+			keyManager.storeRevocationInformation(ri.getRevocationAuthorityParametersUID(), ri);
 
 		}
-	}	
+		logger.debug("Added revocation information " + ri.getRevocationInformationUID());
+
+	}
 	
 	protected abstract ExternalResourceContainer initialzeExternalResourceContainer();
-	
+
+	public KeyManager getKeyManager() {
+		return keyManager;
+	}
 }

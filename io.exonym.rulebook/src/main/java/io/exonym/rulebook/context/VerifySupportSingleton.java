@@ -82,6 +82,9 @@ public class VerifySupportSingleton {
         }
     }
 
+    protected ExonymOwner getOwner() {
+        return owner;
+    }
 
     protected void loadOwner(ExonymOwner owner, UIDHelper helper) throws Exception {
         owner.openResourceIfNotLoaded(helper.getCredentialSpec());
@@ -99,8 +102,9 @@ public class VerifySupportSingleton {
     }
 
     protected String verifyToken(SsoChallenge challengeAndToken) throws Exception {
-
         try {
+            logger.info("Verifying Token");
+
             PresentationToken token = Parser.parsePresentationToken(
                     challengeAndToken.getToken());
 

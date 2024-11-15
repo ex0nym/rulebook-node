@@ -92,7 +92,7 @@ public final class ExonymOwnerTest extends AbstractExonymOwner {
     }
 
     @Override
-    protected void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
+    public void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
         super.addRevocationInformation(rapUid, ri);
     }
 

@@ -124,7 +124,8 @@ public class IdContainerJSON extends AbstractIdContainer {
 	
 	protected void commitSchema() throws Exception {
 		try (FileOutputStream fos = new FileOutputStream(file)){
-			fos.write(JaxbHelper.serializeToJson(schema, IdContainerSchema.class).getBytes());
+			String json = JaxbHelper.gson.toJson(schema, IdContainerSchema.class);
+			fos.write(json.getBytes());
 			updateLists();
 			
 		} catch (Exception e) {
@@ -200,7 +201,9 @@ public class IdContainerJSON extends AbstractIdContainer {
 			return openFile(REVOCATION_AUTH_STORE, fullFileName, RevocationAuthorityParameters.class);
 
 		} else if (FileType.isRevocationInformation(fullFileName)){
-			return openFile(REVOCATION_AUTH_STORE, fullFileName, RevocationInformation.class);
+			RevocationInformation ri = openFile(REVOCATION_AUTH_STORE, fullFileName, RevocationInformation.class);
+			logger.info("Opening RAI from:" + this.getUsername() + "----" + ri.getRevocationInformationUID());
+			return (T)ri;
 
 		} else if (FileType.isCredential(fullFileName)){ // Local
 			return openEncryptedFile(OWNER_PRIVATE_STORE, fullFileName, Credential.class, dec);

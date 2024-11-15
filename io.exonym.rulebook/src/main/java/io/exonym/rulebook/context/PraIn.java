@@ -1,15 +1,11 @@
 package io.exonym.rulebook.context;
 
 import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
-import com.sun.xml.ws.util.ByteArrayBuffer;
-import eu.abc4trust.keyManager.KeyManagerException;
+import eu.abc4trust.keyManager.KeyManager;
 import eu.abc4trust.xml.PresentationPolicy;
 import eu.abc4trust.xml.RevocationInformation;
 import io.exonym.abc.util.JaxbHelper;
-import io.exonym.actor.actions.AbstractNetworkMap;
-import io.exonym.actor.actions.NodeVerifier;
-import io.exonym.actor.actions.PkiExternalResourceContainer;
-import io.exonym.actor.actions.TrustNetworkWrapper;
+import io.exonym.actor.actions.*;
 import io.exonym.helpers.UIDHelper;
 import io.exonym.lite.parallel.ModelCommandProcessor;
 import io.exonym.lite.parallel.ModelSingleSequence;
@@ -21,11 +17,7 @@ import io.exonym.lite.standard.AsymStoreKey;
 import io.exonym.lite.standard.Const;
 import io.exonym.lite.standard.CryptoUtils;
 import io.exonym.lite.standard.WhiteList;
-import io.exonym.managers.KeyManagerSingleton;
-import io.exonym.utils.storage.CacheContainer;
-import io.exonym.utils.storage.IdContainer;
-import io.exonym.utils.storage.KeyContainer;
-import io.exonym.utils.storage.KeyContainerWrapper;
+import io.exonym.utils.storage.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class PraIn extends ModelCommandProcessor {
     
@@ -51,14 +42,11 @@ public class PraIn extends ModelCommandProcessor {
 
     private final NetworkPublicKeyManager publicKeyManager;
 
-    private final KeyManagerSingleton keyManagerSingleton;
-
     protected PraIn() {
         super(Const.FLUX_CAPACITY, "PraIn", 60000);
         PkiExternalResourceContainer pki = PkiExternalResourceContainer.getInstance();
         this.networkMap = pki.getNetworkMap();
         this.cache = pki.getCache();
-        this.keyManagerSingleton = KeyManagerSingleton.getInstance();
         this.publicKeyManager = NetworkPublicKeyManager.getInstance();
 
     }
@@ -243,14 +231,13 @@ public class PraIn extends ModelCommandProcessor {
 
     }
 
-    private static void updateKeyManager(RevocationInformation rai) throws KeyManagerException {
-        logger.info("Updating Key Manager");
+    private static void updateKeyManager(RevocationInformation rai) throws Exception {
         URI raiUid = rai.getRevocationInformationUID();
-        URI rapUid = rai.getRevocationInformationUID();
-        logger.info("RAI=" + raiUid);
-        logger.info("RAP=" + rapUid);
-        KeyManagerSingleton km = KeyManagerSingleton.getInstance();
-        km.storeRevocationInformation(raiUid, rai);
+        ExonymOwner owner = VerifySupportSingleton.getInstance().getOwner();
+        URI rapUid =rai.getRevocationAuthorityParametersUID();
+        logger.info("Received UID for Revocation Infomation=" + raiUid);
+        owner.addRevocationInformation(rapUid, rai);
+        ExonymIssuer.logRevocationInformationDetails(rai);
 
     }
 

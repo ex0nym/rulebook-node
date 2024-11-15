@@ -8,6 +8,7 @@ import com.ibm.zurich.idmix.abc4trust.facades.IssuanceMessageFacade;
 import com.ibm.zurich.idmix.abc4trust.facades.RevocationAuthorityParametersFacade;
 import com.ibm.zurich.idmix.abc4trust.facades.RevocationInformationFacade;
 import com.ibm.zurich.idmix.abc4trust.facades.SecretKeyFacade;
+import com.ibm.zurich.idmx.exception.ConfigurationException;
 import com.ibm.zurich.idmx.interfaces.cryptoEngine.CryptoEngineRevocationAuthority;
 import com.ibm.zurich.idmx.interfaces.util.BigInt;
 import com.ibm.zurich.idmx.jaxb.JaxbHelperClass;
@@ -565,12 +566,25 @@ public abstract class AbstractExonymIssuer extends AbstractBaseActor {
 			revocationInfo = this.cryptoEngineRaIdmx.revoke(raUid, handle0);
 
 		}
-		logger.info(revocationInfo);
 		RevocationInformation ri = this.keyManager.getRevocationInformation(raUid, revocationInfo);
-
-		logger.info("Revoked to new " + revocationInfo);
+		logger.info("Logging Revocation Information from revocationBulkValidHandles():");
+		logRevocationInformationDetails(ri);
 		return ri;
 
+	}
+
+	public static void logRevocationInformationDetails(RevocationInformation ri){
+		try {
+			RevocationInformationFacade rif = new RevocationInformationFacade(ri);
+			logger.info(rif.getRevocationInformationId());
+			logger.info(rif.getRevocationAuthorityParametersId());
+			logger.info(ri.getRevocationInformationUID());
+			logger.info(rif.getRevocationHistory().getRevocationHistoryUID());
+
+		} catch (ConfigurationException e) {
+			logger.debug("Error", e);
+
+		}
 	}
 	
 	/**

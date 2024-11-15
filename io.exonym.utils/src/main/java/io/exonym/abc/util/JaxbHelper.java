@@ -7,12 +7,10 @@ package io.exonym.abc.util;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.xml.messaging.saaj.util.ByteOutputStream;
 import eu.abc4trust.smartcard.Base64;
-import eu.abc4trust.xml.PresentationPolicy;
 import io.exonym.lite.couchdb.Base64TypeAdapter;
 import io.exonym.lite.exceptions.ErrorMessages;
 import io.exonym.lite.exceptions.UxException;
@@ -114,17 +112,6 @@ public class JaxbHelper {
 	public static <T> T xmlFileToClass(Path file, Class<T> clazz) throws Exception{
 		byte[] xml = Files.readAllBytes(file);
 		return (T) JaxbHelper.xmlToClass(xml, clazz);
-
-	}
-
-	public static String serializeToJson(Object o, Class<?> clazz) throws Exception {
-		if (o==null){
-			throw new NullPointerException();
-		}
-		ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-		AnnotationIntrospector introspection = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-		mapper.setAnnotationIntrospector(introspection);
-		return mapper.writeValueAsString(o);
 
 	}
 

@@ -164,8 +164,8 @@ public class NodeManager {
 
 					URI rulebookUrl = nodeInfo.getRulebookNodeUrl().resolve(rulebookPath.toUri());
 
-					String xnd = JaxbHelper.serializeToJson(rulebook, Rulebook.class);
-					writeLocal(rulebookUrl, xnd.getBytes(StandardCharsets.UTF_8),
+					String json = JaxbHelper.gson.toJson(rulebook, Rulebook.class);
+					writeLocal(rulebookUrl, json.getBytes(StandardCharsets.UTF_8),
 							"rulebook.json");
 
 				} catch (Exception e) {
@@ -382,7 +382,7 @@ public class NodeManager {
 
 				URI rulebookUrl = nodeInfo.getRulebookNodeUrl().resolve(rulebookPath.toUri());
 
-				String xnd = JaxbHelper.serializeToJson(rulebook, Rulebook.class);
+				String xnd = JaxbHelper.gson.toJson(rulebook, Rulebook.class);
 				writeLocal(rulebookUrl, xnd.getBytes(StandardCharsets.UTF_8),
 						"rulebook.json");
 

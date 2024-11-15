@@ -376,14 +376,15 @@ public class TestNodeManager {
 			sigma.setTestNet(true);
 			sigma.setSybilClass(Rulebook.SYBIL_CLASS_ENTITY);
 
-			String r0 = client.basicPost(sybilServiceRegisterUrl, JaxbHelper.serializeToJson(sigma, IssuanceSigma.class));
+			String json = JaxbHelper.gson.toJson(sigma, IssuanceSigma.class);
+			String r0 = client.basicPost(sybilServiceRegisterUrl, json);
 			IssuanceSigma response0 = JaxbHelper.jsonToClass(r0, IssuanceSigma.class);
 			IssuanceMessageAndBoolean imab = Parser.parseIssuanceMessageAndBoolean(response0.getImab());
 
 			IssuanceMessage im = owner.issuanceStep(imab, store.getEncrypt());
 			sigma.setIm(Parser.parseIssuanceMessage(im));
 			String r1 = client.basicPost(sybilServiceRegisterUrl,
-					JaxbHelper.serializeToJson(sigma, IssuanceSigma.class));
+					JaxbHelper.gson.toJson(sigma, IssuanceSigma.class));
 
 			IssuanceSigma response1 = JaxbHelper.jsonToClass(r1, IssuanceSigma.class);
 			imab = Parser.parseIssuanceMessageAndBoolean(response1.getImab());

@@ -50,12 +50,11 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractExonymOwner extends AbstractBaseActor {
 
-
 	private static final Logger logger = LogManager.getLogger(AbstractExonymOwner.class);
-
 	protected ZkDirector director;
 	protected PseudonymBuildingBlock pseudonymBB;
 	protected ScopeExclusivePseudonymBuildingBlock scopeExclusivePseudonymBB;
@@ -75,6 +74,8 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 	protected CryptoEngineVerifier cryptoEngineVerifier;
 	protected PresentationOrchestrationVerifier presentationOrchestrationVerifier;
 	protected KeyGenerationOrchestration keyGenerationOrchestration;
+
+
 	
 	// Further participants
 	protected CryptoEngineRevocationAuthority cryptoEngineRevocationAuthority;
@@ -759,7 +760,13 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 				}
 				IssuerParameters ip = this.keyManager.getIssuerParameters(cit.getIssuerParametersUID());
 				URI ra = this.addIssuerParameters(ip);
-				
+//				ConcurrentHashMap<URI, RevocationInformation> kme = ((KeyManagerExonym)this.keyManager).getRevocationInfoMap();
+//				for (URI rai: kme.keySet()){
+//					logger.info("Logging: " + rai);
+//					AbstractExonymIssuer.logRevocationInformationDetails(kme.get(rai));
+//
+//				}
+
 				if (ra!=null){
 					URI rai = URI.create(ra + "i");
 					openResourceIfNotLoaded(ra);
@@ -865,4 +872,6 @@ public abstract class AbstractExonymOwner extends AbstractBaseActor {
 
 		// return .unsignedValueOf(in).toByteArrayUnsigned();
 	}
+
+
 }

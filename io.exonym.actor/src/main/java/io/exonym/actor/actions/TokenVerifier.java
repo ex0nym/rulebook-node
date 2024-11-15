@@ -1,5 +1,6 @@
 package io.exonym.actor.actions;
 
+import eu.abc4trust.keyManager.KeyManager;
 import eu.abc4trust.keyManager.KeyManagerException;
 import eu.abc4trust.smartcard.Base64;
 import eu.abc4trust.xml.*;
@@ -10,24 +11,32 @@ import io.exonym.lite.exceptions.UxException;
 import io.exonym.lite.pojo.AttributeBasedTokenResult;
 import io.exonym.lite.pojo.DecodedAttributeToken;
 import io.exonym.utils.storage.CacheContainer;
-import io.exonym.managers.KeyManagerSingleton;
 import io.exonym.utils.storage.ExternalResourceContainer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
 import java.util.List;
 
 public class TokenVerifier {
 
+	// TODO Consider placing all the key manager actions inside the owner
+
 	private final ExonymOwner owner;
-	private final KeyManagerSingleton keyManager = KeyManagerSingleton.getInstance();
+	private final KeyManager keyManager;
 
 	private final ExternalResourceContainer external;
+
+	private static final Logger logger = LogManager.getLogger(TokenVerifier.class);
 
 
 	public TokenVerifier(CacheContainer cache, ExternalResourceContainer external) throws Exception {
 		this.owner = new ExonymOwner(cache.getContainer());
 		this.owner.initSystemParameters();
 		this.external=external;
+		this.keyManager = owner.getKeyManager();
+		logger.info("KeyManager @ Token Verifier=" + this.keyManager);
+
 
 	}
 

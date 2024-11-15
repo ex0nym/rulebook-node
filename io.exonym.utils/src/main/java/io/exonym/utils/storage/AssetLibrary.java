@@ -221,7 +221,7 @@ public final class AssetLibrary {
 	public synchronized void commit() throws Exception {
 		File file = new File("resource\\asset-library.json");
 		try (FileOutputStream fos = new FileOutputStream(file)){
-			String json = JaxbHelper.serializeToJson(this, AssetLibrary.class);
+			String json = JaxbHelper.gson.toJson(this, AssetLibrary.class);
 			fos.write(json.getBytes());
 			
 		} catch (Exception e) {

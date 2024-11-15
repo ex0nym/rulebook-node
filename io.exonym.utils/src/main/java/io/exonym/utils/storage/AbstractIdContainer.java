@@ -197,7 +197,7 @@ public abstract class AbstractIdContainer {
 
 	private void saveRulebook(Rulebook resource, boolean overwrite) throws Exception {
 		String name = uidToFileName(resource.getRulebookId()) + ".json";
-		String json = JaxbHelper.serializeToJson(resource, Rulebook.class);
+		String json = JaxbHelper.gson.toJson(resource, Rulebook.class);
 		save(json, LOCAL_LEDGER, name, overwrite);
 	}
 

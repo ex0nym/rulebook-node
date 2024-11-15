@@ -7,6 +7,7 @@ import java.net.URI;
 import eu.abc4trust.xml.CredentialSpecification;
 import io.exonym.abc.util.JaxbHelper;
 import io.exonym.helpers.BuildCredentialSpecification;
+import io.exonym.lite.pojo.IssuanceSigma;
 import io.exonym.uri.UriDataType;
 import io.exonym.uri.UriEncoding;
 import org.apache.logging.log4j.LogManager;
@@ -78,7 +79,7 @@ public class TestXContainer {
 		try {
 			AnonCredentialParameters acp = new AnonCredentialParameters();
 			acp.setGroupUid(URI.create("urn:one:two:three"));
-			String x = JaxbHelper.serializeToJson(acp, AnonCredentialParameters.class);
+			String x = JaxbHelper.gson.toJson(acp, AnonCredentialParameters.class);
 			logger.info("\\n HELP" + x);
 			
 		} catch (Exception e) {

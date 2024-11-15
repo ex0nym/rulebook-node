@@ -314,7 +314,7 @@ public final class IdContainerExternal extends AbstractIdContainer {
     }
 
     public String getSchema() throws Exception {
-        return JaxbHelper.serializeToJson(this.schema, IdContainerSchema.class);
+        return JaxbHelper.gson.toJson(this.schema, IdContainerSchema.class);
 
     }
 }

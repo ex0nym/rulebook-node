@@ -87,7 +87,7 @@ public final class ExonymInspector extends AbstractExonymInspector {
 	}
 
 	@Override
-	protected void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
+	public void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
 		super.addRevocationInformation(rapUid, ri);
 		
 	}

@@ -73,7 +73,7 @@ public class ExonymIssuerTest extends AbstractExonymIssuer {
     }
 
     @Override
-    protected void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
+    public void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
         super.addRevocationInformation(rapUid, ri);
     }
 

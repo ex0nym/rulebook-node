@@ -82,7 +82,7 @@ public class RevokeServlet extends HttpServlet {
 
             } else {
                 logger.info("In network revocation request.");
-                inNetworkModRevocationRequest(revocationReq, req, resp);
+                inNetworkModRevocationRequest(revocationReq);
 
             }
         } catch (UxException e) {
@@ -119,7 +119,7 @@ public class RevokeServlet extends HttpServlet {
         }
     }
 
-    private void inNetworkModRevocationRequest(RevocationRequestWrapper rr, HttpServletRequest req, HttpServletResponse resp) throws Exception {
+    private void inNetworkModRevocationRequest(RevocationRequestWrapper rr) throws Exception {
         byte[] sig = rr.getSignature();
         if (sig==null){
             throw new UxException(ErrorMessages.FAILED_TO_AUTHORIZE, "No signature");
@@ -512,7 +512,7 @@ public class RevokeServlet extends HttpServlet {
      * @return {b64 encoded raiXml, sigOnXmlB64, raiHashOfXml }
      * @throws Exception
      */
-    protected String publishLocalRevocationData(RevocationInformation ri, URI raiUid, NodeManager nodeManager, AsymStoreKey key) throws Exception {
+    private String publishLocalRevocationData(RevocationInformation ri, URI raiUid, NodeManager nodeManager, AsymStoreKey key) throws Exception {
 
         MyTrustNetworkAndKeys myTrustNetwork = new MyTrustNetworkAndKeys(false);
         TrustNetwork tn = myTrustNetwork.getTrustNetwork();

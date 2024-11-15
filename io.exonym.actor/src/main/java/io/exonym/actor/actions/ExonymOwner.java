@@ -141,7 +141,7 @@ public class ExonymOwner extends AbstractExonymOwner {
 	}
 
 	@Override
-	protected void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
+	public void addRevocationInformation(URI rapUid, RevocationInformation ri) throws Exception {
 		super.addRevocationInformation(rapUid, ri);
 	}
 
@@ -164,6 +164,7 @@ public class ExonymOwner extends AbstractExonymOwner {
 	protected <T> T publicParameterOpener(URI uid) throws Exception {
 		return super.publicParameterOpener(uid);
 	}
+
 
 
 }

@@ -63,7 +63,7 @@ public class RulebookVerifier {
 
     private void setupDisplay() throws Exception {
         this.displayRulebook = this.getDisplayRulebook();
-        this.rulebookJson = JaxbHelper.serializeToJson(this.displayRulebook, Rulebook.class);
+        this.rulebookJson = JaxbHelper.gson.toJson(this.displayRulebook, Rulebook.class);
 
     }
 
